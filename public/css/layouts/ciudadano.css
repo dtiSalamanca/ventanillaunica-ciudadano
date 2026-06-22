@@ -1,0 +1,1110 @@
+/* ========================================================================
+   SB Admin - Layout estructural (sidebar, topbar, posicionamiento)
+   Extraído de styles.css para independencia del bundle de SB Admin.
+   ======================================================================== */
+
+/* Posicionamiento fijo del sidebar y topbar */
+.sb-nav-fixed #layoutSidenav #layoutSidenav_nav,
+.sb-nav-fixed .sb-topnav {
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: 0;
+    z-index: 1030;
+}
+
+/* Layout principal */
+#layoutSidenav {
+    display: flex;
+}
+
+#layoutSidenav #layoutSidenav_nav {
+    flex-basis: 200px;
+    flex-shrink: 0;
+    transition: transform 0.15s ease-in-out;
+    z-index: 1038;
+    transform: translateX(-200px);
+}
+
+#layoutSidenav #layoutSidenav_content {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-width: 0;
+    flex-grow: 1;
+    min-height: calc(100vh - 56px);
+    margin-left: -200px;
+}
+
+/* Toggle del sidebar (móvil: oculto por defecto, se muestra al activar) */
+.sb-sidenav-toggled #layoutSidenav #layoutSidenav_nav {
+    transform: translateX(0);
+}
+
+.sb-sidenav-toggled #layoutSidenav #layoutSidenav_content:before {
+    content: "";
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #000;
+    z-index: 1037;
+    opacity: 0.5;
+    transition: opacity 0.3s ease-in-out;
+}
+
+/* Desktop: sidebar visible por defecto, toggle lo oculta */
+@media (min-width: 992px) {
+    #layoutSidenav #layoutSidenav_nav {
+        transform: translateX(0);
+    }
+
+    #layoutSidenav #layoutSidenav_content {
+        margin-left: 0;
+        transition: margin 0.15s ease-in-out;
+    }
+
+    .sb-sidenav-toggled #layoutSidenav #layoutSidenav_nav {
+        transform: translateX(-200px);
+    }
+
+    .sb-sidenav-toggled #layoutSidenav #layoutSidenav_content {
+        margin-left: -200px;
+    }
+
+    .sb-sidenav-toggled #layoutSidenav #layoutSidenav_content:before {
+        display: none;
+    }
+}
+
+/* Posición fija con navbar */
+.sb-nav-fixed .sb-topnav {
+    z-index: 1039;
+}
+
+.sb-nav-fixed #layoutSidenav #layoutSidenav_nav {
+    width: 200px;
+    height: 100vh;
+    z-index: 1038;
+}
+
+.sb-nav-fixed #layoutSidenav #layoutSidenav_nav .sb-sidenav {
+    padding-top: 56px;
+}
+
+.sb-nav-fixed #layoutSidenav #layoutSidenav_nav .sb-sidenav .sb-sidenav-menu {
+    overflow-y: auto;
+}
+
+.sb-nav-fixed #layoutSidenav #layoutSidenav_content {
+    padding-left: 200px;
+    top: 56px;
+}
+
+/* Iconos de navegación */
+.nav .nav-link .sb-nav-link-icon,
+.sb-sidenav-menu .nav-link .sb-nav-link-icon {
+    margin-right: 0.5rem;
+}
+
+/* Topbar - estructura */
+.sb-topnav {
+    padding-left: 0;
+    height: 56px;
+    z-index: 1039;
+}
+
+.sb-topnav .navbar-brand {
+    width: 200px;
+    margin: 0;
+}
+
+.sb-topnav.navbar-dark #sidebarToggle {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.sb-topnav.navbar-light #sidebarToggle {
+    color: #212529;
+}
+
+/* Sidenav - estructura */
+.sb-sidenav {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    flex-wrap: nowrap;
+}
+
+.sb-sidenav .sb-sidenav-menu {
+    flex-grow: 1;
+}
+
+.sb-sidenav .sb-sidenav-menu .nav {
+    flex-direction: column;
+    flex-wrap: nowrap;
+}
+
+.sb-sidenav .sb-sidenav-menu .nav .sb-sidenav-menu-heading {
+    padding: 1.75rem 1rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.sb-sidenav .sb-sidenav-menu .nav .nav-link {
+    display: flex;
+    align-items: center;
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+    position: relative;
+}
+
+.sb-sidenav .sb-sidenav-menu .nav .nav-link .sb-nav-link-icon {
+    font-size: 0.9rem;
+}
+
+.sb-sidenav .sb-sidenav-menu .nav .nav-link .sb-sidenav-collapse-arrow {
+    display: inline-block;
+    margin-left: auto;
+    transition: transform 0.15s ease;
+}
+
+.sb-sidenav .sb-sidenav-menu .nav .nav-link.collapsed .sb-sidenav-collapse-arrow {
+    transform: rotate(-90deg);
+}
+
+.sb-sidenav .sb-sidenav-menu .nav .sb-sidenav-menu-nested {
+    margin-left: 1.5rem;
+    flex-direction: column;
+}
+
+.sb-sidenav .sb-sidenav-footer {
+    padding: 0.75rem;
+    flex-shrink: 0;
+}
+
+/* Sidenav - tema oscuro (base) */
+.sb-sidenav-dark {
+    background-color: #212529;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.sb-sidenav-dark .sb-sidenav-menu .sb-sidenav-menu-heading {
+    color: rgba(255, 255, 255, 0.25);
+}
+
+.sb-sidenav-dark .sb-sidenav-menu .nav-link {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.sb-sidenav-dark .sb-sidenav-menu .nav-link .sb-nav-link-icon {
+    color: rgba(255, 255, 255, 0.25);
+}
+
+.sb-sidenav-dark .sb-sidenav-menu .nav-link .sb-sidenav-collapse-arrow {
+    color: rgba(255, 255, 255, 0.25);
+}
+
+.sb-sidenav-dark .sb-sidenav-menu .nav-link:hover {
+    color: #fff;
+}
+
+.sb-sidenav-dark .sb-sidenav-menu .nav-link.active {
+    color: #fff;
+}
+
+.sb-sidenav-dark .sb-sidenav-menu .nav-link.active .sb-nav-link-icon {
+    color: #fff;
+}
+
+.sb-sidenav-dark .sb-sidenav-footer {
+    background-color: #343a40;
+}
+
+/* Sidenav - tema claro */
+.sb-sidenav-light {
+    background-color: #f8f9fa;
+    color: #212529;
+}
+
+.sb-sidenav-light .sb-sidenav-menu .sb-sidenav-menu-heading {
+    color: #adb5bd;
+}
+
+.sb-sidenav-light .sb-sidenav-menu .nav-link {
+    color: #212529;
+}
+
+.sb-sidenav-light .sb-sidenav-menu .nav-link .sb-nav-link-icon {
+    color: #adb5bd;
+}
+
+.sb-sidenav-light .sb-sidenav-menu .nav-link .sb-sidenav-collapse-arrow {
+    color: #adb5bd;
+}
+
+.sb-sidenav-light .sb-sidenav-menu .nav-link:hover {
+    color: #0d6efd;
+}
+
+.sb-sidenav-light .sb-sidenav-menu .nav-link.active {
+    color: #0d6efd;
+}
+
+.sb-sidenav-light .sb-sidenav-menu .nav-link.active .sb-nav-link-icon {
+    color: #0d6efd;
+}
+
+.sb-sidenav-light .sb-sidenav-footer {
+    background-color: #e9ecef;
+}
+
+/* ========================================================================
+   Estilos visuales personalizados del admin layout
+   ======================================================================== */
+
+/* Cortinilla de transición */
+.page-loader {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    background: var(--theme-bg-primary, #000000);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform: translateY(0);
+    transition: transform 0.6s cubic-bezier(0.76, 0, 0.24, 1);
+}
+
+.page-loader.is-hidden {
+    transform: translateY(-100%);
+    pointer-events: none;
+}
+
+.page-loader-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.page-loader-logo {
+    width: 80px;
+    height: auto;
+    animation: loaderPulse 1.6s ease-in-out infinite;
+}
+
+.page-loader-title {
+    color: #ffffff;
+    font-family: "Montserrat", sans-serif;
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    margin: 0;
+    text-align: center;
+}
+
+.page-loader-subtitle {
+    color: rgba(255, 255, 255, 0.6);
+    font-family: "Montserrat", sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    margin: 0;
+    text-align: center;
+    max-width: 320px;
+    line-height: 1.4;
+}
+
+.page-loader-spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid rgba(255, 255, 255, 0.15);
+    border-top-color: rgba(255, 255, 255, 0.8);
+    border-radius: 50%;
+    animation: loaderSpin 0.8s linear infinite;
+}
+
+@keyframes loaderPulse {
+    0%,
+    100% {
+        opacity: 0.6;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 1;
+        transform: scale(1.05);
+    }
+}
+
+@keyframes loaderSpin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Variables CSS para personalización de colores */
+:root {
+    --theme-bg-primary: #022c22;
+    --theme-bg-secondary: #064e3b;
+    --theme-text-primary: #ecfdf5;
+    --theme-text-secondary: #6ee7b7;
+    --theme-text-muted: #a7f3d0;
+    --theme-accent: #10b981;
+    --theme-hover-bg: rgba(16, 185, 129, 0.12);
+    --theme-active-bg: rgba(16, 185, 129, 0.18);
+    --theme-border: rgba(110, 231, 183, 0.2);
+}
+
+/* Estilos globales */
+.sb-topnav,
+.sb-sidenav,
+.sb-sidenav-header h1,
+.sb-sidenav-menu-heading,
+.sb-sidenav .nav-link,
+.navbar-brand,
+.dropdown-item {
+    font-family: "Montserrat", sans-serif;
+}
+
+/* Estilos del Navbar */
+.sb-topnav {
+    background: var(--theme-bg-primary);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    height: 56px;
+    padding: 0 1rem;
+}
+
+.navbar-brand {
+    color: var(--theme-text-primary) !important;
+    font-weight: 600;
+    font-size: 1.1rem;
+    padding: 0.5rem 1rem;
+    transition: color 0.2s ease-in-out;
+}
+
+.navbar-brand:hover {
+    color: var(--theme-text-muted) !important;
+}
+
+.highlight-text {
+    font-weight: bold;
+    color: var(--theme-text-primary);
+}
+
+/* Botón toggle */
+#sidebarToggle {
+    color: var(--theme-text-secondary);
+    padding: 0.5rem;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+#sidebarToggle:hover {
+    color: var(--theme-text-primary);
+    background: var(--theme-hover-bg);
+    transform: scale(1.05);
+}
+
+/* Dropdown usuario */
+.nav-item.dropdown > .nav-link {
+    color: var(--theme-text-secondary);
+    padding: 0.5rem;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.nav-item.dropdown > .nav-link:hover {
+    color: var(--theme-text-primary);
+    background: var(--theme-hover-bg);
+}
+
+.dropdown-menu {
+    background: var(--theme-bg-primary);
+    border: 1px solid var(--theme-border);
+    margin-top: 0.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.dropdown-item {
+    color: var(--theme-text-secondary);
+    padding: 0.5rem 1rem;
+    transition: all 0.2s ease;
+    font-weight: 500;
+}
+
+.dropdown-item:hover {
+    color: var(--theme-text-primary);
+    background: var(--theme-hover-bg);
+}
+
+.dropdown-menu.show {
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Estilos del Sidenav */
+.sb-sidenav {
+    background: var(--theme-bg-primary);
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.sb-sidenav-menu-heading {
+    color: var(--theme-text-secondary);
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 1.5rem 1rem 0.5rem;
+}
+
+.sb-sidenav-search {
+    padding: 0.75rem 1rem 0.35rem;
+}
+
+.sb-sidenav-search-box {
+    position: relative;
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--theme-border);
+    border-radius: 8px;
+    background: var(--theme-bg-secondary);
+}
+
+.sb-sidenav-search-box > .fa-search {
+    position: absolute;
+    left: 0.75rem;
+    color: var(--theme-text-secondary);
+    font-size: 0.85rem;
+    pointer-events: none;
+}
+
+.sb-sidenav-search-input {
+    width: 100%;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: var(--theme-text-primary);
+    font-size: 0.88rem;
+    padding: 0.55rem 2.1rem 0.55rem 2.1rem;
+}
+
+.sb-sidenav-search-input::placeholder {
+    color: var(--theme-text-secondary);
+}
+
+.sb-sidenav-search-clear {
+    position: absolute;
+    right: 0.45rem;
+    border: none;
+    background: transparent;
+    color: var(--theme-text-secondary);
+    width: 1.45rem;
+    height: 1.45rem;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.2s ease;
+}
+
+.sb-sidenav-search-clear.is-visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.sb-sidenav-search-clear:hover {
+    color: var(--theme-text-primary);
+    background: var(--theme-hover-bg);
+}
+
+.sb-sidenav-search-no-results {
+    color: var(--theme-text-secondary);
+    font-size: 0.82rem;
+    font-weight: 600;
+    margin: 0.6rem 1rem 0.3rem;
+    padding: 0.5rem 0.6rem;
+    border: 1px dashed var(--theme-border);
+    border-radius: 8px;
+    display: none;
+}
+
+.sb-sidenav-search-no-results.show {
+    display: block;
+}
+
+.sb-sidenav .is-search-hidden {
+    display: none !important;
+}
+
+.sb-sidenav .nav-link {
+    color: var(--theme-text-muted);
+    padding: 0.75rem 1rem;
+    margin: 0.2rem 0.7rem;
+    border-radius: 6px;
+    transition: all 0.2s ease-in-out;
+    font-weight: 700;
+}
+
+.sb-sidenav .nav-link:hover {
+    background-color: var(--theme-hover-bg);
+    color: var(--theme-text-primary);
+    transform: translateX(3px);
+}
+
+.sb-sidenav .nav-link.active-current {
+    background-color: var(--theme-active-bg);
+    color: var(--theme-text-primary);
+    border-left: 4px solid var(--theme-accent);
+    font-weight: 800;
+}
+
+.sb-nav-link-icon {
+    width: 1.5rem;
+    text-align: center;
+    margin-right: 0.5rem;
+    color: var(--theme-text-secondary);
+}
+
+.nav-link:hover .sb-nav-link-icon {
+    color: var(--theme-text-primary);
+}
+
+/* Logo y header */
+.sb-sidenav-logo {
+    padding: 1rem;
+    text-align: center;
+    background: var(--theme-bg-primary);
+}
+
+.sb-sidenav-logo img {
+    max-width: 70px;
+    height: auto;
+    transition: all 0.3s ease;
+}
+
+.sb-sidenav-header {
+    padding: 1rem;
+    text-align: center;
+    background: var(--theme-bg-primary);
+}
+
+.sb-sidenav-header h1 {
+    color: var(--theme-text-primary);
+    font-size: 15px;
+    font-weight: 700;
+    margin: 0;
+    letter-spacing: 0.5px;
+}
+
+/* Menú desplegable */
+.sb-sidenav-menu-nested {
+    padding-left: 0;
+}
+
+.sb-sidenav-menu-nested .nav-link {
+    padding: 0.5rem 1rem 0.5rem 1rem;
+    font-size: 0.9rem;
+    opacity: 0.9;
+    margin-left: 0.5rem;
+    margin-right: 0.5rem;
+    text-align: left;
+}
+
+.sb-sidenav-collapse-arrow {
+    transition: transform 0.3s ease;
+}
+
+.nav-link.collapsed .sb-sidenav-collapse-arrow {
+    transform: rotate(0deg);
+}
+
+.nav-link:not(.collapsed) .sb-sidenav-collapse-arrow {
+    transform: rotate(180deg);
+}
+
+.collapse-custom {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.2s ease-out;
+}
+
+.collapse-custom.show {
+    max-height: 200px;
+}
+
+/* Scrollbar del sidebar - estilo camuflado */
+.sb-sidenav {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+}
+
+.sb-sidenav::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sb-sidenav::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.sb-sidenav::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+    border: none;
+}
+
+.sb-sidenav::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(255, 255, 255, 0.5);
+}
+
+/* Responsive */
+@media (max-width: 120px) {
+    .sb-sidenav-logo img {
+        max-width: 120px;
+    }
+
+    .sb-sidenav-header h1 {
+        font-size: 1rem;
+    }
+}
+
+/* Modal de personalizacion de colores */
+/* Estilos del Modal de Personalización de Colores */
+.theme-modal-dialog {
+    max-width: 95%;
+    width: 95%;
+}
+
+@media (min-width: 1200px) {
+    .theme-modal-dialog {
+        max-width: 1140px;
+    }
+}
+
+#modalPersonalizarColores .modal-content {
+    border: none;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+.theme-modal-header {
+    background: #1e1e2e;
+    color: white;
+    border-bottom: none;
+    padding: 1.75rem 2rem;
+}
+
+.theme-modal-icon {
+    width: 52px;
+    height: 52px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+}
+
+#modalPersonalizarColores .modal-subtitle {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.theme-modal-body {
+    padding: 2rem;
+    background: #f8fafc;
+}
+
+.theme-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 1.25rem;
+}
+
+@media (max-width: 1400px) {
+    .theme-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+@media (max-width: 992px) {
+    .theme-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .theme-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.theme-card {
+    cursor: pointer;
+    border-radius: 12px;
+    overflow: hidden;
+    background: white;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: all 0.25s ease;
+    border: 3px solid transparent;
+}
+
+.theme-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+}
+
+.theme-card[role="button"] {
+    user-select: none;
+}
+
+.theme-card:focus-visible {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.35);
+}
+
+.theme-card.active {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.theme-card.active .theme-check {
+    opacity: 1;
+}
+
+.theme-preview {
+    height: 80px;
+    display: flex;
+    overflow: hidden;
+}
+
+.preview-sidebar {
+    width: 30%;
+    height: 100%;
+}
+
+.preview-content {
+    width: 70%;
+    display: flex;
+    flex-direction: column;
+}
+
+.preview-topbar {
+    height: 20%;
+}
+
+.preview-main {
+    flex: 1;
+    background: #f1f5f9;
+}
+
+.theme-info {
+    padding: 0.75rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid #e2e8f0;
+}
+
+.theme-name {
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: #334155;
+}
+
+.theme-check {
+    color: #3b82f6;
+    font-size: 1.1rem;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.theme-modal-footer {
+    background: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+    padding: 1.25rem 2rem;
+}
+
+.theme-modal-footer .btn {
+    padding: 0.6rem 1.25rem;
+    border-radius: 8px;
+    font-weight: 600;
+}
+
+.theme-modal-footer .btn-primary {
+    background: #1e1e2e;
+    border: none;
+}
+
+.theme-modal-footer .btn-primary:hover {
+    background: #2d2d3f;
+}
+
+/* Previews de cada tema */
+.theme-preview-negro .preview-sidebar,
+.theme-preview-negro .preview-topbar {
+    background: #000000;
+}
+
+.theme-preview-azul-marino .preview-sidebar,
+.theme-preview-azul-marino .preview-topbar {
+    background: #0f172a;
+}
+
+.theme-preview-verde-bosque .preview-sidebar,
+.theme-preview-verde-bosque .preview-topbar {
+    background: #14332a;
+}
+
+.theme-preview-burdeos .preview-sidebar,
+.theme-preview-burdeos .preview-topbar {
+    background: #4a1c24;
+}
+
+.theme-preview-purpura .preview-sidebar,
+.theme-preview-purpura .preview-topbar {
+    background: #2d1b4e;
+}
+
+.theme-preview-cafe .preview-sidebar,
+.theme-preview-cafe .preview-topbar {
+    background: #3d2914;
+}
+
+.theme-preview-gris-carbon .preview-sidebar,
+.theme-preview-gris-carbon .preview-topbar {
+    background: #374151;
+}
+
+.theme-preview-azul-cobalto .preview-sidebar,
+.theme-preview-azul-cobalto .preview-topbar {
+    background: #1e3a5f;
+}
+
+.theme-preview-turquesa .preview-sidebar,
+.theme-preview-turquesa .preview-topbar {
+    background: #134e4a;
+}
+
+.theme-preview-rosa-atardecer .preview-sidebar,
+.theme-preview-rosa-atardecer .preview-topbar {
+    background: #581c3c;
+}
+
+.theme-preview-esmeralda .preview-sidebar,
+.theme-preview-esmeralda .preview-topbar {
+    background: #064e3b;
+}
+
+.theme-preview-indigo .preview-sidebar,
+.theme-preview-indigo .preview-topbar {
+    background: #312e81;
+}
+
+.theme-preview-terracota .preview-sidebar,
+.theme-preview-terracota .preview-topbar {
+    background: #7c2d12;
+}
+
+.theme-preview-petroleo .preview-sidebar,
+.theme-preview-petroleo .preview-topbar {
+    background: #164e63;
+}
+
+.theme-preview-oliva .preview-sidebar,
+.theme-preview-oliva .preview-topbar {
+    background: #3f3f2f;
+}
+
+.theme-preview-coral .preview-sidebar,
+.theme-preview-coral .preview-topbar {
+    background: #9f1239;
+}
+
+.theme-preview-azul-cielo .preview-sidebar,
+.theme-preview-azul-cielo .preview-topbar {
+    background: #0c4a6e;
+}
+
+.theme-preview-lavanda .preview-sidebar,
+.theme-preview-lavanda .preview-topbar {
+    background: #5b21b6;
+}
+
+.theme-preview-menta .preview-sidebar,
+.theme-preview-menta .preview-topbar {
+    background: #047857;
+}
+
+.theme-preview-ambar .preview-sidebar,
+.theme-preview-ambar .preview-topbar {
+    background: #78350f;
+}
+
+.theme-preview-cobre .preview-sidebar,
+.theme-preview-cobre .preview-topbar {
+    background: #92400e;
+}
+
+.theme-preview-azul-electrico .preview-sidebar,
+.theme-preview-azul-electrico .preview-topbar {
+    background: #1e40af;
+}
+
+.theme-preview-verde-lima .preview-sidebar,
+.theme-preview-verde-lima .preview-topbar {
+    background: #365314;
+}
+
+.theme-preview-magenta .preview-sidebar,
+.theme-preview-magenta .preview-topbar {
+    background: #831843;
+}
+
+.theme-preview-azul-acero .preview-sidebar,
+.theme-preview-azul-acero .preview-topbar {
+    background: #1e3a8a;
+}
+
+.theme-preview-naranja-fuego .preview-sidebar,
+.theme-preview-naranja-fuego .preview-topbar {
+    background: #c2410c;
+}
+
+.theme-preview-verde-esmeralda-oscuro .preview-sidebar,
+.theme-preview-verde-esmeralda-oscuro .preview-topbar {
+    background: #022c22;
+}
+
+.theme-preview-violeta-oscuro .preview-sidebar,
+.theme-preview-violeta-oscuro .preview-topbar {
+    background: #4c1d95;
+}
+
+/* ========================================================================
+   Dropdown del usuario en el navbar
+   (consolidado desde dropdown-fix.css)
+   ======================================================================== */
+
+.navbar-nav .dropdown-menu {
+    display: none !important;
+    position: absolute !important;
+    top: 100% !important;
+    right: 0 !important;
+    left: auto !important;
+    z-index: 1000 !important;
+    min-width: 10rem !important;
+    padding: 0.5rem 0 !important;
+    margin: 0.5rem 0 0 !important;
+    font-size: 0.875rem !important;
+    color: var(--theme-text-secondary, #8b92a9) !important;
+    text-align: left !important;
+    list-style: none !important;
+    background: var(--theme-bg-primary, #000000) !important;
+    background-clip: padding-box !important;
+    border: 1px solid var(--theme-border, rgba(255, 255, 255, 0.1)) !important;
+    border-radius: 0.375rem !important;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+}
+
+.navbar-nav .dropdown-menu.show {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+.navbar-nav .dropdown-item {
+    display: block !important;
+    width: 100% !important;
+    padding: 0.25rem 1rem !important;
+    clear: both !important;
+    font-weight: 400 !important;
+    color: var(--theme-text-secondary, #8b92a9) !important;
+    text-align: inherit !important;
+    text-decoration: none !important;
+    white-space: nowrap !important;
+    background-color: transparent !important;
+    border: 0 !important;
+    transition: all 0.2s ease !important;
+}
+
+.navbar-nav .dropdown-item:hover,
+.navbar-nav .dropdown-item:focus {
+    color: var(--theme-text-primary, #ffffff) !important;
+    background-color: var(--theme-hover-bg, rgba(255, 255, 255, 0.1)) !important;
+}
+
+.nav-item.dropdown {
+    position: relative !important;
+}
+
+.nav-item.dropdown .nav-link {
+    cursor: pointer !important;
+    pointer-events: auto !important;
+}
+
+#navbarDropdown {
+    cursor: pointer !important;
+    pointer-events: auto !important;
+}
+
+#navbarDropdown:hover {
+    background-color: var(--theme-hover-bg, rgba(255, 255, 255, 0.1)) !important;
+}
+
+.user-dropdown-header {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.75rem !important;
+    padding: 0.75rem 1rem !important;
+}
+
+.user-avatar {
+    width: 36px !important;
+    height: 36px !important;
+    border-radius: 50% !important;
+    background: var(--theme-hover-bg, rgba(255, 255, 255, 0.1)) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: var(--theme-text-primary, #ffffff) !important;
+}
+
+.user-avatar i {
+    font-size: 0.9rem !important;
+}
+
+.user-info {
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.user-name {
+    color: var(--theme-text-primary, #ffffff) !important;
+    font-weight: 600 !important;
+    line-height: 1.2 !important;
+}
+
+.user-email {
+    color: var(--theme-text-secondary, #8b92a9) !important;
+    font-size: 0.8rem !important;
+}
