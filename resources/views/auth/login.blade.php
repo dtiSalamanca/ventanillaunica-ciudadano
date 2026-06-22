@@ -84,7 +84,7 @@
                             <button type="submit" class="btn-primary-login">Iniciar sesión</button>
                         </div>
 
-                        <h5 style="text-align: center;">ó</h5>
+                        <h5 style="text-align: center; font-weight: bold;">ó</h5>
 
                         <div class="form-field form-field--submit">
                             <a href="{{ route('register') }}" class="btn-register">Registrate</a>

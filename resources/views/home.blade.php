@@ -15,6 +15,18 @@
                     @endif
 
                     {{ __('You are logged in!') }}
+
+                    <div class="mt-3">
+                        <a class="btn btn-danger" href="{{ route('logout') }}"
+                           onclick="event.preventDefault();
+                                         document.getElementById('logout-form').submit();">
+                            {{ __('Cerrar sesión') }}
+                        </a>
+
+                        <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+                            @csrf
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>

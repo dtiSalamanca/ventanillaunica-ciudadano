@@ -326,10 +326,10 @@ body {
 .btn-register {
     display: inline-block;
     width: 100%;
-    border: 2px solid var(--color-accent);
+    border: 2px solid #1e5c50;
     border-radius: 10px;
     background: transparent;
-    color: var(--color-accent);
+    color: #1e5c50;
     padding: 12px 16px;
     font-weight: 700;
     letter-spacing: 0.2px;
@@ -343,7 +343,7 @@ body {
 }
 
 .btn-register:hover {
-    background: var(--color-accent);
+    background: #1e5c50;
     color: #fff;
     text-decoration: none;
 }
