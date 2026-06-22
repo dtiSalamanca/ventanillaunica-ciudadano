@@ -1,0 +1,359 @@
+:root {
+    --color-bg: #f5f7fb;
+    --color-surface: #ffffff;
+    --color-text: #1f2937;
+    --color-muted: #6b7280;
+    --color-accent: #2563eb;
+    --radius: 12px;
+    --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.08);
+    --shadow-sm: 0 8px 18px rgba(0, 0, 0, 0.06);
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    height: 100%;
+}
+
+body {
+    margin: 0;
+    font-family:
+        system-ui,
+        -apple-system,
+        Segoe UI,
+        Roboto,
+        Helvetica,
+        Arial,
+        "Noto Sans",
+        "Apple Color Emoji",
+        "Segoe UI Emoji",
+        sans-serif;
+    color: var(--color-text);
+    background: var(--color-bg);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.auth-page {
+    min-height: 100vh;
+}
+
+.auth-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    min-height: 100vh;
+}
+
+.auth-panel {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 32px;
+    background: #ffffff;
+}
+
+.auth-card {
+    background: var(--color-surface);
+    width: 100%;
+    max-width: 660px;
+    border-radius: var(--radius);
+    padding: 32px;
+}
+
+.auth-header {
+    margin-bottom: 24px;
+    text-align: center;
+}
+
+.auth-title {
+    margin: 0 0 8px;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.auth-subtitle {
+    margin: 0;
+    color: var(--color-muted);
+    font-weight: 500;
+    font-size: 0.95rem;
+}
+
+.auth-badge {
+    display: inline-block;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: #eef2ff;
+    color: var(--color-accent);
+    font-weight: 700;
+    font-size: 0.75rem;
+    letter-spacing: 0.3px;
+    margin-bottom: 10px;
+}
+
+.auth-logo {
+    display: block;
+    width: auto;
+    height: 100px;
+    margin: 0 auto 12px;
+}
+
+.form-field {
+    margin-bottom: 16px;
+}
+
+.form-field--float {
+    position: relative;
+}
+
+.form-field--submit {
+    margin-top: 8px;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.input-control {
+    width: 100%;
+    appearance: none;
+    border: 1px solid #e5e7eb;
+    background: #f9fafb;
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 0.95rem;
+    transition:
+        border-color 0.2s ease,
+        background 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.input-control:focus {
+    outline: none;
+    background: #fff;
+    border-color: #952e48;
+    box-shadow: 0 0 0 3px #7f1d1d;
+}
+
+.input-control--float {
+    padding: 16px 14px 10px;
+}
+
+.float-label {
+    position: absolute;
+    top: 50%;
+    left: 14px;
+    transform: translateY(-50%);
+    color: var(--color-muted);
+    background: transparent;
+    padding: 0 4px;
+    pointer-events: none;
+    transition: all 0.18s ease;
+}
+
+.input-control--float:focus + .float-label,
+.input-control--float:not(:placeholder-shown) + .float-label {
+    top: -8px;
+    background: var(--color-surface);
+    font-size: 0.78rem;
+    color: #000000;
+}
+
+.input-has-suffix {
+    padding-right: 44px;
+}
+
+.input-toggle {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: var(--color-muted);
+    cursor: pointer;
+    font-weight: 700;
+}
+
+.input-toggle:focus {
+    outline: none;
+    color: var(--color-accent);
+}
+
+.btn-primary-login {
+    display: inline-block;
+    width: 100%;
+    border: none;
+    border-radius: 10px;
+    background: #952e48;
+    color: #fff;
+    padding: 12px 16px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    transition:
+        transform 0.05s ease,
+        filter 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.caps-hint {
+    display: none;
+    margin-top: 6px;
+    color: var(--color-muted);
+    font-size: 0.8rem;
+}
+
+.error-text {
+    color: #dc2626;
+}
+
+.auth-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 8px 0 16px;
+}
+
+.checkbox {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.checkbox input {
+    width: 18px;
+    height: 18px;
+}
+
+.link {
+    color: var(--color-accent);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.link:hover {
+    text-decoration: underline;
+}
+
+.btn-primary {
+    display: inline-block;
+    width: 100%;
+    border: none;
+    border-radius: 10px;
+    background: var(--color-accent);
+    color: #fff;
+    padding: 12px 16px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    transition:
+        transform 0.05s ease,
+        filter 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.btn-primary:hover {
+    filter: brightness(0.95);
+}
+
+.btn-primary:active {
+    transform: translateY(1px);
+}
+
+.alert {
+    margin-bottom: 12px;
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 0.95rem;
+}
+
+.alert-success {
+    border: 1px solid #a7f3d0;
+    background: #ecfdf5;
+    color: #065f46;
+}
+
+.alert-danger {
+    border: 1px solid #fecaca;
+    background: #fef2f2;
+    color: #7f1d1d;
+}
+
+.is-hidden {
+    display: none;
+}
+
+.auth-illustration {
+    min-height: 100vh;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+
+.auth-illustration--login {
+    background-image: url("/images/salamanca.jpg");
+}
+
+@media (max-width: 992px) {
+    .auth-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .auth-illustration {
+        order: -1;
+        min-height: 38vh;
+    }
+
+    .auth-panel {
+        padding: 28px 20px;
+    }
+
+    .auth-card {
+        padding: 24px;
+    }
+}
+
+.btn-register {
+    display: inline-block;
+    width: 100%;
+    border: 2px solid var(--color-accent);
+    border-radius: 10px;
+    background: transparent;
+    color: var(--color-accent);
+    padding: 12px 16px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+        background 0.2s ease,
+        color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.btn-register:hover {
+    background: var(--color-accent);
+    color: #fff;
+    text-decoration: none;
+}
+
+@media (max-width: 768px) {
+    .auth-illustration {
+        display: none;
+    }
+
+    .auth-grid {
+        grid-template-columns: 1fr;
+    }
+}

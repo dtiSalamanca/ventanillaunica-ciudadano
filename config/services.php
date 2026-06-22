@@ -35,4 +35,12 @@ return [
         ],
     ],
 
+    'recaptcha_v3' => [
+        'enabled' => env('RECAPTCHA_V3_ENABLED', false),
+        'site_key' => env('RECAPTCHA_V3_SITE_KEY'),
+        'secret_key' => env('RECAPTCHA_V3_SECRET_KEY'),
+        'action' => env('RECAPTCHA_V3_ACTION', 'login'),
+        'score_threshold' => env('RECAPTCHA_V3_SCORE_THRESHOLD', 0.5),
+    ],
+
 ];

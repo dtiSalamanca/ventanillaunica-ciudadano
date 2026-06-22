@@ -1,73 +1,104 @@
-@extends('layouts.app')
+@extends('layouts.login')
+
+@section('head')
+    <link rel="stylesheet" href="{{ asset('css/auth/login.css') }}">
+
+    @if (config('services.recaptcha_v3.enabled') && filled(config('services.recaptcha_v3.site_key')))
+        <script
+            src="https://www.google.com/recaptcha/api.js?render={{ urlencode((string) config('services.recaptcha_v3.site_key')) }}"
+            async defer></script>
+    @endif
+@endsection
 
 @section('content')
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header">{{ __('Login') }}</div>
+    <div class="auth-page">
+        <div class="auth-grid">
+            <!-- Columna izquierda: panel con el formulario -->
+            <div class="auth-panel">
+                <div class="auth-card">
+                    <div class="auth-header">
+                        <!-- <span class="auth-badge">Iniciar sesión</span> -->
+                        <img src="{{ asset('images/escudoArma.png') }}" alt="Escudo de armas" class="auth-logo">
+                        <h1 class="auth-title">SISTEMA DE ADMINISTRACIÓN DE LA VENTANILLA ÚNICA</h1>
+                        <p class="auth-subtitle">Accede a la plataforma de la Ventanilla Única de
+                            Salamanca, Guanajuato.
+                        </p>
+                    </div>
 
-                <div class="card-body">
-                    <form method="POST" action="{{ route('login') }}">
+                    @if (session('status'))
+                        <div class="alert alert-success" role="alert">{{ session('status') }}</div>
+                    @endif
+
+                    @error('ad')
+                        <div class="alert alert-danger" role="alert">{{ $message }}</div>
+                    @enderror
+
+                    @error('email')
+                        <div class="alert alert-danger" role="alert">{{ $message }}</div>
+                    @enderror
+
+                    @error('password')
+                        <div class="alert alert-danger" role="alert">{{ $message }}</div>
+                    @enderror
+
+                    <div id="recaptchaErrorContainer"
+                        class="alert alert-danger @unless ($errors->has('recaptcha_token')) is-hidden @endunless" role="alert">
+                        <span id="recaptchaError">{{ $errors->first('recaptcha_token') }}</span>
+                    </div>
+
+                    <form id="loginForm" method="POST" action="{{ route('login') }}" novalidate
+                        data-recaptcha-enabled='@json((bool) config('services.recaptcha_v3.enabled') && filled(config('services.recaptcha_v3.site_key')))'
+                        data-recaptcha-site-key="{{ (string) config('services.recaptcha_v3.site_key') }}"
+                        data-recaptcha-action="{{ (string) config('services.recaptcha_v3.action', 'login') }}">
                         @csrf
 
-                        <div class="row mb-3">
-                            <label for="email" class="col-md-4 col-form-label text-md-end">{{ __('Email Address') }}</label>
+                        <!-- Campo oculto: Rol de Usuario (valor por defecto: administrador) -->
+                        <input type="hidden" name="role" value="administrador">
+                        <input id="recaptcha_token" type="hidden" name="recaptcha_token" value="">
 
-                            <div class="col-md-6">
-                                <input id="email" type="email" class="form-control @error('email') is-invalid @enderror" name="email" value="{{ old('email') }}" required autocomplete="email" autofocus>
-
-                                @error('email')
-                                    <span class="invalid-feedback" role="alert">
-                                        <strong>{{ $message }}</strong>
-                                    </span>
-                                @enderror
-                            </div>
+                        <!-- Campo: Correo Electrónico -->
+                        <div class="form-field form-field--float">
+                            <input id="email" type="email" name="email" value="{{ old('email') }}" required
+                                autocomplete="email" autofocus class="input-control input-control--float" placeholder=" "
+                                aria-describedby="emailError" aria-invalid="false">
+                            <label for="email" class="float-label">Correo electrónico</label>
+                            <small id="emailError" class="error-text" role="alert"></small>
                         </div>
 
-                        <div class="row mb-3">
-                            <label for="password" class="col-md-4 col-form-label text-md-end">{{ __('Password') }}</label>
-
-                            <div class="col-md-6">
-                                <input id="password" type="password" class="form-control @error('password') is-invalid @enderror" name="password" required autocomplete="current-password">
-
-                                @error('password')
-                                    <span class="invalid-feedback" role="alert">
-                                        <strong>{{ $message }}</strong>
-                                    </span>
-                                @enderror
-                            </div>
+                        <!-- Campo: Contraseña (label integrado) -->
+                        <div class="form-field form-field--float">
+                            <input id="password" type="password" name="password" required minlength="6"
+                                autocomplete="current-password" class="input-control input-control--float input-has-suffix"
+                                placeholder=" " aria-describedby="passwordError capsHint" aria-invalid="false">
+                            <label for="password" class="float-label">Contraseña</label>
+                            <button type="button" id="togglePassword" class="input-toggle"
+                                aria-label="Mostrar u ocultar contraseña">Ver</button>
+                            <small id="passwordError" class="error-text" role="alert"></small>
+                            <div id="capsHint" class="caps-hint">Bloq Mayús activado</div>
                         </div>
 
-                        <div class="row mb-3">
-                            <div class="col-md-6 offset-md-4">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="remember" id="remember" {{ old('remember') ? 'checked' : '' }}>
+                        <!-- Fila: Recordarme y ¿Olvidaste tu contraseña? -->
 
-                                    <label class="form-check-label" for="remember">
-                                        {{ __('Remember Me') }}
-                                    </label>
-                                </div>
-                            </div>
+                        <!-- Botón de envío -->
+                        <div class="form-field form-field--submit">
+                            <button type="submit" class="btn-primary-login">Iniciar sesión</button>
                         </div>
 
-                        <div class="row mb-0">
-                            <div class="col-md-8 offset-md-4">
-                                <button type="submit" class="btn btn-primary">
-                                    {{ __('Login') }}
-                                </button>
+                        <h5 style="text-align: center;">ó</h5>
 
-                                @if (Route::has('password.request'))
-                                    <a class="btn btn-link" href="{{ route('password.request') }}">
-                                        {{ __('Forgot Your Password?') }}
-                                    </a>
-                                @endif
-                            </div>
+                        <div class="form-field form-field--submit">
+                            <a href="{{ route('register') }}" class="btn-register">Registrate</a>
                         </div>
                     </form>
                 </div>
             </div>
+
+            <!-- Columna derecha: ilustración a pantalla completa -->
+            <div class="auth-illustration auth-illustration--login"></div>
         </div>
     </div>
-</div>
+@endsection
+
+@section('scripts')
+    <script src="{{ asset('js/auth/login.js') }}" defer></script>
 @endsection
