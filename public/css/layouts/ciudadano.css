@@ -572,7 +572,6 @@
 .sb-sidenav .nav-link.active-current {
     background-color: var(--theme-active-bg);
     color: var(--theme-text-primary);
-    border-left: 4px solid var(--theme-accent);
     font-weight: 800;
 }
 

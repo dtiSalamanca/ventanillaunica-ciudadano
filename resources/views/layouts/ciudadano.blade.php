@@ -68,14 +68,12 @@
                         </div>
                     </li>
                     <li>
-                        <hr class="dropdown-divider">
+                        <a class="dropdown-item" href="#">
+                            <i class="fas fa-user-circle me-2"></i><span class="highlight-text">{{ __('Mi perfil') }}</span>
+                        </a>
                     </li>
                     <li>
-                        <a class="dropdown-item" href="#"
-                            onclick="event.preventDefault(); abrirPersonalizacionColores();">
-                            <i class="fas fa-palette me-2"></i><span class="highlight-text">Cambiar colores de la
-                                interfaz</span>
-                        </a>
+                        <hr class="dropdown-divider">
                     </li>
                     <li>
                         <a class="dropdown-item" href="{{ route('logout') }}"
