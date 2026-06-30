@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Rules\RecaptchaV3;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -72,7 +73,16 @@ class VerificationController extends Controller
      */
     public function resend(Request $request): RedirectResponse
     {
-        $request->validate(['email' => ['required', 'email']]);
+        $rules = ['email' => ['required', 'email']];
+
+        if ($this->recaptchaEnabled()) {
+            $rules['recaptcha_token'] = ['required', new RecaptchaV3(
+                'verification_resend',
+                (float) config('services.recaptcha_v3.score_threshold', 0.5),
+            )];
+        }
+
+        $request->validate($rules);
 
         $user = User::where('email', $request->input('email'))->first();
 
@@ -81,5 +91,15 @@ class VerificationController extends Controller
         }
 
         return back()->with('status', 'Si la cuenta existe y no ha sido verificada, te hemos enviado un nuevo correo de verificación.');
+    }
+
+    /**
+     * Determine if reCAPTCHA v3 is enabled and properly configured.
+     */
+    private function recaptchaEnabled(): bool
+    {
+        return config('services.recaptcha_v3.enabled', false)
+            && filled(config('services.recaptcha_v3.site_key'))
+            && filled(config('services.recaptcha_v3.secret_key'));
     }
 }

@@ -21,7 +21,7 @@ document.addEventListener("DOMContentLoaded", function () {
         "recaptchaErrorContainer",
     );
     const submitButton = form.querySelector('button[type="submit"]');
-    const defaultSubmitLabel = submitButton ? submitButton.textContent : "";
+    const defaultSubmitContent = submitButton ? submitButton.innerHTML : "";
     const recaptchaEnabled = form.dataset.recaptchaEnabled === "true";
     const recaptchaSiteKey = form.dataset.recaptchaSiteKey ?? "";
     const recaptchaAction = form.dataset.recaptchaAction ?? "register";
@@ -128,6 +128,17 @@ document.addEventListener("DOMContentLoaded", function () {
         return true;
     }
 
+    function setSubmitting(isSubmitting, label) {
+        if (!submitButton) {
+            return;
+        }
+
+        submitButton.disabled = isSubmitting;
+        submitButton.innerHTML = isSubmitting
+            ? '<span class="btn-spinner" aria-hidden="true"></span>' + label
+            : defaultSubmitContent;
+    }
+
     function executeRecaptcha() {
         return new Promise(function (resolve, reject) {
             if (typeof window.grecaptcha === "undefined") {
@@ -203,15 +214,13 @@ document.addEventListener("DOMContentLoaded", function () {
         setRecaptchaError("");
 
         if (!recaptchaEnabled) {
+            setSubmitting(true, "Creando cuenta...");
             return;
         }
 
         event.preventDefault();
 
-        if (submitButton) {
-            submitButton.disabled = true;
-            submitButton.textContent = "Validando...";
-        }
+        setSubmitting(true, "Validando...");
 
         try {
             const token = await executeRecaptcha();
@@ -221,16 +230,14 @@ document.addEventListener("DOMContentLoaded", function () {
             }
 
             recaptchaTokenInput.value = token;
+            setSubmitting(true, "Creando cuenta...");
             form.submit();
         } catch (error) {
             setRecaptchaError(
                 "No fue posible completar la validacion de seguridad. Intenta nuevamente.",
             );
 
-            if (submitButton) {
-                submitButton.disabled = false;
-                submitButton.textContent = defaultSubmitLabel;
-            }
+            setSubmitting(false);
         }
     });
 });

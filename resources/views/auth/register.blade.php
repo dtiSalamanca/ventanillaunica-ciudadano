@@ -24,7 +24,10 @@
                     </div>
 
                     @if (session('status'))
-                        <div class="alert alert-success" role="alert">{{ session('status') }}</div>
+                        <div class="alert alert-success" role="status">
+                            <span class="alert-icon" aria-hidden="true">&check;</span>
+                            <span>{{ session('status') }}</span>
+                        </div>
                     @endif
 
                     @error('name')
