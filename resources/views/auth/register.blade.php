@@ -19,7 +19,7 @@
                 <div class="auth-card">
                     <div class="auth-header">
                         <img src="{{ asset('images/escudoArma.png') }}" alt="Escudo de armas" class="auth-logo">
-                        <h1 class="auth-title">SISTEMA DE ADMINISTRACIÓN DE LA VENTANILLA ÚNICA</h1>
+                        <h1 class="auth-title">REGISTRO DE CUENTA DE LA VENTANILLA ÚNICA DE SALAMANCA, GUANAJUATO</h1>
                         <p class="auth-subtitle">Crea tu cuenta en la Ventanilla Única de Salamanca, Guanajuato.</p>
                     </div>
 

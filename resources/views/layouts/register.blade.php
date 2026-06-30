@@ -8,7 +8,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="shortcut icon" href="{{ asset('images/favicon.png') }}" />
 
-    <title>Sistema de Administración de la Ventanilla Única | Registro</title>
+    <title>Ventanilla Única de Salamanca, Guanajuato | Registro</title>
 
     <!-- Fuente: Montserrat (estilo profesional y legible) -->
     <link rel="preconnect" href="https://fonts.gstatic.com">
