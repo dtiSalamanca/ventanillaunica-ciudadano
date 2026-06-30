@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Rules\RecaptchaV3;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Http\Request;
@@ -71,5 +72,21 @@ class LoginController extends Controller
         return config('services.recaptcha_v3.enabled', false)
             && filled(config('services.recaptcha_v3.site_key'))
             && filled(config('services.recaptcha_v3.secret_key'));
+    }
+
+    /**
+     * Reject login for users who haven't verified their email yet.
+     *
+     * @param  User  $user
+     */
+    protected function authenticated(Request $request, $user): void
+    {
+        if (! $user->hasVerifiedEmail()) {
+            $this->guard()->logout();
+
+            throw ValidationException::withMessages([
+                $this->username() => ['Debes verificar tu correo electrónico antes de iniciar sesión. Revisa tu bandeja de entrada.'],
+            ]);
+        }
     }
 }

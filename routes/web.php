@@ -8,6 +8,10 @@ Route::get('/', function () {
     return view('auth.login');
 });
 
-Auth::routes();
+Auth::routes(['verify' => true]);
+
+Route::get('/email/resend', function () {
+    return view('auth.resend-verification');
+})->name('verification.resend.form');
 
 Route::get('/home', [HomeController::class, 'index'])->name('home');

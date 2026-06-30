@@ -13,7 +13,7 @@
                     <div class="auth-header">
                         <img src="{{ asset('images/escudoArma.png') }}" alt="Escudo de armas" class="auth-logo">
                         <h1 class="auth-title">SISTEMA DE ADMINISTRACIÓN DE LA VENTANILLA ÚNICA</h1>
-                        <p class="auth-subtitle">Restablece tu contraseña para recuperar el acceso.</p>
+                        <p class="auth-subtitle">Reenvía el correo de verificación de tu cuenta.</p>
                     </div>
 
                     @if (session('status'))
@@ -24,7 +24,7 @@
                         <div class="alert alert-danger" role="alert">{{ $message }}</div>
                     @enderror
 
-                    <form method="POST" action="{{ route('password.email') }}" novalidate>
+                    <form method="POST" action="{{ route('verification.resend') }}" novalidate>
                         @csrf
 
                         <!-- Campo: Correo Electrónico -->
@@ -38,14 +38,11 @@
 
                         <!-- Botón de envío -->
                         <div class="form-field form-field--submit">
-                            <button type="submit" class="btn-primary-login">Enviar enlace de restablecimiento</button>
+                            <button type="submit" class="btn-primary-login">Reenviar correo de verificación</button>
                         </div>
 
                         <div class="form-field form-field--submit">
-                            <a href="{{ route('login') }}" class="btn-back-login">
-                                <span class="btn-back-login__arrow">&larr;</span>
-                                Volver al inicio de sesión
-                            </a>
+                            <a href="{{ route('login') }}" class="btn-register">Volver a iniciar sesión</a>
                         </div>
                     </form>
                 </div>

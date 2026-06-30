@@ -77,7 +77,13 @@
                             <div id="capsHint" class="caps-hint">Bloq Mayús activado</div>
                         </div>
 
-                        <!-- Fila: Recordarme y ¿Olvidaste tu contraseña? -->
+                        <div class="auth-row" style="justify-content: flex-end;">
+                            <a href="{{ route('password.request') }}" class="link">¿Olvidaste tu contraseña?</a>
+                        </div>
+
+                        <div class="auth-row" style="justify-content: flex-end;">
+                            <a href="{{ route('verification.resend.form') }}" class="link">¿No verificaste tu cuenta? Reenviar correo</a>
+                        </div>
 
                         <!-- Botón de envío -->
                         <div class="form-field form-field--submit">

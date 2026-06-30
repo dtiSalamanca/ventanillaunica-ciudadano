@@ -348,6 +348,41 @@ body {
     text-decoration: none;
 }
 
+.btn-back-login {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    border: 2px solid #d1d5db;
+    border-radius: 10px;
+    background: transparent;
+    color: var(--color-muted);
+    padding: 12px 16px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    letter-spacing: 0.2px;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+        background 0.2s ease,
+        color 0.2s ease,
+        border-color 0.2s ease;
+}
+
+.btn-back-login:hover {
+    background: #f3f4f6;
+    color: var(--color-text);
+    border-color: #9ca3af;
+    text-decoration: none;
+}
+
+.btn-back-login__arrow {
+    font-size: 1.1rem;
+    line-height: 1;
+}
+
 @media (max-width: 768px) {
     .auth-illustration {
         display: none;
