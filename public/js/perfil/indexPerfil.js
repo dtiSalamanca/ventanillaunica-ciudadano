@@ -1,0 +1,303 @@
+document.addEventListener("DOMContentLoaded", function () {
+    initBarraProgreso();
+    initFiltroDocumentos();
+    initTabs();
+    initSubirDocumento();
+    initPollingEstatus();
+});
+
+const INTERVALO_POLLING_MS = 15000;
+
+function initPollingEstatus() {
+    const url = window.perfilConfig?.urlEstatusDocumentos;
+    if (!url) return;
+
+    setInterval(() => consultarEstatusDocumentos(url), INTERVALO_POLLING_MS);
+}
+
+async function consultarEstatusDocumentos(url) {
+    try {
+        const respuesta = await fetch(url, {
+            headers: { Accept: "application/json" },
+        });
+        if (!respuesta.ok) return;
+
+        const datos = await respuesta.json();
+        let huboCambios = false;
+
+        datos.documentos.forEach((documento) => {
+            const card = document.querySelector(
+                `.documento-card[data-catalogo-id="${documento.fk_documento_personal}"]`
+            );
+            if (!card) return;
+
+            const estatusActual = card.dataset.estatusNum;
+            if (estatusActual !== undefined && Number(estatusActual) === documento.estatus) {
+                return;
+            }
+
+            actualizarCard(card, documento);
+            huboCambios = true;
+        });
+
+        if (huboCambios) {
+            actualizarContadores();
+        }
+    } catch {
+        // Silencioso: se reintenta en el siguiente ciclo de polling.
+    }
+}
+
+function initBarraProgreso() {
+    const barra = document.querySelector(".progreso-barra-fill");
+    if (!barra) return;
+
+    const porcentaje = barra.dataset.progreso || 0;
+    requestAnimationFrame(() => {
+        barra.style.width = `${porcentaje}%`;
+    });
+}
+
+function initFiltroDocumentos() {
+    const botones = document.querySelectorAll(".filtro-btn");
+    const cards = document.querySelectorAll(".documento-card");
+    const mensajeVacio = document.querySelector(".mensaje-filtro-vacio");
+    if (!botones.length || !cards.length) return;
+
+    botones.forEach((btn) => {
+        btn.addEventListener("click", () => {
+            botones.forEach((b) => b.classList.remove("filtro-btn--active"));
+            btn.classList.add("filtro-btn--active");
+
+            const filtro = btn.dataset.filtro;
+            let visibles = 0;
+
+            cards.forEach((card) => {
+                const mostrar =
+                    filtro === "todos" || card.dataset.estatus === filtro;
+                card.style.display = mostrar ? "" : "none";
+                if (mostrar) visibles++;
+            });
+
+            if (mensajeVacio) {
+                mensajeVacio.hidden = visibles > 0;
+            }
+        });
+    });
+}
+
+function initTabs() {
+    const tabs = document.querySelectorAll('.profile-tabs__tab:not(.profile-tabs__tab--disabled)');
+    if (tabs.length <= 1) return;
+
+    tabs.forEach((tab) => {
+        tab.addEventListener("click", () => {
+            const panelId = tab.getAttribute("aria-controls");
+            if (!panelId) return;
+
+            document.querySelectorAll(".profile-tabs__tab").forEach((t) => {
+                t.classList.remove("profile-tabs__tab--active");
+                t.setAttribute("aria-selected", "false");
+            });
+
+            tab.classList.add("profile-tabs__tab--active");
+            tab.setAttribute("aria-selected", "true");
+        });
+    });
+
+    const tablist = document.querySelector(".profile-tabs");
+    if (!tablist) return;
+
+    tablist.addEventListener("keydown", (e) => {
+        if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+
+        const enabledTabs = Array.from(tabs);
+        const current = enabledTabs.findIndex(
+            (t) => t.getAttribute("aria-selected") === "true"
+        );
+        if (current === -1) return;
+
+        let next;
+        if (e.key === "ArrowRight") {
+            next = (current + 1) % enabledTabs.length;
+        } else {
+            next = (current - 1 + enabledTabs.length) % enabledTabs.length;
+        }
+
+        enabledTabs[next].focus();
+        enabledTabs[next].click();
+    });
+}
+
+function initSubirDocumento() {
+    document.querySelectorAll(".form-subir-inline").forEach(bindFormSubir);
+}
+
+function bindFormSubir(form) {
+    const input = form.querySelector(".input-archivo-oculto");
+    const btn   = form.querySelector(".btn-trigger-archivo");
+    const card  = form.closest(".documento-card");
+
+    if (!input || !btn || !card) return;
+
+    btn.addEventListener("click", () => input.click());
+
+    input.addEventListener("change", async () => {
+        if (input.files.length === 0) return;
+
+        const archivo = input.files[0];
+        const maxBytes = 10 * 1024 * 1024;
+        const extension = archivo.name.split(".").pop().toLowerCase();
+
+        if (extension !== "pdf") {
+            mostrarError("Solo se permiten archivos PDF.");
+            input.value = "";
+            return;
+        }
+
+        if (archivo.size > maxBytes) {
+            mostrarError("El archivo no puede superar los 10 MB.");
+            input.value = "";
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Subiendo…';
+
+        const formData = new FormData(form);
+
+        try {
+            const respuesta = await fetch(form.action, {
+                method: "POST",
+                headers: {
+                    Accept: "application/json",
+                    "X-CSRF-TOKEN": window.adminConfig?.csrfToken ?? "",
+                },
+                body: formData,
+            });
+
+            const datos = await respuesta.json();
+
+            if (!respuesta.ok) {
+                const mensaje = datos.errors?.archivo?.[0]
+                    ?? datos.message
+                    ?? "Ocurrió un error al subir el documento.";
+                mostrarError(mensaje);
+                return;
+            }
+
+            actualizarCard(card, datos);
+            actualizarContadores();
+
+        } catch {
+            mostrarError("No se pudo conectar con el servidor. Intenta de nuevo.");
+        } finally {
+            input.value = "";
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-upload me-1"></i>Cargar';
+        }
+    });
+}
+
+function actualizarCard(card, datos) {
+    // Icono verde
+    card.classList.add("documento-card--cargado");
+    card.dataset.estatus = "cargado";
+    card.dataset.estatusNum = datos.estatus;
+
+    // Ocultar vigencia hasta aprobación y agregar fecha de carga
+    const meta = card.querySelector(".documento-card__meta");
+    if (meta) {
+        const vigencia = meta.querySelector(".documento-card__vigencia");
+        if (vigencia && datos.estatus !== 2) vigencia.remove();
+
+        if (!meta.querySelector(".documento-card__fecha")) {
+            const fecha = document.createElement("span");
+            fecha.className = "documento-card__fecha";
+            fecha.innerHTML = `<i class="fas fa-calendar-check me-1"></i>Cargado el ${datos.fecha_registro}`;
+            meta.appendChild(fecha);
+        }
+    }
+
+    // Reemplazar sección de acciones
+    const acciones = card.querySelector(".documento-card__acciones");
+    if (!acciones) return;
+
+    const badgeHtml = badgeEstatus(datos.estatus);
+    const reenviarHtml = datos.estatus === 0
+        ? `
+        <form action="${datos.url_subir}"
+              method="POST"
+              enctype="multipart/form-data"
+              class="form-subir-inline">
+            <input type="hidden" name="_token" value="${window.adminConfig?.csrfToken ?? ""}">
+            <input type="file"
+                   name="archivo"
+                   class="input-archivo-oculto"
+                   accept=".pdf"
+                   aria-label="Volver a subir documento">
+            <button type="button" class="btn-accion btn-accion--cargar btn-trigger-archivo" title="Volver a subir">
+                <i class="fas fa-rotate-right me-1"></i>Reenviar
+            </button>
+        </form>
+        `
+        : "";
+
+    acciones.innerHTML = `
+        ${badgeHtml}
+        <a href="${datos.url_descargar}"
+           class="btn-accion btn-accion--ver"
+           target="_blank"
+           title="Ver documento">
+            <i class="fas fa-eye"></i>
+        </a>
+        ${reenviarHtml}
+    `;
+
+    const formReenviar = acciones.querySelector(".form-subir-inline");
+    if (formReenviar) {
+        bindFormSubir(formReenviar);
+    }
+}
+
+function badgeEstatus(estatus) {
+    if (estatus === 2) {
+        return '<span class="badge-estatus badge-estatus--aprobado"><i class="fas fa-circle-check me-1"></i>Aprobado</span>';
+    }
+    if (estatus === 1) {
+        return '<span class="badge-estatus badge-estatus--revision"><i class="fas fa-hourglass-half me-1"></i>En revisión</span>';
+    }
+    return '<span class="badge-estatus badge-estatus--rechazado"><i class="fas fa-circle-xmark me-1"></i>Rechazado</span>';
+}
+
+function actualizarContadores() {
+    const total     = document.querySelectorAll(".documento-card").length;
+    const cargados  = document.querySelectorAll(".documento-card--cargado").length;
+    const pendientes = total - cargados;
+    const porcentaje = total > 0 ? Math.round((cargados / total) * 100) : 0;
+
+    const elTotal     = document.querySelector(".profile-stat:nth-child(1) .profile-stat__valor");
+    const elCargados  = document.querySelector(".profile-stat--ok .profile-stat__valor");
+    const elPendientes = document.querySelector(".profile-stat--pendiente .profile-stat__valor");
+    const elPorcentaje = document.querySelector(".completeness-card__valor");
+    const barra       = document.querySelector(".progreso-barra-fill");
+
+    if (elTotal)      elTotal.textContent      = total;
+    if (elCargados)   elCargados.textContent   = cargados;
+    if (elPendientes) elPendientes.textContent = pendientes;
+    if (elPorcentaje) elPorcentaje.textContent = porcentaje + "%";
+    if (barra)        barra.style.width        = porcentaje + "%";
+}
+
+function mostrarError(mensaje) {
+    if (window.Swal) {
+        Swal.fire({
+            icon: "error",
+            title: "Error al subir",
+            text: mensaje,
+            confirmButtonColor: "#dc2626",
+        });
+    } else {
+        alert(mensaje);
+    }
+}
