@@ -2,6 +2,7 @@ document.addEventListener("DOMContentLoaded", function () {
     initBarraProgreso();
     initFiltroDocumentos();
     initTabs();
+    initSubirDocumento();
 });
 
 function initBarraProgreso() {
@@ -83,4 +84,149 @@ function initTabs() {
         enabledTabs[next].focus();
         enabledTabs[next].click();
     });
+}
+
+function initSubirDocumento() {
+    document.querySelectorAll(".form-subir-inline").forEach((form) => {
+        const input = form.querySelector(".input-archivo-oculto");
+        const btn   = form.querySelector(".btn-trigger-archivo");
+        const card  = form.closest(".documento-card");
+
+        if (!input || !btn || !card) return;
+
+        btn.addEventListener("click", () => input.click());
+
+        input.addEventListener("change", async () => {
+            if (input.files.length === 0) return;
+
+            const archivo = input.files[0];
+            const maxBytes = 10 * 1024 * 1024;
+            const extension = archivo.name.split(".").pop().toLowerCase();
+
+            if (extension !== "pdf") {
+                mostrarError("Solo se permiten archivos PDF.");
+                input.value = "";
+                return;
+            }
+
+            if (archivo.size > maxBytes) {
+                mostrarError("El archivo no puede superar los 10 MB.");
+                input.value = "";
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Subiendo…';
+
+            const formData = new FormData(form);
+
+            try {
+                const respuesta = await fetch(form.action, {
+                    method: "POST",
+                    headers: {
+                        Accept: "application/json",
+                        "X-CSRF-TOKEN": window.adminConfig?.csrfToken ?? "",
+                    },
+                    body: formData,
+                });
+
+                const datos = await respuesta.json();
+
+                if (!respuesta.ok) {
+                    const mensaje = datos.errors?.archivo?.[0]
+                        ?? datos.message
+                        ?? "Ocurrió un error al subir el documento.";
+                    mostrarError(mensaje);
+                    return;
+                }
+
+                actualizarCard(card, datos);
+                actualizarContadores();
+
+            } catch {
+                mostrarError("No se pudo conectar con el servidor. Intenta de nuevo.");
+            } finally {
+                input.value = "";
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-upload me-1"></i>Cargar';
+            }
+        });
+    });
+}
+
+function actualizarCard(card, datos) {
+    // Icono verde
+    card.classList.add("documento-card--cargado");
+    card.dataset.estatus = "cargado";
+
+    // Ocultar vigencia hasta aprobación y agregar fecha de carga
+    const meta = card.querySelector(".documento-card__meta");
+    if (meta) {
+        const vigencia = meta.querySelector(".documento-card__vigencia");
+        if (vigencia && datos.estatus !== 2) vigencia.remove();
+
+        if (!meta.querySelector(".documento-card__fecha")) {
+            const fecha = document.createElement("span");
+            fecha.className = "documento-card__fecha";
+            fecha.innerHTML = `<i class="fas fa-calendar-check me-1"></i>Cargado el ${datos.fecha_registro}`;
+            meta.appendChild(fecha);
+        }
+    }
+
+    // Reemplazar sección de acciones
+    const acciones = card.querySelector(".documento-card__acciones");
+    if (!acciones) return;
+
+    const badgeHtml = badgeEstatus(datos.estatus);
+    acciones.innerHTML = `
+        ${badgeHtml}
+        <a href="${datos.url_descargar}"
+           class="btn-accion btn-accion--ver"
+           target="_blank"
+           title="Ver documento">
+            <i class="fas fa-eye"></i>
+        </a>
+    `;
+}
+
+function badgeEstatus(estatus) {
+    if (estatus === 2) {
+        return '<span class="badge-estatus badge-estatus--aprobado"><i class="fas fa-circle-check me-1"></i>Aprobado</span>';
+    }
+    if (estatus === 1) {
+        return '<span class="badge-estatus badge-estatus--revision"><i class="fas fa-hourglass-half me-1"></i>En revisión</span>';
+    }
+    return '<span class="badge-estatus badge-estatus--rechazado"><i class="fas fa-circle-xmark me-1"></i>Rechazado</span>';
+}
+
+function actualizarContadores() {
+    const total     = document.querySelectorAll(".documento-card").length;
+    const cargados  = document.querySelectorAll(".documento-card--cargado").length;
+    const pendientes = total - cargados;
+    const porcentaje = total > 0 ? Math.round((cargados / total) * 100) : 0;
+
+    const elTotal     = document.querySelector(".profile-stat:nth-child(1) .profile-stat__valor");
+    const elCargados  = document.querySelector(".profile-stat--ok .profile-stat__valor");
+    const elPendientes = document.querySelector(".profile-stat--pendiente .profile-stat__valor");
+    const elPorcentaje = document.querySelector(".completeness-card__valor");
+    const barra       = document.querySelector(".progreso-barra-fill");
+
+    if (elTotal)      elTotal.textContent      = total;
+    if (elCargados)   elCargados.textContent   = cargados;
+    if (elPendientes) elPendientes.textContent = pendientes;
+    if (elPorcentaje) elPorcentaje.textContent = porcentaje + "%";
+    if (barra)        barra.style.width        = porcentaje + "%";
+}
+
+function mostrarError(mensaje) {
+    if (window.Swal) {
+        Swal.fire({
+            icon: "error",
+            title: "Error al subir",
+            text: mensaje,
+            confirmButtonColor: "#dc2626",
+        });
+    } else {
+        alert(mensaje);
+    }
 }

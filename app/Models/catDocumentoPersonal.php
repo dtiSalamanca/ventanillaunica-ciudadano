@@ -18,6 +18,17 @@ class catDocumentoPersonal extends Model
         'estatus_documento',
     ];
 
+    const ESTATUS_RECHAZADO = 0;
+
+    const ESTATUS_EN_REVISION = 1;
+
+    const ESTATUS_APROBADO = 2;
+
+    public function directorioArchivo(): string
+    {
+        return "documentos_personales/{$this->fk_usuario}/{$this->fk_documento_personal}";
+    }
+
     protected $casts = [
         'fecha_registro' => 'date',
     ];

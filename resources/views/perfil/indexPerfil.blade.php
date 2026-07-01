@@ -113,6 +113,7 @@
                                     $estatusDoc = $cargado ? 'cargado' : 'pendiente';
                                     $fechaVencimiento = $cargado ? $cargado->fecha_registro->copy()->addMonths($documento->vigencia_meses) : null;
                                     $diasRestantes = $fechaVencimiento ? now()->diffInDays($fechaVencimiento, false) : null;
+                                    $estatus = $cargado ? (int) $cargado->estatus_documento : null;
                                 @endphp
                                 <div class="documento-card {{ $cargado ? 'documento-card--cargado' : '' }}" data-estatus="{{ $estatusDoc }}">
                                     <div class="documento-card__icono">
@@ -121,7 +122,9 @@
                                     <div class="documento-card__contenido">
                                         <span class="documento-card__nombre">{{ $documento->nombre_documento }}</span>
                                         <div class="documento-card__meta">
-                                            <span class="documento-card__vigencia"><i class="fas fa-hourglass-half me-1"></i>Vigencia: {{ $documento->vigencia_meses }} meses</span>
+                                            @if (!$cargado || $estatus === 2)
+                                                <span class="documento-card__vigencia"><i class="fas fa-hourglass-half me-1"></i>Vigencia: {{ $documento->vigencia_meses }} meses</span>
+                                            @endif
                                             @if ($cargado)
                                                 <span class="documento-card__fecha"><i class="fas fa-calendar-check me-1"></i>Cargado el {{ $cargado->fecha_registro->format('d/m/Y') }}</span>
                                                 @if ($diasRestantes !== null && $diasRestantes <= 0)
@@ -132,11 +135,37 @@
                                             @endif
                                         </div>
                                     </div>
-                                    <div class="documento-card__estatus">
+                                    <div class="documento-card__acciones">
                                         @if ($cargado)
-                                            <span class="badge-estatus badge-estatus--cargado"><i class="fas fa-circle-check me-1"></i>Cargado</span>
+                                            @if ($estatus === 2)
+                                                <span class="badge-estatus badge-estatus--aprobado"><i class="fas fa-circle-check me-1"></i>Aprobado</span>
+                                            @elseif ($estatus === 1)
+                                                <span class="badge-estatus badge-estatus--revision"><i class="fas fa-hourglass-half me-1"></i>En revisión</span>
+                                            @else
+                                                <span class="badge-estatus badge-estatus--rechazado"><i class="fas fa-circle-xmark me-1"></i>Rechazado</span>
+                                            @endif
+                                            <a href="{{ route('perfiles.documentos.descargar', $cargado->id_documento) }}"
+                                               class="btn-accion btn-accion--ver"
+                                               target="_blank"
+                                               title="Ver documento">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
                                         @else
                                             <span class="badge-estatus badge-estatus--pendiente"><i class="fas fa-circle-exclamation me-1"></i>Pendiente</span>
+                                            <form action="{{ route('perfiles.documentos.subir', $documento->id_documento) }}"
+                                                  method="POST"
+                                                  enctype="multipart/form-data"
+                                                  class="form-subir-inline">
+                                                @csrf
+                                                <input type="file"
+                                                       name="archivo"
+                                                       class="input-archivo-oculto"
+                                                       accept=".pdf"
+                                                       aria-label="Seleccionar archivo para {{ $documento->nombre_documento }}">
+                                                <button type="button" class="btn-accion btn-accion--cargar btn-trigger-archivo">
+                                                    <i class="fas fa-upload me-1"></i>Cargar
+                                                </button>
+                                            </form>
                                         @endif
                                     </div>
                                 </div>
@@ -149,6 +178,7 @@
             </div>
         </div>
     </div>
+
 @endsection
 
 @section('scripts')
