@@ -68,7 +68,7 @@
                         </div>
                     </li>
                     <li>
-                        <a class="dropdown-item" href="#">
+                        <a class="dropdown-item" href="{{ route('indexPerfiles') }}">
                             <i class="fas fa-user-circle me-2"></i><span class="highlight-text">{{ __('Mi perfil') }}</span>
                         </a>
                     </li>

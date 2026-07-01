@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\PerfilesController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -15,3 +16,7 @@ Route::get('/email/resend', function () {
 })->name('verification.resend.form');
 
 Route::get('/home', [HomeController::class, 'index'])->name('home');
+
+Route::middleware('auth')->controller(PerfilesController::class)->group(function () {
+    Route::get('/perfiles/mi-perfil', 'indexPerfiles')->name('indexPerfiles');
+});
