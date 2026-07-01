@@ -19,6 +19,7 @@ Route::get('/home', [HomeController::class, 'index'])->name('home');
 
 Route::middleware('auth')->controller(PerfilesController::class)->group(function () {
     Route::get('/perfiles/mi-perfil', 'indexPerfiles')->name('indexPerfiles');
+    Route::get('/perfiles/documentos/estatus', 'estatusDocumentos')->name('perfiles.documentos.estatus');
     Route::post('/perfiles/documentos/{catalogoDocumento}', 'subirDocumento')->name('perfiles.documentos.subir');
     Route::get('/perfiles/documentos/{registroDocumento}/descargar', 'descargarDocumento')->name('perfiles.documentos.descargar');
 });

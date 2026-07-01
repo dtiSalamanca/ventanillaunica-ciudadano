@@ -115,7 +115,10 @@
                                     $diasRestantes = $fechaVencimiento ? now()->diffInDays($fechaVencimiento, false) : null;
                                     $estatus = $cargado ? (int) $cargado->estatus_documento : null;
                                 @endphp
-                                <div class="documento-card {{ $cargado ? 'documento-card--cargado' : '' }}" data-estatus="{{ $estatusDoc }}">
+                                <div class="documento-card {{ $cargado ? 'documento-card--cargado' : '' }}"
+                                     data-estatus="{{ $estatusDoc }}"
+                                     data-catalogo-id="{{ $documento->id_documento }}"
+                                     @if ($cargado) data-estatus-num="{{ $estatus }}" @endif>
                                     <div class="documento-card__icono">
                                         <i class="fas fa-file-lines"></i>
                                     </div>
@@ -150,6 +153,22 @@
                                                title="Ver documento">
                                                 <i class="fas fa-eye"></i>
                                             </a>
+                                            @if ($estatus === 0)
+                                                <form action="{{ route('perfiles.documentos.subir', $documento->id_documento) }}"
+                                                      method="POST"
+                                                      enctype="multipart/form-data"
+                                                      class="form-subir-inline">
+                                                    @csrf
+                                                    <input type="file"
+                                                           name="archivo"
+                                                           class="input-archivo-oculto"
+                                                           accept=".pdf"
+                                                           aria-label="Volver a subir {{ $documento->nombre_documento }}">
+                                                    <button type="button" class="btn-accion btn-accion--cargar btn-trigger-archivo" title="Volver a subir">
+                                                        <i class="fas fa-rotate-right me-1"></i>Reenviar
+                                                    </button>
+                                                </form>
+                                            @endif
                                         @else
                                             <span class="badge-estatus badge-estatus--pendiente"><i class="fas fa-circle-exclamation me-1"></i>Pendiente</span>
                                             <form action="{{ route('perfiles.documentos.subir', $documento->id_documento) }}"
@@ -182,5 +201,8 @@
 @endsection
 
 @section('scripts')
+    <script>
+        window.perfilConfig = @json(['urlEstatusDocumentos' => route('perfiles.documentos.estatus')]);
+    </script>
     <script src="{{ asset('js/perfil/indexPerfil.js') }}" defer></script>
 @endsection

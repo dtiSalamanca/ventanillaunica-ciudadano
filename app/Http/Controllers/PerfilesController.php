@@ -36,6 +36,21 @@ class PerfilesController extends Controller
         ]);
     }
 
+    public function estatusDocumentos(): JsonResponse
+    {
+        $documentos = catDocumentoPersonal::where('fk_usuario', auth()->id())
+            ->get()
+            ->map(fn (catDocumentoPersonal $documento) => [
+                'fk_documento_personal' => $documento->fk_documento_personal,
+                'estatus' => $documento->estatus_documento,
+                'fecha_registro' => $documento->fecha_registro->format('d/m/Y'),
+                'url_descargar' => route('perfiles.documentos.descargar', $documento->id_documento),
+                'url_subir' => route('perfiles.documentos.subir', $documento->fk_documento_personal),
+            ]);
+
+        return response()->json(['documentos' => $documentos]);
+    }
+
     public function subirDocumento(Request $request, tblDocumentoPersonal $catalogoDocumento): RedirectResponse|JsonResponse
     {
         $request->validate([
@@ -84,6 +99,7 @@ class PerfilesController extends Controller
                 'fecha_registro' => $registro->fecha_registro->format('d/m/Y'),
                 'estatus' => $registro->estatus_documento,
                 'url_descargar' => route('perfiles.documentos.descargar', $registro->id_documento),
+                'url_subir' => route('perfiles.documentos.subir', $catalogoDocumento->id_documento),
             ]);
         }
 

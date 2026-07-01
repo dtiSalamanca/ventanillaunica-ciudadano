@@ -3,7 +3,50 @@ document.addEventListener("DOMContentLoaded", function () {
     initFiltroDocumentos();
     initTabs();
     initSubirDocumento();
+    initPollingEstatus();
 });
+
+const INTERVALO_POLLING_MS = 15000;
+
+function initPollingEstatus() {
+    const url = window.perfilConfig?.urlEstatusDocumentos;
+    if (!url) return;
+
+    setInterval(() => consultarEstatusDocumentos(url), INTERVALO_POLLING_MS);
+}
+
+async function consultarEstatusDocumentos(url) {
+    try {
+        const respuesta = await fetch(url, {
+            headers: { Accept: "application/json" },
+        });
+        if (!respuesta.ok) return;
+
+        const datos = await respuesta.json();
+        let huboCambios = false;
+
+        datos.documentos.forEach((documento) => {
+            const card = document.querySelector(
+                `.documento-card[data-catalogo-id="${documento.fk_documento_personal}"]`
+            );
+            if (!card) return;
+
+            const estatusActual = card.dataset.estatusNum;
+            if (estatusActual !== undefined && Number(estatusActual) === documento.estatus) {
+                return;
+            }
+
+            actualizarCard(card, documento);
+            huboCambios = true;
+        });
+
+        if (huboCambios) {
+            actualizarContadores();
+        }
+    } catch {
+        // Silencioso: se reintenta en el siguiente ciclo de polling.
+    }
+}
 
 function initBarraProgreso() {
     const barra = document.querySelector(".progreso-barra-fill");
@@ -87,70 +130,72 @@ function initTabs() {
 }
 
 function initSubirDocumento() {
-    document.querySelectorAll(".form-subir-inline").forEach((form) => {
-        const input = form.querySelector(".input-archivo-oculto");
-        const btn   = form.querySelector(".btn-trigger-archivo");
-        const card  = form.closest(".documento-card");
+    document.querySelectorAll(".form-subir-inline").forEach(bindFormSubir);
+}
 
-        if (!input || !btn || !card) return;
+function bindFormSubir(form) {
+    const input = form.querySelector(".input-archivo-oculto");
+    const btn   = form.querySelector(".btn-trigger-archivo");
+    const card  = form.closest(".documento-card");
 
-        btn.addEventListener("click", () => input.click());
+    if (!input || !btn || !card) return;
 
-        input.addEventListener("change", async () => {
-            if (input.files.length === 0) return;
+    btn.addEventListener("click", () => input.click());
 
-            const archivo = input.files[0];
-            const maxBytes = 10 * 1024 * 1024;
-            const extension = archivo.name.split(".").pop().toLowerCase();
+    input.addEventListener("change", async () => {
+        if (input.files.length === 0) return;
 
-            if (extension !== "pdf") {
-                mostrarError("Solo se permiten archivos PDF.");
-                input.value = "";
+        const archivo = input.files[0];
+        const maxBytes = 10 * 1024 * 1024;
+        const extension = archivo.name.split(".").pop().toLowerCase();
+
+        if (extension !== "pdf") {
+            mostrarError("Solo se permiten archivos PDF.");
+            input.value = "";
+            return;
+        }
+
+        if (archivo.size > maxBytes) {
+            mostrarError("El archivo no puede superar los 10 MB.");
+            input.value = "";
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Subiendo…';
+
+        const formData = new FormData(form);
+
+        try {
+            const respuesta = await fetch(form.action, {
+                method: "POST",
+                headers: {
+                    Accept: "application/json",
+                    "X-CSRF-TOKEN": window.adminConfig?.csrfToken ?? "",
+                },
+                body: formData,
+            });
+
+            const datos = await respuesta.json();
+
+            if (!respuesta.ok) {
+                const mensaje = datos.errors?.archivo?.[0]
+                    ?? datos.message
+                    ?? "Ocurrió un error al subir el documento.";
+                mostrarError(mensaje);
                 return;
             }
 
-            if (archivo.size > maxBytes) {
-                mostrarError("El archivo no puede superar los 10 MB.");
-                input.value = "";
-                return;
-            }
+            actualizarCard(card, datos);
+            actualizarContadores();
 
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Subiendo…';
-
-            const formData = new FormData(form);
-
-            try {
-                const respuesta = await fetch(form.action, {
-                    method: "POST",
-                    headers: {
-                        Accept: "application/json",
-                        "X-CSRF-TOKEN": window.adminConfig?.csrfToken ?? "",
-                    },
-                    body: formData,
-                });
-
-                const datos = await respuesta.json();
-
-                if (!respuesta.ok) {
-                    const mensaje = datos.errors?.archivo?.[0]
-                        ?? datos.message
-                        ?? "Ocurrió un error al subir el documento.";
-                    mostrarError(mensaje);
-                    return;
-                }
-
-                actualizarCard(card, datos);
-                actualizarContadores();
-
-            } catch {
-                mostrarError("No se pudo conectar con el servidor. Intenta de nuevo.");
-            } finally {
-                input.value = "";
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-upload me-1"></i>Cargar';
-            }
-        });
+        } catch {
+            mostrarError("No se pudo conectar con el servidor. Intenta de nuevo.");
+        } finally {
+            input.value = "";
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-upload me-1"></i>Cargar';
+        }
     });
 }
 
@@ -158,6 +203,7 @@ function actualizarCard(card, datos) {
     // Icono verde
     card.classList.add("documento-card--cargado");
     card.dataset.estatus = "cargado";
+    card.dataset.estatusNum = datos.estatus;
 
     // Ocultar vigencia hasta aprobación y agregar fecha de carga
     const meta = card.querySelector(".documento-card__meta");
@@ -178,6 +224,25 @@ function actualizarCard(card, datos) {
     if (!acciones) return;
 
     const badgeHtml = badgeEstatus(datos.estatus);
+    const reenviarHtml = datos.estatus === 0
+        ? `
+        <form action="${datos.url_subir}"
+              method="POST"
+              enctype="multipart/form-data"
+              class="form-subir-inline">
+            <input type="hidden" name="_token" value="${window.adminConfig?.csrfToken ?? ""}">
+            <input type="file"
+                   name="archivo"
+                   class="input-archivo-oculto"
+                   accept=".pdf"
+                   aria-label="Volver a subir documento">
+            <button type="button" class="btn-accion btn-accion--cargar btn-trigger-archivo" title="Volver a subir">
+                <i class="fas fa-rotate-right me-1"></i>Reenviar
+            </button>
+        </form>
+        `
+        : "";
+
     acciones.innerHTML = `
         ${badgeHtml}
         <a href="${datos.url_descargar}"
@@ -186,7 +251,13 @@ function actualizarCard(card, datos) {
            title="Ver documento">
             <i class="fas fa-eye"></i>
         </a>
+        ${reenviarHtml}
     `;
+
+    const formReenviar = acciones.querySelector(".form-subir-inline");
+    if (formReenviar) {
+        bindFormSubir(formReenviar);
+    }
 }
 
 function badgeEstatus(estatus) {
