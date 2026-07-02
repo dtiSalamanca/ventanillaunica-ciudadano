@@ -27,4 +27,5 @@ Route::middleware('auth')->controller(PerfilesController::class)->group(function
 
 Route::middleware('auth')->controller(TramitesController::class)->group(function () {
     Route::get('/tramites', 'indexTramites')->name('indexTramites');
+    Route::get('/tramites/{tramite}/iniciar', 'iniciarTramite')->name('iniciarTramite');
 });

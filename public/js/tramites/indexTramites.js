@@ -2,7 +2,6 @@ document.addEventListener("DOMContentLoaded", function () {
     initFiltroDependencias();
     initBusquedaTramites();
     initAcordeonesRequisitos();
-    initBotonesIniciarTramite();
 });
 
 let filtroDependenciaActual = "todas";
@@ -84,27 +83,6 @@ function initAcordeonesRequisitos() {
             btn.classList.toggle("collapsed", expandido);
             btn.setAttribute("aria-expanded", String(!expandido));
             cuerpo.classList.toggle("show", !expandido);
-        });
-    });
-}
-
-/* ── Botón Iniciar trámite (placeholder) ── */
-function initBotonesIniciarTramite() {
-    const botones = document.querySelectorAll(".btn-iniciar-tramite");
-    if (!botones.length) return;
-
-    botones.forEach((btn) => {
-        btn.addEventListener("click", () => {
-            const nombre = btn.dataset.nombre;
-
-            if (window.Swal) {
-                Swal.fire({
-                    icon: "info",
-                    title: "Próximamente",
-                    html: `El inicio del trámite <strong>${nombre}</strong> estará disponible pronto.`,
-                    confirmButtonColor: "#1e5c50",
-                });
-            }
         });
     });
 }

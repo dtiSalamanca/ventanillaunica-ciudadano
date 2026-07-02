@@ -129,11 +129,11 @@
                                 </div>
 
                                 <div class="tramite-card-footer">
-                                    <button type="button"
-                                            class="btn-iniciar-tramite"
-                                            data-nombre="{{ $tramite->nombre_tramite }}">
+                                    <a href="{{ route('iniciarTramite', $tramite) }}"
+                                       class="btn-iniciar-tramite"
+                                       data-nombre="{{ $tramite->nombre_tramite }}">
                                         <i class="fa-solid fa-play"></i> Iniciar trámite
-                                    </button>
+                                    </a>
                                 </div>
                             </div>
                         @endforeach
