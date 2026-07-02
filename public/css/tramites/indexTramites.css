@@ -1,0 +1,465 @@
+:root {
+    --primary: #1e5c50;
+    --primary-dark: #164a3f;
+    --primary-light: #e8f4f1;
+    --accent: #a62346;
+    --accent-dark: #8a1c36;
+    --text-primary: #1a202c;
+    --text-secondary: #64748b;
+    --border: #e2e8f0;
+    --bg-surface: #ffffff;
+    --bg-subtle: #f8fafc;
+    --bg-hover: #f1f5f9;
+    --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-sm:
+        0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    --shadow-md:
+        0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg:
+        0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 16px;
+    --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.main-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+    font-family: "Montserrat", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+/* ── Header ── */
+.page-header {
+    position: relative;
+    overflow: hidden;
+    border-radius: 10px;
+    background: #601028 url("/images/fondo_rojo.png") center / cover no-repeat;
+    padding: 1.1rem 2rem;
+    color: #fff;
+    margin-bottom: 2rem;
+}
+
+.header-content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.45rem;
+}
+
+.header-escudo {
+    width: 52px;
+    height: auto;
+    opacity: 0.92;
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
+}
+
+.header-main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.page-title {
+    margin: 0;
+    font-size: clamp(1.2rem, 2.4vw, 1.6rem);
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 0.01em;
+    line-height: 1.2;
+}
+
+.page-subtitle {
+    margin: 0.15rem auto 0;
+    max-width: 740px;
+    font-size: 0.88rem;
+    line-height: 1.4;
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 500;
+}
+
+/* ── Card principal ── */
+.card {
+    background: var(--bg-surface);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--border);
+    overflow: hidden;
+    transition: var(--transition);
+}
+
+.card:hover {
+    box-shadow: var(--shadow-lg);
+}
+
+.card-body {
+    padding: 2rem;
+}
+
+/* ── Tabs por dependencia ── */
+.nav-tabs .nav-link.active {
+    background: var(--primary-light);
+    color: var(--primary);
+    font-weight: 600;
+    border: 1px solid var(--primary);
+    border-bottom: none;
+}
+
+.nav-tabs .nav-link {
+    color: var(--text-secondary);
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+    margin-right: 2px;
+}
+
+/* ── Búsqueda ── */
+.tramites-search {
+    margin-bottom: 1.25rem;
+}
+
+.search-bar {
+    position: relative;
+    max-width: 420px;
+}
+
+.search-bar i.fa-magnifying-glass {
+    position: absolute;
+    top: 50%;
+    left: 0.9rem;
+    transform: translateY(-50%);
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+.search-bar input[type="text"] {
+    width: 100%;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 0.55rem 2.25rem;
+    font-size: 0.88rem;
+    color: var(--text-primary);
+    transition: var(--transition);
+}
+
+.search-bar input[type="text"]:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(30, 92, 80, 0.12);
+}
+
+.search-clear {
+    position: absolute;
+    top: 50%;
+    right: 0.75rem;
+    transform: translateY(-50%);
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+}
+
+.search-clear:hover {
+    color: var(--accent);
+}
+
+/* ── Grid de tarjetas de trámite ── */
+.tramites-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 1.25rem;
+}
+
+.tramite-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-xs);
+    transition: var(--transition);
+    overflow: visible;
+}
+
+.tramite-card:hover {
+    box-shadow: var(--shadow-sm);
+}
+
+.tramite-card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 1.1rem 1.25rem;
+}
+
+.tramite-card-icono {
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: var(--primary-light);
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+}
+
+.tramite-card-info {
+    min-width: 0;
+    flex: 1;
+}
+
+.tramite-card-nombre {
+    font-weight: 700;
+    color: var(--text-primary);
+    font-size: 0.98rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tramite-card-dependencia {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tramite-card-dependencia i {
+    color: var(--primary);
+}
+
+.badge-requisitos {
+    flex-shrink: 0;
+    background: var(--primary-light);
+    color: var(--primary);
+    font-weight: 700;
+    font-size: 0.78rem;
+    padding: 0.3rem 0.65rem;
+    border-radius: 999px;
+}
+
+/* ── Acordeón de requisitos ── */
+.tramite-accordion {
+    border-top: 1px solid var(--border);
+}
+
+.tramite-accordion .accordion-item {
+    border: none;
+    background: transparent;
+}
+
+.tramite-accordion .accordion-header {
+    margin: 0;
+}
+
+.tramite-accordion .accordion-button {
+    background: var(--bg-subtle);
+    color: var(--primary);
+    font-weight: 600;
+    font-size: 0.88rem;
+    padding: 0.7rem 1.25rem;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+.tramite-accordion .accordion-button:not(.collapsed) {
+    background: var(--primary-light);
+    color: var(--primary);
+    box-shadow: none;
+}
+
+.tramite-accordion .accordion-button:focus {
+    box-shadow: none;
+    border-color: transparent;
+}
+
+.tramite-accordion .accordion-button::after {
+    filter: brightness(0) saturate(100%) invert(24%) sepia(19%) saturate(1224%)
+        hue-rotate(122deg) brightness(94%) contrast(90%);
+}
+
+.tramite-accordion .accordion-body {
+    padding: 0.6rem;
+}
+
+/* ── Items de requisito ── */
+.requisito-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.6rem 0.65rem;
+    border-radius: var(--radius-sm);
+}
+
+.requisito-item:hover {
+    background: var(--bg-hover);
+}
+
+.requisito-item + .requisito-item {
+    border-top: 1px solid var(--border);
+}
+
+.requisito-info {
+    min-width: 0;
+}
+
+.requisito-nombre {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.88rem;
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+}
+
+.requisito-check {
+    color: var(--primary);
+    font-size: 0.78rem;
+    flex-shrink: 0;
+}
+
+.requisito-empty {
+    padding: 0.85rem 0.65rem;
+    text-align: center;
+    font-size: 0.84rem;
+    color: var(--text-secondary);
+    background: var(--bg-subtle);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-sm);
+}
+
+/* ── Botón Iniciar trámite (CTA) ── */
+.tramite-card-footer {
+    padding: 0 1.25rem 1.25rem;
+}
+
+.btn-iniciar-tramite {
+    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    padding: 0.6rem 1rem;
+    border: 1.5px solid var(--primary);
+    border-radius: var(--radius-md);
+    background: var(--bg-surface);
+    color: var(--primary);
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.btn-iniciar-tramite:hover {
+    background: var(--primary);
+    color: #fff;
+}
+
+.btn-iniciar-tramite:active {
+    background: var(--primary-dark);
+    border-color: var(--primary-dark);
+}
+
+.btn-iniciar-tramite:focus-visible {
+    outline: 3px solid rgba(30, 92, 80, 0.25);
+    outline-offset: 2px;
+}
+
+/* ── Estado vacío ── */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 3rem 1.5rem;
+    color: var(--text-secondary);
+}
+
+.empty-state i {
+    font-size: 2.5rem;
+    color: var(--primary-light);
+    margin-bottom: 1rem;
+}
+
+.empty-state p {
+    margin: 0;
+    font-weight: 600;
+}
+
+/* ── Responsive ── */
+@media (max-width: 1024px) {
+    .main-container {
+        padding: 1rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .main-container {
+        padding: 1rem;
+    }
+
+    .page-header {
+        padding: 1rem;
+        border-radius: 10px;
+    }
+
+    .page-title {
+        font-size: 1.25rem;
+    }
+
+    .header-escudo {
+        width: 46px;
+    }
+
+    .page-subtitle {
+        font-size: 0.82rem;
+    }
+
+    .card-body {
+        padding: 1.5rem;
+    }
+
+    .tramites-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .main-container {
+        padding: 0.75rem;
+    }
+
+    .page-header {
+        padding: 0.95rem 0.75rem;
+    }
+
+    .page-title {
+        font-size: 1.12rem;
+    }
+
+    .header-escudo {
+        width: 42px;
+    }
+
+    .page-subtitle {
+        font-size: 0.78rem;
+    }
+
+    .card-body {
+        padding: 1rem;
+    }
+}
+
+/* ── Preferencia de movimiento reducido ── */
+@media (prefers-reduced-motion: reduce) {
+    .card,
+    .tramite-card,
+    .search-bar input[type="text"] {
+        transition: none;
+    }
+}
