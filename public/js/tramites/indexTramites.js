@@ -7,19 +7,34 @@ document.addEventListener("DOMContentLoaded", function () {
 let filtroDependenciaActual = "todas";
 let terminoBusquedaActual = "";
 
-/* ── Filtrado por dependencia (nav-tabs) ── */
+/* ── Filtrado por dependencia (sidebar + tabs móviles) ── */
 function initFiltroDependencias() {
-    const botones = document.querySelectorAll(".nav-tabs .nav-link");
-    if (!botones.length) return;
+    const sidebarItems = document.querySelectorAll(".tramites-sidebar-item");
+    const tabItems = document.querySelectorAll(".tramites-tab-item");
 
-    botones.forEach((btn) => {
+    sidebarItems.forEach((btn) => {
         btn.addEventListener("click", () => {
-            botones.forEach((b) => b.classList.remove("active"));
-            btn.classList.add("active");
             filtroDependenciaActual = btn.dataset.dependencia;
-            aplicarFiltros();
+            activarFiltro(sidebarItems, tabItems, filtroDependenciaActual);
         });
     });
+
+    tabItems.forEach((btn) => {
+        btn.addEventListener("click", () => {
+            filtroDependenciaActual = btn.dataset.dependencia;
+            activarFiltro(sidebarItems, tabItems, filtroDependenciaActual);
+        });
+    });
+}
+
+function activarFiltro(sidebarItems, tabItems, dependencia) {
+    sidebarItems.forEach((b) => {
+        b.classList.toggle("active", b.dataset.dependencia === dependencia);
+    });
+    tabItems.forEach((b) => {
+        b.classList.toggle("active", b.dataset.dependencia === dependencia);
+    });
+    aplicarFiltros();
 }
 
 /* ── Búsqueda por nombre ── */

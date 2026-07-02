@@ -28,6 +28,8 @@
     margin: 0 auto;
     padding: 2rem 1.5rem;
     font-family: "Montserrat", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    overflow-x: hidden;
+    box-sizing: border-box;
 }
 
 /* ── Header ── */
@@ -82,37 +84,186 @@
     font-weight: 500;
 }
 
-/* ── Card principal ── */
-.card {
+/* ── Layout de dos columnas ── */
+.tramites-layout {
+    display: flex;
+    gap: 1.5rem;
+    align-items: flex-start;
+}
+
+/* ── Sidebar de dependencias ── */
+.tramites-sidebar {
+    width: 260px;
+    flex-shrink: 0;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    position: sticky;
+    top: 5rem;
+    max-height: calc(100vh - 6rem);
+    overflow-y: auto;
+    transition: var(--transition);
+}
+
+.tramites-sidebar-header {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.tramites-sidebar-header h2 {
+    margin: 0;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.tramites-sidebar-header h2 i {
+    color: var(--primary);
+    font-size: 0.85rem;
+}
+
+.tramites-sidebar-list {
+    padding: 0.4rem 0;
+}
+
+.tramites-sidebar-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0.7rem 1.25rem;
+    border: none;
+    border-left: 3px solid transparent;
+    background: transparent;
+    text-align: left;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.88rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    transition: var(--transition);
+    word-break: break-word;
+}
+
+.tramites-sidebar-item:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.tramites-sidebar-item.active {
+    background: var(--primary-light);
+    color: var(--primary);
+    font-weight: 600;
+    border-left-color: var(--primary);
+}
+
+.tramites-sidebar-item-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+}
+
+.tramites-sidebar-item-label i {
+    flex-shrink: 0;
+    font-size: 0.82rem;
+}
+
+.tramites-sidebar-item-label span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tramites-sidebar-count {
+    flex-shrink: 0;
+    background: var(--bg-subtle);
+    color: var(--text-secondary);
+    font-weight: 700;
+    font-size: 0.72rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 999px;
+    margin-left: 0.5rem;
+}
+
+.tramites-sidebar-item.active .tramites-sidebar-count {
+    background: var(--primary);
+    color: #fff;
+}
+
+/* ── Tabs de dependencias (solo móvil) ── */
+.tramites-tabs-mobile {
+    display: none;
+    overflow-x: auto;
+    gap: 0.5rem;
+    padding-bottom: 0.75rem;
+    margin-bottom: 1rem;
+    margin-left: -1.5rem;
+    margin-right: -1.5rem;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+
+.tramites-tabs-mobile::-webkit-scrollbar {
+    display: none;
+}
+
+.tramites-tab-item {
+    flex-shrink: 0;
+    padding: 0.45rem 1rem;
+    border: 1.5px solid var(--border);
+    border-radius: 999px;
+    background: var(--bg-surface);
+    color: var(--text-secondary);
+    font-family: inherit;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: var(--transition);
+}
+
+.tramites-tab-item:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+    border-color: var(--text-secondary);
+}
+
+.tramites-tab-item.active {
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
+}
+
+.tramites-tab-item.active:hover {
+    background: var(--primary-dark);
+    border-color: var(--primary-dark);
+}
+
+/* ── Contenido principal (columna derecha) ── */
+.tramites-content {
+    flex: 1;
+    min-width: 0;
+    max-width: 100%;
     background: var(--bg-surface);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-md);
     border: 1px solid var(--border);
+    padding: 2rem;
+    box-sizing: border-box;
     overflow: hidden;
     transition: var(--transition);
 }
 
-.card:hover {
+.tramites-content:hover {
     box-shadow: var(--shadow-lg);
-}
-
-.card-body {
-    padding: 2rem;
-}
-
-/* ── Tabs por dependencia ── */
-.nav-tabs .nav-link.active {
-    background: var(--primary-light);
-    color: var(--primary);
-    font-weight: 600;
-    border: 1px solid var(--primary);
-    border-bottom: none;
-}
-
-.nav-tabs .nav-link {
-    color: var(--text-secondary);
-    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
-    margin-right: 2px;
 }
 
 /* ── Búsqueda ── */
@@ -168,8 +319,8 @@
 
 /* ── Grid de tarjetas de trámite ── */
 .tramites-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    display: flex;
+    flex-direction: column;
     gap: 1.25rem;
 }
 
@@ -179,7 +330,8 @@
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-xs);
     transition: var(--transition);
-    overflow: visible;
+    overflow: hidden;
+    box-sizing: border-box;
 }
 
 .tramite-card:hover {
@@ -257,19 +409,34 @@
 }
 
 .tramite-accordion .accordion-button {
-    background: var(--bg-subtle);
+    background: transparent;
     color: var(--primary);
     font-weight: 600;
-    font-size: 0.88rem;
-    padding: 0.7rem 1.25rem;
+    font-size: 0.84rem;
+    padding: 0.65rem 1.25rem;
     border-radius: 0;
     box-shadow: none;
+    gap: 0.5rem;
+    letter-spacing: 0.01em;
+}
+
+.tramite-accordion .accordion-button::after {
+    width: 0.85rem;
+    height: 0.85rem;
+    background-size: 0.85rem;
+    filter: brightness(0) saturate(100%) invert(24%) sepia(19%) saturate(1224%)
+        hue-rotate(122deg) brightness(94%) contrast(90%);
+    transition: transform 0.25s ease;
 }
 
 .tramite-accordion .accordion-button:not(.collapsed) {
     background: var(--primary-light);
-    color: var(--primary);
+    color: var(--primary-dark);
     box-shadow: none;
+}
+
+.tramite-accordion .accordion-button:hover {
+    background: var(--primary-light);
 }
 
 .tramite-accordion .accordion-button:focus {
@@ -277,13 +444,19 @@
     border-color: transparent;
 }
 
-.tramite-accordion .accordion-button::after {
-    filter: brightness(0) saturate(100%) invert(24%) sepia(19%) saturate(1224%)
-        hue-rotate(122deg) brightness(94%) contrast(90%);
+.tramite-accordion .accordion-button .fa-folder-open {
+    font-size: 0.82rem;
+    opacity: 0.8;
+}
+
+.tramite-accordion .accordion-button:not(.collapsed) .fa-folder-open {
+    opacity: 1;
 }
 
 .tramite-accordion .accordion-body {
-    padding: 0.6rem;
+    padding: 0.5rem 0.75rem 0.75rem;
+    background: var(--bg-subtle);
+    border-top: 1px dashed var(--border);
 }
 
 /* ── Items de requisito ── */
@@ -291,16 +464,17 @@
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    padding: 0.6rem 0.65rem;
+    padding: 0.55rem 0.65rem;
     border-radius: var(--radius-sm);
+    transition: background 0.15s ease;
 }
 
 .requisito-item:hover {
-    background: var(--bg-hover);
+    background: rgba(30, 92, 80, 0.06);
 }
 
 .requisito-item + .requisito-item {
-    border-top: 1px solid var(--border);
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .requisito-info {
@@ -397,6 +571,10 @@
     .main-container {
         padding: 1rem;
     }
+
+    .tramites-sidebar {
+        width: 220px;
+    }
 }
 
 @media (max-width: 768px) {
@@ -421,12 +599,41 @@
         font-size: 0.82rem;
     }
 
-    .card-body {
-        padding: 1.5rem;
+    .tramites-layout {
+        flex-direction: column;
+        gap: 0;
     }
 
-    .tramites-grid {
-        grid-template-columns: 1fr;
+    .tramites-sidebar {
+        display: none;
+    }
+
+    .tramites-tabs-mobile {
+        display: flex;
+    }
+
+    .tramites-content {
+        padding: 1.5rem;
+        border-radius: var(--radius-md);
+        overflow-x: hidden;
+    }
+
+    .search-bar {
+        max-width: 100%;
+    }
+
+    .tramite-card-header {
+        flex-wrap: wrap;
+    }
+
+    .tramite-card-nombre {
+        white-space: normal;
+        word-break: break-word;
+    }
+
+    .tramite-card-dependencia {
+        white-space: normal;
+        word-break: break-word;
     }
 }
 
@@ -451,14 +658,21 @@
         font-size: 0.78rem;
     }
 
-    .card-body {
+    .tramites-content {
         padding: 1rem;
+    }
+
+    .tramites-tabs-mobile {
+        margin-left: -1rem;
+        margin-right: -1rem;
+        padding-left: 1rem;
+        padding-right: 1rem;
     }
 }
 
 /* ── Preferencia de movimiento reducido ── */
 @media (prefers-reduced-motion: reduce) {
-    .card,
+    .tramites-sidebar,
     .tramite-card,
     .search-bar input[type="text"] {
         transition: none;

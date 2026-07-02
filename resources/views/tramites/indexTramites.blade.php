@@ -18,27 +18,51 @@
             </div>
         </div>
 
-        {{-- Card principal --}}
-        <div class="card">
-            <div class="card-body">
-                @if ($dependencias->count() > 1)
-                    {{-- Tabs por dependencia --}}
-                    <ul class="nav nav-tabs mb-3" id="tabs-tramites" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link active" type="button" data-dependencia="todas">
-                                <i class="fa-solid fa-layer-group me-1"></i> Todas
-                            </button>
-                        </li>
+        {{-- Layout de dos columnas --}}
+        <div class="tramites-layout">
+            {{-- Sidebar de dependencias --}}
+            <aside class="tramites-sidebar">
+                <div class="tramites-sidebar-header">
+                    <h2>
+                        <i class="fa-solid fa-building-columns"></i>
+                        Dependencias
+                    </h2>
+                </div>
 
-                        @foreach ($dependencias as $dependencia)
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link" type="button" data-dependencia="{{ $dependencia->id_dependencia }}">
-                                    {{ $dependencia->nombre_dependencia }}
-                                </button>
-                            </li>
-                        @endforeach
-                    </ul>
-                @endif
+                <div class="tramites-sidebar-list">
+                    <button class="tramites-sidebar-item active" type="button" data-dependencia="todas">
+                        <span class="tramites-sidebar-item-label">
+                            <i class="fa-solid fa-layer-group"></i>
+                            <span>Todas</span>
+                        </span>
+                        <span class="tramites-sidebar-count">{{ $tramites->count() }}</span>
+                    </button>
+
+                    @foreach ($dependencias as $dependencia)
+                        <button class="tramites-sidebar-item" type="button" data-dependencia="{{ $dependencia->id_dependencia }}">
+                            <span class="tramites-sidebar-item-label">
+                                <i class="fa-solid fa-building"></i>
+                                <span>{{ $dependencia->nombre_dependencia }}</span>
+                            </span>
+                            <span class="tramites-sidebar-count">{{ $tramites->where('fk_dependencia', $dependencia->id_dependencia)->count() }}</span>
+                        </button>
+                    @endforeach
+                </div>
+            </aside>
+
+            {{-- Contenido principal --}}
+            <div class="tramites-content">
+                {{-- Tabs de dependencias en móvil --}}
+                <div class="tramites-tabs-mobile">
+                    <button class="tramites-tab-item active" type="button" data-dependencia="todas">
+                        <i class="fa-solid fa-layer-group"></i> Todas
+                    </button>
+                    @foreach ($dependencias as $dependencia)
+                        <button class="tramites-tab-item" type="button" data-dependencia="{{ $dependencia->id_dependencia }}">
+                            {{ $dependencia->nombre_dependencia }}
+                        </button>
+                    @endforeach
+                </div>
 
                 {{-- Búsqueda --}}
                 <div class="tramites-search">
@@ -146,6 +170,7 @@
                 @endif
             </div>
         </div>
+
     </div>
 @endsection
 
