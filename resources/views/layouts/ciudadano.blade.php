@@ -128,6 +128,12 @@
                             <div class="sb-nav-link-icon"><i class="fa-solid fa-file-invoice"></i></div>
                             Generar trámite
                         </a>
+
+                        <a class="nav-link active {{ request()->routeIs('indexTramites') ? 'active-current' : '' }}"
+                            href="{{ route('indexTramites') }}">
+                            <div class="sb-nav-link-icon"><i class="fa-solid fa-list"></i></div>
+                            Mis trámites
+                        </a>
                     </div>
                 </div>
             </nav>
