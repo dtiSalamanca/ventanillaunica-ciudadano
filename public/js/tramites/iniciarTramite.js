@@ -1,11 +1,53 @@
 document.addEventListener("DOMContentLoaded", function () {
+    initAnimacionEntrada();
     initOpcionesRequisitos();
     initActualizacionProgreso();
     initValidacionArchivos();
     initEnvioSolicitud();
+    initAcordeonRequisitos();
 });
 
 const MAX_BYTES_ARCHIVO = 10 * 1024 * 1024;
+
+/* ── Entrada escalonada de la vista (fade + slide) ── */
+function initAnimacionEntrada() {
+    if (typeof anime === "undefined") return;
+
+    anime({
+        targets: [".page-header", ".btn-volver", ".tramite-resumen", ".card"],
+        opacity: [0, 1],
+        translateY: [18, 0],
+        duration: 550,
+        delay: anime.stagger(120),
+        easing: "easeOutQuad",
+    });
+
+    const requisitos = document.querySelectorAll(".requisito-cumplimiento");
+    const inicioRequisitos = 360;
+
+    if (requisitos.length) {
+        anime({
+            targets: requisitos,
+            opacity: [0, 1],
+            translateY: [18, 0],
+            duration: 550,
+            delay: anime.stagger(90, { start: inicioRequisitos }),
+            easing: "easeOutQuad",
+        });
+    }
+
+    const acciones = document.querySelector(".acciones-finales");
+    if (acciones) {
+        anime({
+            targets: acciones,
+            opacity: [0, 1],
+            translateY: [10, 0],
+            duration: 450,
+            delay: inicioRequisitos + requisitos.length * 90 + 160,
+            easing: "easeOutQuad",
+        });
+    }
+}
 
 /* ── Opciones de cumplimiento (radio + control dinámico) ── */
 function initOpcionesRequisitos() {
@@ -77,6 +119,8 @@ function actualizarEstadoRequisito(requisito) {
         }
     }
 
+    const yaCumplido = requisito.classList.contains("requisito-cumplimiento--cumplido");
+
     requisito.classList.toggle("requisito-cumplimiento--cumplido", cumplido);
 
     if (badge) {
@@ -89,7 +133,49 @@ function actualizarEstadoRequisito(requisito) {
         }
     }
 
+    const botonReabrir = requisito.querySelector(".requisito-cumplimiento__reabrir");
+    if (botonReabrir) botonReabrir.hidden = !cumplido;
+
+    if (cumplido && !yaCumplido) {
+        colapsarRequisito(requisito);
+    } else if (!cumplido) {
+        expandirRequisito(requisito);
+    }
+
     actualizarProgresoGlobal();
+}
+
+/* ── Acordeón: colapsar el requisito al cumplirse, reabrir para editar ── */
+function initAcordeonRequisitos() {
+    const requisitos = document.querySelectorAll(".requisito-cumplimiento");
+
+    requisitos.forEach((requisito) => {
+        const cabecera = requisito.querySelector("[data-toggle-acordeon]");
+        const botonReabrir = requisito.querySelector(".requisito-cumplimiento__reabrir");
+
+        if (cabecera) {
+            cabecera.addEventListener("click", () => {
+                if (requisito.classList.contains("requisito-cumplimiento--colapsado")) {
+                    expandirRequisito(requisito);
+                }
+            });
+        }
+
+        if (botonReabrir) {
+            botonReabrir.addEventListener("click", (evento) => {
+                evento.stopPropagation();
+                expandirRequisito(requisito);
+            });
+        }
+    });
+}
+
+function colapsarRequisito(requisito) {
+    requisito.classList.add("requisito-cumplimiento--colapsado");
+}
+
+function expandirRequisito(requisito) {
+    requisito.classList.remove("requisito-cumplimiento--colapsado");
 }
 
 function actualizarProgresoGlobal() {
