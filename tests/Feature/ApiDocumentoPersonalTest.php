@@ -65,17 +65,17 @@ class ApiDocumentoPersonalTest extends TestCase
 
     public function test_devuelve_404_cuando_el_registro_no_tiene_archivo(): void
     {
-        $catalogo = tblDocumentoPersonal::create([
+        $catalogo = catDocumentoPersonal::create([
             'nombre_documento' => 'INE',
             'vigencia_meses' => 12,
             'estatus_documento' => true,
         ]);
 
-        $documento = catDocumentoPersonal::create([
+        $documento = tblDocumentoPersonal::create([
             'fk_usuario' => User::factory()->create()->id,
             'fk_documento_personal' => $catalogo->id_documento,
             'fecha_registro' => now(),
-            'estatus_documento' => catDocumentoPersonal::ESTATUS_EN_REVISION,
+            'estatus_documento' => tblDocumentoPersonal::ESTATUS_EN_REVISION,
         ]);
 
         $response = $this->withHeaders(['X-Api-Token' => self::TOKEN])
@@ -87,7 +87,7 @@ class ApiDocumentoPersonalTest extends TestCase
     public function test_usa_el_archivo_mas_reciente_cuando_no_hay_ruta_archivo(): void
     {
         // Simula un registro antiguo sin ruta_archivo y con varios PDFs en disco.
-        $catalogo = tblDocumentoPersonal::create([
+        $catalogo = catDocumentoPersonal::create([
             'nombre_documento' => 'INE',
             'vigencia_meses' => 12,
             'estatus_documento' => true,
@@ -95,11 +95,11 @@ class ApiDocumentoPersonalTest extends TestCase
 
         $usuario = User::factory()->create();
 
-        $documento = catDocumentoPersonal::create([
+        $documento = tblDocumentoPersonal::create([
             'fk_usuario' => $usuario->id,
             'fk_documento_personal' => $catalogo->id_documento,
             'fecha_registro' => now(),
-            'estatus_documento' => catDocumentoPersonal::ESTATUS_EN_REVISION,
+            'estatus_documento' => tblDocumentoPersonal::ESTATUS_EN_REVISION,
             // ruta_archivo intencionalmente vacío
         ]);
 
@@ -125,9 +125,9 @@ class ApiDocumentoPersonalTest extends TestCase
      * Crea un documento con su catálogo y un PDF almacenado, registrando
      * la ruta en la columna `ruta_archivo` (flujo de subida actual).
      */
-    private function crearDocumentoConArchivo(): catDocumentoPersonal
+    private function crearDocumentoConArchivo(): tblDocumentoPersonal
     {
-        $catalogo = tblDocumentoPersonal::create([
+        $catalogo = catDocumentoPersonal::create([
             'nombre_documento' => 'INE',
             'vigencia_meses' => 12,
             'estatus_documento' => true,
@@ -135,11 +135,11 @@ class ApiDocumentoPersonalTest extends TestCase
 
         $usuario = User::factory()->create();
 
-        $documento = catDocumentoPersonal::create([
+        $documento = tblDocumentoPersonal::create([
             'fk_usuario' => $usuario->id,
             'fk_documento_personal' => $catalogo->id_documento,
             'fecha_registro' => now(),
-            'estatus_documento' => catDocumentoPersonal::ESTATUS_EN_REVISION,
+            'estatus_documento' => tblDocumentoPersonal::ESTATUS_EN_REVISION,
         ]);
 
         $ruta = $documento->directorioArchivo().'/documento.pdf';

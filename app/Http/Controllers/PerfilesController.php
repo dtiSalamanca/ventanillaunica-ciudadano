@@ -15,17 +15,17 @@ class PerfilesController extends Controller
 {
     public function indexPerfiles(): View
     {
-        $documentosCatalogo = tblDocumentoPersonal::where('estatus_documento', 1)
+        $documentosCatalogo = catDocumentoPersonal::where('estatus_documento', 1)
             ->orderBy('nombre_documento')
             ->get();
 
-        $documentosCargados = catDocumentoPersonal::where('fk_usuario', auth()->id())
+        $documentosCargados = tblDocumentoPersonal::where('fk_usuario', auth()->id())
             ->get()
             ->keyBy('fk_documento_personal');
 
         $totalDocumentos = $documentosCatalogo->count();
         $documentosCompletados = $documentosCatalogo->filter(
-            fn (tblDocumentoPersonal $documento) => $documentosCargados->has($documento->id_documento)
+            fn (catDocumentoPersonal $documento) => $documentosCargados->has($documento->id_documento)
         )->count();
 
         return view('perfil.indexPerfil', [
@@ -38,9 +38,9 @@ class PerfilesController extends Controller
 
     public function estatusDocumentos(): JsonResponse
     {
-        $documentos = catDocumentoPersonal::where('fk_usuario', auth()->id())
+        $documentos = tblDocumentoPersonal::where('fk_usuario', auth()->id())
             ->get()
-            ->map(fn (catDocumentoPersonal $documento) => [
+            ->map(fn (tblDocumentoPersonal $documento) => [
                 'fk_documento_personal' => $documento->fk_documento_personal,
                 'estatus' => $documento->estatus_documento,
                 'fecha_registro' => $documento->fecha_registro->format('d/m/Y'),
@@ -51,7 +51,7 @@ class PerfilesController extends Controller
         return response()->json(['documentos' => $documentos]);
     }
 
-    public function subirDocumento(Request $request, tblDocumentoPersonal $catalogoDocumento): RedirectResponse|JsonResponse
+    public function subirDocumento(Request $request, catDocumentoPersonal $catalogoDocumento): RedirectResponse|JsonResponse
     {
         $request->validate([
             'archivo' => ['required', 'file', 'mimes:pdf', 'max:10240'],
@@ -62,7 +62,7 @@ class PerfilesController extends Controller
             'archivo.max' => 'El archivo no puede superar los 10 MB.',
         ]);
 
-        $registroExistente = catDocumentoPersonal::where('fk_usuario', auth()->id())
+        $registroExistente = tblDocumentoPersonal::where('fk_usuario', auth()->id())
             ->where('fk_documento_personal', $catalogoDocumento->id_documento)
             ->first();
 
@@ -78,20 +78,20 @@ class PerfilesController extends Controller
         if ($registroExistente) {
             $registroExistente->update([
                 'fecha_registro' => now(),
-                'estatus_documento' => catDocumentoPersonal::ESTATUS_EN_REVISION,
+                'estatus_documento' => tblDocumentoPersonal::ESTATUS_EN_REVISION,
                 'ruta_archivo' => $rutaArchivo,
             ]);
         } else {
-            catDocumentoPersonal::create([
+            tblDocumentoPersonal::create([
                 'fk_usuario' => auth()->id(),
                 'fk_documento_personal' => $catalogoDocumento->id_documento,
                 'fecha_registro' => now(),
-                'estatus_documento' => catDocumentoPersonal::ESTATUS_EN_REVISION,
+                'estatus_documento' => tblDocumentoPersonal::ESTATUS_EN_REVISION,
                 'ruta_archivo' => $rutaArchivo,
             ]);
         }
 
-        $registro = $registroExistente ?? catDocumentoPersonal::where('fk_usuario', auth()->id())
+        $registro = $registroExistente ?? tblDocumentoPersonal::where('fk_usuario', auth()->id())
             ->where('fk_documento_personal', $catalogoDocumento->id_documento)
             ->first();
 
@@ -109,7 +109,7 @@ class PerfilesController extends Controller
             ->with('success', "El documento «{$catalogoDocumento->nombre_documento}» se envió para revisión correctamente.");
     }
 
-    public function descargarDocumento(catDocumentoPersonal $registroDocumento): BinaryFileResponse
+    public function descargarDocumento(tblDocumentoPersonal $registroDocumento): BinaryFileResponse
     {
         abort_if($registroDocumento->fk_usuario !== auth()->id(), 403);
 
@@ -128,7 +128,7 @@ class PerfilesController extends Controller
      *
      * @return string|null Ruta relativa en el disco `local`, o null si no existe.
      */
-    private function resolverRutaArchivo(catDocumentoPersonal $registroDocumento, $disk): ?string
+    private function resolverRutaArchivo(tblDocumentoPersonal $registroDocumento, $disk): ?string
     {
         if ($registroDocumento->ruta_archivo && $disk->exists($registroDocumento->ruta_archivo)) {
             return $registroDocumento->ruta_archivo;

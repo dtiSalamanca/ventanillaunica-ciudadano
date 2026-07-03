@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\catDocumentoPersonal;
+use App\Models\tblDocumentoPersonal;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
@@ -13,7 +13,7 @@ class DocumentoPersonalController extends Controller
      * Devuelve el archivo del documento personal para que el panel
      * administrador lo visualice inline en el visor del navegador.
      */
-    public function mostrarArchivo(catDocumentoPersonal $registroDocumento): BinaryFileResponse
+    public function mostrarArchivo(tblDocumentoPersonal $registroDocumento): BinaryFileResponse
     {
         $disk = Storage::disk('local');
         $ruta = $this->resolverRutaArchivo($registroDocumento, $disk);
@@ -37,7 +37,7 @@ class DocumentoPersonalController extends Controller
      *
      * @return string|null Ruta relativa en el disco `local`, o null si no existe.
      */
-    private function resolverRutaArchivo(catDocumentoPersonal $registroDocumento, $disk): ?string
+    private function resolverRutaArchivo(tblDocumentoPersonal $registroDocumento, $disk): ?string
     {
         if ($registroDocumento->ruta_archivo && $disk->exists($registroDocumento->ruta_archivo)) {
             return $registroDocumento->ruta_archivo;
