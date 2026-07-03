@@ -73,12 +73,13 @@ class PerfilesController extends Controller
         }
 
         $directorio = 'documentos_personales/'.auth()->id()."/{$catalogoDocumento->id_documento}";
-        $request->file('archivo')->store($directorio, 'local');
+        $rutaArchivo = $request->file('archivo')->store($directorio, 'local');
 
         if ($registroExistente) {
             $registroExistente->update([
                 'fecha_registro' => now(),
                 'estatus_documento' => catDocumentoPersonal::ESTATUS_EN_REVISION,
+                'ruta_archivo' => $rutaArchivo,
             ]);
         } else {
             catDocumentoPersonal::create([
@@ -86,6 +87,7 @@ class PerfilesController extends Controller
                 'fk_documento_personal' => $catalogoDocumento->id_documento,
                 'fecha_registro' => now(),
                 'estatus_documento' => catDocumentoPersonal::ESTATUS_EN_REVISION,
+                'ruta_archivo' => $rutaArchivo,
             ]);
         }
 
@@ -111,12 +113,35 @@ class PerfilesController extends Controller
     {
         abort_if($registroDocumento->fk_usuario !== auth()->id(), 403);
 
-        $archivos = Storage::disk('local')->files($registroDocumento->directorioArchivo());
+        $disk = Storage::disk('local');
+        $ruta = $this->resolverRutaArchivo($registroDocumento, $disk);
 
-        abort_if(empty($archivos), 404, 'El archivo no existe.');
+        abort_if($ruta === null, 404, 'El archivo no existe.');
 
-        return response()->file(
-            Storage::disk('local')->path($archivos[0])
-        );
+        return response()->file($disk->path($ruta));
+    }
+
+    /**
+     * Resuelve la ruta del archivo a servir: usa la columna `ruta_archivo`
+     * si está disponible; si no (registros antiguos), elige el archivo más
+     * reciente del directorio por fecha de modificación.
+     *
+     * @return string|null Ruta relativa en el disco `local`, o null si no existe.
+     */
+    private function resolverRutaArchivo(catDocumentoPersonal $registroDocumento, $disk): ?string
+    {
+        if ($registroDocumento->ruta_archivo && $disk->exists($registroDocumento->ruta_archivo)) {
+            return $registroDocumento->ruta_archivo;
+        }
+
+        $archivos = $disk->files($registroDocumento->directorioArchivo());
+
+        if (empty($archivos)) {
+            return null;
+        }
+
+        return collect($archivos)
+            ->sortByDesc(fn (string $archivo) => $disk->lastModified($archivo))
+            ->first();
     }
 }
