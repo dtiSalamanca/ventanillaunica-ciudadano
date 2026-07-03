@@ -34,10 +34,10 @@
 
         <div class="profile-tabs" role="tablist" aria-label="Secciones del perfil">
             <button class="profile-tabs__tab profile-tabs__tab--active" role="tab" aria-selected="true" aria-controls="panel-documentos" id="tab-documentos" type="button">
-                <i class="fas fa-clipboard-list"></i> Documentos
+                <i class="fas fa-id-card"></i> Documentos Personales
             </button>
             <button class="profile-tabs__tab profile-tabs__tab--disabled" role="tab" aria-selected="false" aria-disabled="true" tabindex="-1" title="Próximamente" type="button">
-                <i class="fas fa-clock-rotate-left"></i> Historial
+                <i class="fas fa-house"></i> Predios
             </button>
         </div>
 
