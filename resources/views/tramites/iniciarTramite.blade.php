@@ -100,13 +100,19 @@
                             @endphp
 
                             <div class="requisito-cumplimiento" data-requisito="{{ $idRequisito }}">
-                                <div class="requisito-cumplimiento__cabecera">
+                                <div class="requisito-cumplimiento__cabecera" data-toggle-acordeon>
                                     <span class="requisito-cumplimiento__nombre">{{ $requisito->nombre_requisito }}</span>
                                     <span class="badge-estado badge-estado--pendiente">
                                         <i class="fa-solid fa-circle-exclamation me-1"></i>Pendiente
                                     </span>
+                                    <button type="button" class="requisito-cumplimiento__reabrir" title="Editar requisito" hidden>
+                                        <i class="fa-solid fa-pen"></i>
+                                    </button>
+                                    <i class="fa-solid fa-chevron-down requisito-cumplimiento__chevron"></i>
                                 </div>
 
+                                <div class="requisito-cumplimiento__cuerpo">
+                                <div class="requisito-cumplimiento__cuerpo-inner">
                                 {{-- Opciones de cumplimiento --}}
                                 <div class="requisito-opciones" role="radiogroup" aria-label="Forma de cumplir {{ $requisito->nombre_requisito }}">
                                     <label class="requisito-opcion" data-metodo="documento">
@@ -220,6 +226,8 @@
                                             Trámites finalizados que entregan un documento oficial.
                                         </p>
                                     </div>
+                                </div>
+                                </div>
                                 </div>
                             </div>
                         @endforeach

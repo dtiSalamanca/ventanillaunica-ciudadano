@@ -1,5 +1,5 @@
 :root {
-    --primary: #1e5c50;
+    --primary: #601028;
     --primary-dark: #164a3f;
     --primary-light: #e8f4f1;
     --accent: #a62346;
@@ -260,7 +260,7 @@
 .progreso-tramite__fill {
     height: 100%;
     width: 0%;
-    background: linear-gradient(90deg, var(--primary), #2d8a78);
+    background: linear-gradient(90deg, var(--primary), #601028);
     border-radius: 999px;
     transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -326,6 +326,70 @@
     color: var(--text-primary);
     font-size: 0.92rem;
     line-height: 1.3;
+}
+
+/* ── Comportamiento de acordeón ── */
+.requisito-cumplimiento__cuerpo {
+    display: grid;
+    grid-template-rows: 1fr;
+    opacity: 1;
+    transition: grid-template-rows 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease;
+}
+
+.requisito-cumplimiento__cuerpo > * {
+    min-height: 0;
+    overflow: hidden;
+}
+
+.requisito-cumplimiento__reabrir {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 30px;
+    height: 30px;
+    border: 1.5px solid var(--border);
+    border-radius: 50%;
+    background: var(--bg-surface);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.requisito-cumplimiento__reabrir:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.requisito-cumplimiento__reabrir[hidden] {
+    display: none;
+}
+
+.requisito-cumplimiento__chevron {
+    flex-shrink: 0;
+    display: none;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    transition: var(--transition);
+}
+
+.requisito-cumplimiento--colapsado .requisito-cumplimiento__cabecera {
+    margin-bottom: 0;
+    cursor: pointer;
+}
+
+.requisito-cumplimiento--colapsado .requisito-cumplimiento__cuerpo {
+    grid-template-rows: 0fr;
+    opacity: 0;
+}
+
+.requisito-cumplimiento--colapsado .requisito-cumplimiento__reabrir {
+    display: inline-flex;
+}
+
+.requisito-cumplimiento--colapsado .requisito-cumplimiento__chevron {
+    display: inline-block;
+    transform: rotate(-90deg);
 }
 
 /* ── Badges de estado por requisito ── */
@@ -585,7 +649,7 @@
     padding-top: 1.5rem;
     border-top: 1px solid var(--border);
     display: flex;
-    justify-content: flex-end;
+    justify-content: center;
 }
 
 .btn-enviar-solicitud {
@@ -750,7 +814,10 @@
     .requisito-control__select,
     .requisito-control__archivo,
     .progreso-tramite__fill,
-    .btn-enviar-solicitud {
+    .btn-enviar-solicitud,
+    .requisito-cumplimiento__cuerpo,
+    .requisito-cumplimiento__reabrir,
+    .requisito-cumplimiento__chevron {
         transition: none;
     }
 
