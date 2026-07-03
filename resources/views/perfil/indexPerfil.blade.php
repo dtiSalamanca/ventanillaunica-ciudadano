@@ -1,7 +1,7 @@
 @extends('layouts.ciudadano')
 
 @section('css')
-    <link rel="stylesheet" href="{{ asset('perfil/indexPerfil.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/perfil/indexPerfil.css') }}">
 @endsection
 
 @section('content')
