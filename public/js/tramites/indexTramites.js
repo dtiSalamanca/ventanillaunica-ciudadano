@@ -34,6 +34,13 @@ function activarFiltro(sidebarItems, tabItems, dependencia) {
     tabItems.forEach((b) => {
         b.classList.toggle("active", b.dataset.dependencia === dependencia);
     });
+
+    // Oculta la etiqueta de dependencia en las tarjetas cuando se filtra por una dependencia específica
+    const content = document.querySelector(".tramites-content");
+    if (content) {
+        content.classList.toggle("filtro-activo", dependencia !== "todas");
+    }
+
     animarItemActivo(dependencia);
     aplicarFiltros();
 }

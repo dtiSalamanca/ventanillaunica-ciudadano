@@ -247,6 +247,11 @@
     border-color: var(--primary-dark);
 }
 
+/* ── Ocultar etiqueta de dependencia cuando se filtra por una dependencia específica ── */
+.tramites-content.filtro-activo .tramite-card-dependencia {
+    display: none;
+}
+
 /* ── Contenido principal (columna derecha) ── */
 .tramites-content {
     flex: 1;
