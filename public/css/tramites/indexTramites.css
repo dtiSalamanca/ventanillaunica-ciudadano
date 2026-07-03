@@ -1,7 +1,7 @@
 :root {
-    --primary: #1e5c50;
-    --primary-dark: #164a3f;
-    --primary-light: #e8f4f1;
+    --primary: #601028;
+    --primary-dark: #4b0b1e;
+    --primary-light: #f5dde4;
     --accent: #a62346;
     --accent-dark: #8a1c36;
     --text-primary: #1a202c;
@@ -298,7 +298,7 @@
 .search-bar input[type="text"]:focus {
     outline: none;
     border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(30, 92, 80, 0.12);
+    box-shadow: 0 0 0 3px rgba(96, 16, 40, 0.12);
 }
 
 .search-clear {
@@ -451,7 +451,7 @@
     height: 0.85rem;
     background-size: 0.85rem;
     filter: brightness(0) saturate(100%) invert(24%) sepia(19%) saturate(1224%)
-        hue-rotate(122deg) brightness(94%) contrast(90%);
+        hue-rotate(296deg) brightness(94%) contrast(90%);
     transition: transform 0.25s ease;
 }
 
@@ -496,7 +496,7 @@
 }
 
 .requisito-item:hover {
-    background: rgba(30, 92, 80, 0.06);
+    background: rgba(96, 16, 40, 0.06);
 }
 
 .requisito-item + .requisito-item {
@@ -588,7 +588,7 @@
 }
 
 .btn-iniciar-tramite:focus-visible {
-    outline: 3px solid rgba(30, 92, 80, 0.25);
+    outline: 3px solid rgba(96, 16, 40, 0.25);
     outline-offset: 2px;
 }
 
