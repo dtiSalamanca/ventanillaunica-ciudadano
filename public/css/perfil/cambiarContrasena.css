@@ -449,7 +449,6 @@
     margin: 1.25rem 0 0;
     padding: 0.75rem 0.9rem;
     background: var(--primary-light);
-    border-left: 3px solid var(--primary);
     border-radius: var(--radius-sm);
     font-size: 0.8rem;
     color: var(--primary-dark);
