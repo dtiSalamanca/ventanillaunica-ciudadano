@@ -389,6 +389,11 @@
     color: var(--primary);
 }
 
+.tramite-card-dependencia-label {
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
 .tramite-card-descripcion {
     display: flex;
     align-items: flex-start;

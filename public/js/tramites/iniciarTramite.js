@@ -57,7 +57,6 @@ function initActualizacionProgreso() {
 function actualizarEstadoRequisito(requisito) {
     const radioActivo = requisito.querySelector(".requisito-opcion__radio:checked");
     const badge = requisito.querySelector(".badge-estado");
-    const icono = requisito.querySelector(".requisito-cumplimiento__icono i");
 
     let cumplido = false;
 
@@ -88,12 +87,6 @@ function actualizarEstadoRequisito(requisito) {
             badge.className = "badge-estado badge-estado--pendiente";
             badge.innerHTML = '<i class="fa-solid fa-circle-exclamation me-1"></i>Pendiente';
         }
-    }
-
-    if (icono) {
-        icono.className = cumplido
-            ? "fa-solid fa-circle-check"
-            : "fa-solid fa-circle-dot";
     }
 
     actualizarProgresoGlobal();
@@ -134,19 +127,39 @@ function initValidacionArchivos() {
             if (extension !== "pdf") {
                 mostrarError("Solo se permiten archivos PDF.");
                 input.value = "";
+                actualizarNombreArchivo(input);
                 return;
             }
 
             if (archivo.size > MAX_BYTES_ARCHIVO) {
                 mostrarError("El archivo no puede superar los 10 MB.");
                 input.value = "";
+                actualizarNombreArchivo(input);
                 return;
             }
+
+            actualizarNombreArchivo(input);
 
             const requisito = input.closest(".requisito-cumplimiento");
             if (requisito) actualizarEstadoRequisito(requisito);
         });
     });
+}
+
+/* ── Nombre del archivo seleccionado (selector personalizado) ── */
+function actualizarNombreArchivo(input) {
+    const nombreEl = input.closest(".archivo-selector")?.querySelector(".archivo-selector__nombre");
+    if (!nombreEl) return;
+
+    const archivo = input.files[0];
+
+    if (archivo) {
+        nombreEl.textContent = archivo.name;
+        nombreEl.classList.add("archivo-selector__nombre--seleccionado");
+    } else {
+        nombreEl.textContent = nombreEl.dataset.placeholder;
+        nombreEl.classList.remove("archivo-selector__nombre--seleccionado");
+    }
 }
 
 /* ── Envío de solicitud (concepto: Swal informativo) ── */
