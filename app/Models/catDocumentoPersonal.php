@@ -13,6 +13,7 @@ class catDocumentoPersonal extends Model
 
     protected $fillable = [
         'nombre_documento',
+        'descripcion_documento',
         'vigencia_meses',
         'estatus_documento',
     ];

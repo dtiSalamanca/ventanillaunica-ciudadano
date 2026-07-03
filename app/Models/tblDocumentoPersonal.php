@@ -7,6 +7,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class tblDocumentoPersonal extends Model
 {
+    public const ESTATUS_RECHAZADO = 0;
+
+    public const ESTATUS_EN_REVISION = 1;
+
+    public const ESTATUS_APROBADO = 2;
+
     protected $table = 'tbl_documentos_personales';
 
     protected $primaryKey = 'id_documento';
@@ -18,17 +24,6 @@ class tblDocumentoPersonal extends Model
         'estatus_documento',
         'ruta_archivo',
     ];
-
-    const ESTATUS_RECHAZADO = 0;
-
-    const ESTATUS_EN_REVISION = 1;
-
-    const ESTATUS_APROBADO = 2;
-
-    public function directorioArchivo(): string
-    {
-        return "documentos_personales/{$this->fk_usuario}/{$this->fk_documento_personal}";
-    }
 
     protected $casts = [
         'fecha_registro' => 'date',
