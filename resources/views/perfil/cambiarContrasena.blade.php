@@ -33,7 +33,7 @@
                     </div>
 
                     <form id="form-cambiar-contrasena"
-                          action="{{ route('perfiles.actualizarContrasena') }}"
+                          action="{{ route('actualizarContrasena') }}"
                           method="POST"
                           novalidate>
                         @csrf
@@ -177,7 +177,7 @@
 
 @section('scripts')
     <script>
-        window.cambiarContrasenaConfig = @json(['url' => route('perfiles.actualizarContrasena'), 'csrfToken' => csrf_token(), 'redirectLogin' => route('login')]);
+        window.cambiarContrasenaConfig = @json(['url' => route('actualizarContrasena'), 'csrfToken' => csrf_token(), 'redirectLogin' => route('login')]);
     </script>
     <script src="{{ asset('js/perfil/cambiarContrasena.js') }}" defer></script>
 @endsection

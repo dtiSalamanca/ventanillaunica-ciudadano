@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\catDocumentoPersonal;
+use App\Models\catDocumentoPredio;
+use App\Models\Predio;
 use App\Models\tblDocumentoPersonal;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -28,11 +30,22 @@ class PerfilesController extends Controller
             fn (catDocumentoPersonal $documento) => $documentosCargados->has($documento->id_documento)
         )->count();
 
+        $catalogoPredios = catDocumentoPredio::where('estatus_documento', 1)
+            ->orderBy('nombre_documento')
+            ->get();
+
+        $predios = Predio::where('fk_user', auth()->id())
+            ->with('documentos')
+            ->orderByDesc('id_predio')
+            ->get();
+
         return view('perfil.indexPerfil', [
             'documentosCatalogo' => $documentosCatalogo,
             'documentosCargados' => $documentosCargados,
             'totalDocumentos' => $totalDocumentos,
             'documentosCompletados' => $documentosCompletados,
+            'catalogoPredios' => $catalogoPredios,
+            'predios' => $predios,
         ]);
     }
 
@@ -44,8 +57,8 @@ class PerfilesController extends Controller
                 'fk_documento_personal' => $documento->fk_documento_personal,
                 'estatus' => $documento->estatus_documento,
                 'fecha_registro' => $documento->fecha_registro->format('d/m/Y'),
-                'url_descargar' => route('perfiles.documentos.descargar', $documento->id_documento),
-                'url_subir' => route('perfiles.documentos.subir', $documento->fk_documento_personal),
+                'url_descargar' => route('descargarDocumento', $documento->id_documento),
+                'url_subir' => route('subirDocumento', $documento->fk_documento_personal),
             ]);
 
         return response()->json(['documentos' => $documentos]);
@@ -100,8 +113,8 @@ class PerfilesController extends Controller
                 'id_registro' => $registro->id_documento,
                 'fecha_registro' => $registro->fecha_registro->format('d/m/Y'),
                 'estatus' => $registro->estatus_documento,
-                'url_descargar' => route('perfiles.documentos.descargar', $registro->id_documento),
-                'url_subir' => route('perfiles.documentos.subir', $catalogoDocumento->id_documento),
+                'url_descargar' => route('descargarDocumento', $registro->id_documento),
+                'url_subir' => route('subirDocumento', $catalogoDocumento->id_documento),
             ]);
         }
 

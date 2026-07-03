@@ -4,6 +4,10 @@ document.addEventListener("DOMContentLoaded", function () {
     initTabs();
     initSubirDocumento();
     initPollingEstatus();
+    initPollingEstatusPredios();
+    initFormAgregarPredio();
+    initAcordeonPredios();
+    initEliminarPredio();
 });
 
 const INTERVALO_POLLING_MS = 15000;
@@ -27,7 +31,7 @@ async function consultarEstatusDocumentos(url) {
 
         datos.documentos.forEach((documento) => {
             const card = document.querySelector(
-                `.documento-card[data-catalogo-id="${documento.fk_documento_personal}"]`
+                `#panel-documentos .documento-card[data-catalogo-id="${documento.fk_documento_personal}"]`
             );
             if (!card) return;
 
@@ -45,6 +49,70 @@ async function consultarEstatusDocumentos(url) {
         }
     } catch {
         // Silencioso: se reintenta en el siguiente ciclo de polling.
+    }
+}
+
+function initPollingEstatusPredios() {
+    const url = window.perfilConfig?.urlEstatusPredios;
+    if (!url) return;
+
+    setInterval(() => consultarEstatusPredios(url), INTERVALO_POLLING_MS);
+}
+
+async function consultarEstatusPredios(url) {
+    try {
+        const respuesta = await fetch(url, {
+            headers: { Accept: "application/json" },
+        });
+        if (!respuesta.ok) return;
+
+        const datos = await respuesta.json();
+
+        datos.predios.forEach((predio) => {
+            const predioCard = document.querySelector(
+                `.predio-card[data-predio-id="${predio.id_predio}"]`
+            );
+            if (!predioCard) return;
+
+            if (Number(predioCard.dataset.estatusPredio) !== predio.estatus) {
+                actualizarBadgePredio(predioCard, predio.estatus);
+            }
+
+            let huboCambios = false;
+
+            predio.documentos.forEach((documento) => {
+                const card = predioCard.querySelector(
+                    `.documento-card[data-catalogo-id="${documento.fk_cat_documento_predio}"]`
+                );
+                if (!card) return;
+
+                const estatusActual = card.dataset.estatusNum;
+                if (estatusActual !== undefined && Number(estatusActual) === documento.estatus) {
+                    return;
+                }
+
+                actualizarCard(card, documento);
+                huboCambios = true;
+            });
+
+            if (huboCambios) {
+                actualizarResumenPredio(predioCard);
+            }
+        });
+    } catch {
+        // Silencioso: se reintenta en el siguiente ciclo de polling.
+    }
+}
+
+function actualizarBadgePredio(predioCard, estatus) {
+    predioCard.dataset.estatusPredio = estatus;
+
+    const badge = predioCard.querySelector(".predio-card__badge");
+    if (badge) {
+        badge.outerHTML = badgeEstatus(estatus).replace(
+            'class="badge-estatus',
+            'class="predio-card__badge badge-estatus'
+        );
     }
 }
 
@@ -102,6 +170,10 @@ function initTabs() {
 
             tab.classList.add("profile-tabs__tab--active");
             tab.setAttribute("aria-selected", "true");
+
+            document.querySelectorAll(".profile-tab-content").forEach((panel) => {
+                panel.hidden = panel.id !== panelId;
+            });
         });
     });
 
@@ -187,7 +259,13 @@ function bindFormSubir(form) {
             }
 
             actualizarCard(card, datos);
-            actualizarContadores();
+
+            const predioCard = card.closest(".predio-card");
+            if (predioCard) {
+                actualizarResumenPredio(predioCard);
+            } else {
+                actualizarContadores();
+            }
 
         } catch {
             mostrarError("No se pudo conectar con el servidor. Intenta de nuevo.");
@@ -271,8 +349,8 @@ function badgeEstatus(estatus) {
 }
 
 function actualizarContadores() {
-    const total     = document.querySelectorAll(".documento-card").length;
-    const cargados  = document.querySelectorAll(".documento-card--cargado").length;
+    const total     = document.querySelectorAll("#panel-documentos .documento-card").length;
+    const cargados  = document.querySelectorAll("#panel-documentos .documento-card--cargado").length;
     const pendientes = total - cargados;
     const porcentaje = total > 0 ? Math.round((cargados / total) * 100) : 0;
 
@@ -287,6 +365,77 @@ function actualizarContadores() {
     if (elPendientes) elPendientes.textContent = pendientes;
     if (elPorcentaje) elPorcentaje.textContent = porcentaje + "%";
     if (barra)        barra.style.width        = porcentaje + "%";
+}
+
+function actualizarResumenPredio(predioCard) {
+    const resumen = predioCard.querySelector(".predio-card__resumen");
+    if (!resumen) return;
+
+    const total = predioCard.querySelectorAll(".documento-card").length;
+    const cargados = predioCard.querySelectorAll(".documento-card--cargado").length;
+
+    resumen.textContent = `${cargados} de ${total} documentos cargados`;
+}
+
+function initFormAgregarPredio() {
+    const form = document.getElementById("form-agregar-predio");
+    const btnMostrar = document.getElementById("btn-mostrar-form-predio");
+    const btnCancelar = document.getElementById("btn-cancelar-form-predio");
+    if (!form || !btnMostrar || !btnCancelar) return;
+
+    btnMostrar.addEventListener("click", () => {
+        form.classList.remove("form-agregar-predio--oculto");
+        form.querySelector("#clave_predio")?.focus();
+    });
+
+    btnCancelar.addEventListener("click", () => {
+        form.reset();
+        form.classList.add("form-agregar-predio--oculto");
+    });
+}
+
+function initAcordeonPredios() {
+    document.querySelectorAll(".predio-card__header").forEach((header) => {
+        header.addEventListener("click", () => {
+            const body = header.nextElementSibling;
+            if (!body) return;
+
+            const abierto = header.getAttribute("aria-expanded") === "true";
+            header.setAttribute("aria-expanded", String(!abierto));
+            body.hidden = abierto;
+        });
+    });
+}
+
+function initEliminarPredio() {
+    document.querySelectorAll(".form-eliminar-predio").forEach((form) => {
+        form.addEventListener("submit", (e) => {
+            if (form.dataset.confirmado) return;
+            e.preventDefault();
+
+            const clave = form.closest(".predio-card")?.querySelector(".predio-card__clave")?.textContent ?? "este predio";
+
+            if (window.Swal) {
+                Swal.fire({
+                    icon: "warning",
+                    title: "¿Eliminar predio?",
+                    text: `Se eliminará «${clave}» junto con sus documentos cargados.`,
+                    showCancelButton: true,
+                    confirmButtonText: "Eliminar",
+                    cancelButtonText: "Cancelar",
+                    confirmButtonColor: "#dc2626",
+                }).then((resultado) => {
+                    if (resultado.isConfirmed) {
+                        form.dataset.confirmado = "1";
+                        form.submit();
+                    }
+                });
+            } else if (confirm(`¿Eliminar «${clave}» junto con sus documentos cargados?`)) {
+                form.dataset.confirmado = "1";
+                form.submit();
+            }
+        });
+    });
 }
 
 function mostrarError(mensaje) {

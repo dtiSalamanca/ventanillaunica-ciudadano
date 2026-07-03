@@ -73,7 +73,7 @@
                         </a>
                     </li>
                     <li>
-                        <a class="dropdown-item" href="{{ route('perfiles.cambiarContrasena') }}">
+                        <a class="dropdown-item" href="{{ route('cambiarContrasena') }}">
                             <i class="fas fa-key me-2"></i><span class="highlight-text">{{ __('Cambiar contraseña') }}</span>
                         </a>
                     </li>
