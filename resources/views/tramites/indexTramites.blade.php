@@ -113,6 +113,13 @@
                                     <span class="badge-requisitos">{{ $totalRequisitos }} requisito(s)</span>
                                 </div>
 
+                                @if ($tramite->descripcion_tramite)
+                                    <div class="tramite-card-descripcion">
+                                        <i class="fa-solid fa-quote-left tramite-card-descripcion-icono"></i>
+                                        <p>{{ $tramite->descripcion_tramite }}</p>
+                                    </div>
+                                @endif
+
                                 <div class="accordion tramite-accordion">
                                     <div class="accordion-item">
                                         <h2 class="accordion-header">

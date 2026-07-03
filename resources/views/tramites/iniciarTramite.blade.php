@@ -52,6 +52,13 @@
                 </span>
             </div>
 
+            @if ($tramite->descripcion_tramite)
+                <div class="tramite-resumen__descripcion">
+                    <i class="fa-solid fa-quote-left tramite-resumen__descripcion-icono"></i>
+                    <p>{{ $tramite->descripcion_tramite }}</p>
+                </div>
+            @endif
+
             @if ($totalRequisitos > 0)
                 <div class="progreso-tramite">
                     <div class="progreso-tramite__header">

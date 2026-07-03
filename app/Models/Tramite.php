@@ -14,6 +14,7 @@ class Tramite extends Model
 
     protected $fillable = [
         'nombre_tramite',
+        'descripcion_tramite',
         'estatus_tramite',
         'fk_dependencia',
         'precio_tramite',
