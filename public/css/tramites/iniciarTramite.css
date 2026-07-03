@@ -267,10 +267,9 @@
 
 /* ── Lista de requisitos ── */
 .requisitos-cumplimiento-lista {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1rem;
-    align-items: start;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
 }
 
 .requisito-cumplimiento {
@@ -546,10 +545,6 @@
 
     .card-body {
         padding: 1.5rem;
-    }
-
-    .requisitos-cumplimiento-lista {
-        grid-template-columns: 1fr;
     }
 
     .requisito-cumplimiento__cabecera {
