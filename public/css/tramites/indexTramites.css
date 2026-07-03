@@ -506,6 +506,28 @@
     border-radius: var(--radius-sm);
 }
 
+/* ── Precio del trámite ── */
+.tramite-card-precio {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 0;
+    margin-bottom: 0.5rem;
+    border-top: 1px solid var(--border);
+}
+
+.precio-label {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.precio-monto {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--primary);
+}
+
 /* ── Botón Iniciar trámite (CTA) ── */
 .tramite-card-footer {
     padding: 0 1.25rem 1.25rem;

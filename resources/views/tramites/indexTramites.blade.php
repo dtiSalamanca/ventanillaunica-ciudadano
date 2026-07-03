@@ -153,6 +153,11 @@
                                 </div>
 
                                 <div class="tramite-card-footer">
+                                    <div class="tramite-card-precio">
+                                        <span class="precio-label">Precio del trámite</span>
+                                        <span class="precio-monto">${{ number_format($tramite->precio_tramite, 2) }}</span>
+                                    </div>
+
                                     <a href="{{ route('iniciarTramite', $tramite) }}"
                                        class="btn-iniciar-tramite"
                                        data-nombre="{{ $tramite->nombre_tramite }}">

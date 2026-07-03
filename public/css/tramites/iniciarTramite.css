@@ -149,6 +149,24 @@
     color: var(--primary);
 }
 
+.tramite-resumen__precio {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.tramite-resumen__precio .precio-label {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.tramite-resumen__precio .precio-monto {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--primary);
+}
+
 .badge-requisitos {
     flex-shrink: 0;
     background: var(--primary-light);

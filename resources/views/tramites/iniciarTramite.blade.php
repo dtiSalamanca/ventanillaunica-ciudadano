@@ -41,6 +41,12 @@
                     <i class="fa-solid fa-building"></i>
                     {{ $tramite->dependencia?->nombre_dependencia ?? 'Sin dependencia' }}
                 </div>
+
+                <div class="tramite-resumen__precio">
+                    <span class="precio-label">Precio</span>
+                    <span class="precio-monto">${{ number_format($tramite->precio_tramite, 2) }}</span>
+                </div>
+
                 <span class="badge-requisitos">
                     <i class="fa-solid fa-list-check me-1"></i>{{ $totalRequisitos }} requisito(s)
                 </span>
