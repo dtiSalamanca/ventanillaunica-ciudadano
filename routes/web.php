@@ -3,6 +3,7 @@
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PerfilesController;
 use App\Http\Controllers\TramitesController;
+use App\Http\Controllers\UsuariosController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -28,4 +29,9 @@ Route::middleware('auth')->controller(PerfilesController::class)->group(function
 Route::middleware('auth')->controller(TramitesController::class)->group(function () {
     Route::get('/tramites', 'indexTramites')->name('indexTramites');
     Route::get('/tramites/{tramite}/iniciar', 'iniciarTramite')->name('iniciarTramite');
+});
+
+Route::middleware('auth')->controller(UsuariosController::class)->group(function () {
+    Route::get('/perfiles/cambiar-contrasena', 'cambiarContrasena')->name('perfiles.cambiarContrasena');
+    Route::post('/perfiles/cambiar-contrasena', 'actualizarContrasena')->name('perfiles.actualizarContrasena');
 });

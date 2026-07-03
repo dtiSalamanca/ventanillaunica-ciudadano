@@ -36,20 +36,23 @@
 
         {{-- Resumen del trámite --}}
         <div class="tramite-resumen">
-            <div class="tramite-resumen__info">
-                <div class="tramite-resumen__dependencia">
-                    <i class="fa-solid fa-building"></i>
-                    {{ $tramite->dependencia?->nombre_dependencia ?? 'Sin dependencia' }}
+            <div class="tramite-resumen__cabecera">
+                <div class="tramite-resumen__datos">
+                    <div class="tramite-resumen__dependencia">
+                        <i class="fa-solid fa-building"></i>
+                        <span class="tramite-resumen__dependencia-texto">
+                            <span class="tramite-resumen__dependencia-label">Dependencia responsable</span>
+                            <span class="tramite-resumen__dependencia-nombre">
+                                {{ $tramite->dependencia?->nombre_dependencia ?? 'Sin dependencia' }}
+                            </span>
+                        </span>
+                    </div>
                 </div>
 
                 <div class="tramite-resumen__precio">
-                    <span class="precio-label">Precio</span>
+                    <span class="precio-label">Precio del trámite</span>
                     <span class="precio-monto">${{ number_format($tramite->precio_tramite, 2) }}</span>
                 </div>
-
-                <span class="badge-requisitos">
-                    <i class="fa-solid fa-list-check me-1"></i>{{ $totalRequisitos }} requisito(s)
-                </span>
             </div>
 
             @if ($tramite->descripcion_tramite)
@@ -98,9 +101,6 @@
 
                             <div class="requisito-cumplimiento" data-requisito="{{ $idRequisito }}">
                                 <div class="requisito-cumplimiento__cabecera">
-                                    <span class="requisito-cumplimiento__icono">
-                                        <i class="fa-solid fa-circle-dot"></i>
-                                    </span>
                                     <span class="requisito-cumplimiento__nombre">{{ $requisito->nombre_requisito }}</span>
                                     <span class="badge-estado badge-estado--pendiente">
                                         <i class="fa-solid fa-circle-exclamation me-1"></i>Pendiente
@@ -114,7 +114,12 @@
                                                name="{{ $nombreRadio }}"
                                                value="documento"
                                                class="requisito-opcion__radio">
-                                        <i class="fa-solid fa-id-card"></i> Documento personal
+                                        <span class="requisito-opcion__icono"><i class="fa-solid fa-id-card"></i></span>
+                                        <span class="requisito-opcion__texto">
+                                            <span class="requisito-opcion__titulo">Documento personal</span>
+                                            <span class="requisito-opcion__detalle">Usa uno ya aprobado</span>
+                                        </span>
+                                        <i class="fa-solid fa-circle-check requisito-opcion__check"></i>
                                     </label>
 
                                     <label class="requisito-opcion" data-metodo="subir">
@@ -122,7 +127,12 @@
                                                name="{{ $nombreRadio }}"
                                                value="subir"
                                                class="requisito-opcion__radio">
-                                        <i class="fa-solid fa-upload"></i> Subir archivo
+                                        <span class="requisito-opcion__icono"><i class="fa-solid fa-upload"></i></span>
+                                        <span class="requisito-opcion__texto">
+                                            <span class="requisito-opcion__titulo">Subir archivo</span>
+                                            <span class="requisito-opcion__detalle">PDF, máx. 10 MB</span>
+                                        </span>
+                                        <i class="fa-solid fa-circle-check requisito-opcion__check"></i>
                                     </label>
 
                                     <label class="requisito-opcion" data-metodo="tramite">
@@ -130,7 +140,12 @@
                                                name="{{ $nombreRadio }}"
                                                value="tramite"
                                                class="requisito-opcion__radio">
-                                        <i class="fa-solid fa-file-circle-check"></i> Trámite previo
+                                        <span class="requisito-opcion__icono"><i class="fa-solid fa-file-circle-check"></i></span>
+                                        <span class="requisito-opcion__texto">
+                                            <span class="requisito-opcion__titulo">Trámite previo</span>
+                                            <span class="requisito-opcion__detalle">Ya finalizado</span>
+                                        </span>
+                                        <i class="fa-solid fa-circle-check requisito-opcion__check"></i>
                                     </label>
                                 </div>
 
@@ -169,11 +184,17 @@
                                         <label class="requisito-control__label" for="archivo-{{ $idRequisito }}">
                                             Selecciona el archivo a subir
                                         </label>
-                                        <input type="file"
-                                               id="archivo-{{ $idRequisito }}"
-                                               class="requisito-control__archivo"
-                                               accept=".pdf"
-                                               disabled>
+                                        <div class="archivo-selector">
+                                            <label for="archivo-{{ $idRequisito }}" class="archivo-selector__boton">
+                                                <i class="fa-solid fa-paperclip"></i> Elegir archivo
+                                            </label>
+                                            <span class="archivo-selector__nombre" data-placeholder="Ningún archivo seleccionado">Ningún archivo seleccionado</span>
+                                            <input type="file"
+                                                   id="archivo-{{ $idRequisito }}"
+                                                   class="requisito-control__archivo"
+                                                   accept=".pdf"
+                                                   disabled>
+                                        </div>
                                         <p class="mensaje-ayuda">
                                             <i class="fa-solid fa-file-pdf me-1"></i>PDF, máximo 10 MB.
                                         </p>

@@ -106,7 +106,9 @@
                                     <div class="tramite-card-info">
                                         <div class="tramite-card-nombre">{{ $tramite->nombre_tramite }}</div>
                                         <div class="tramite-card-dependencia">
-                                            <i class="fa-solid fa-building me-1"></i>{{ $tramite->dependencia?->nombre_dependencia ?? 'Sin dependencia' }}
+                                            <i class="fa-solid fa-building me-1"></i>
+                                            <span class="tramite-card-dependencia-label">Organiza:</span>
+                                            {{ $tramite->dependencia?->nombre_dependencia ?? 'Sin dependencia' }}
                                         </div>
                                     </div>
 
@@ -187,5 +189,6 @@
 @endsection
 
 @section('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.2/lib/anime.min.js"></script>
     <script src="{{ asset('js/tramites/indexTramites.js') }}" defer></script>
 @endsection
