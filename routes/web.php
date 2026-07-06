@@ -30,6 +30,7 @@ Route::middleware('auth')->controller(PerfilesController::class)->group(function
 Route::middleware('auth')->controller(PrediosController::class)->group(function () {
     Route::get('/perfiles/predios/estatus', 'estatusPredios')->name('estatusPredios');
     Route::post('/perfiles/predios/agregar', 'agregarPredio')->name('agregarPredio');
+    Route::post('/perfiles/predios/actualizar/{predio}', 'actualizarPredio')->name('actualizarPredio');
     Route::post('/perfiles/predios/eliminar/{predio}', 'eliminarPredio')->name('eliminarPredio');
     Route::post('/perfiles/predios/subir/{predio}/{catalogoDocumento}', 'subirDocumentoPredio')->name('subirDocumentoPredio');
     Route::get('/perfiles/predios/descargar/{registroDocumento}', 'descargarDocumentoPredio')->name('descargarDocumentoPredio');

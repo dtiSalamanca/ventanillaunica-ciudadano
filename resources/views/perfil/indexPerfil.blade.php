@@ -17,7 +17,10 @@
         </div>
 
         @php
-            $abrirTabPredios = $errors->has('clave_predio');
+            $prediosConErrorCorreccion = collect($predios)->filter(
+                fn ($predioTmp) => $errors->has('clave_predio_'.$predioTmp->id_predio)
+            );
+            $abrirTabPredios = $errors->has('clave_predio') || $prediosConErrorCorreccion->isNotEmpty();
             $tabActiva = $abrirTabPredios ? 'predios' : 'documentos';
 
             $porcentaje = $totalDocumentos > 0 ? (int) round(($documentosCompletados / $totalDocumentos) * 100) : 0;
@@ -310,9 +313,10 @@
                                     $completadosPredio = $catalogoPredios->filter(
                                         fn ($doc) => $documentosPredioCargados->has($doc->id_documento_predio)
                                     )->count();
+                                    $tieneErrorCorreccion = $errors->has('clave_predio_'.$predio->id_predio);
                                 @endphp
                                 <div class="predio-card" data-predio-id="{{ $predio->id_predio }}" data-estatus-predio="{{ $estatusPredio }}">
-                                    <button class="predio-card__header" type="button" aria-expanded="false">
+                                    <button class="predio-card__header" type="button" aria-expanded="{{ $tieneErrorCorreccion ? 'true' : 'false' }}">
                                         <div class="predio-card__info">
                                             <span class="predio-card__icono"><i class="fas fa-house"></i></span>
                                             <span class="predio-card__textos">
@@ -332,7 +336,33 @@
                                         </div>
                                     </button>
 
-                                    <div class="predio-card__body" hidden>
+                                    <div class="predio-card__body" @if (!$tieneErrorCorreccion) hidden @endif>
+                                        @if ($estatusPredio === 0)
+                                            <form action="{{ route('actualizarPredio', $predio->id_predio) }}"
+                                                  method="POST"
+                                                  class="form-agregar-predio form-corregir-predio">
+                                                @csrf
+                                                <div class="form-agregar-predio__campo">
+                                                    <label for="clave_predio_{{ $predio->id_predio }}">Corregir clave catastral</label>
+                                                    <input type="text"
+                                                           name="clave_predio_{{ $predio->id_predio }}"
+                                                           id="clave_predio_{{ $predio->id_predio }}"
+                                                           value="{{ old('clave_predio_'.$predio->id_predio, $predio->clave_predio) }}"
+                                                           placeholder="Ej. 123-456-789-000"
+                                                           maxlength="255"
+                                                           required>
+                                                    @error('clave_predio_'.$predio->id_predio)
+                                                        <span class="form-agregar-predio__error">{{ $message }}</span>
+                                                    @enderror
+                                                </div>
+                                                <div class="form-agregar-predio__acciones">
+                                                    <button type="submit" class="btn-accion btn-accion--cargar">
+                                                        <i class="fas fa-rotate-right me-1"></i>Corregir y reenviar
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        @endif
+
                                         @if ($estatusPredio !== 2)
                                             <form action="{{ route('eliminarPredio', $predio->id_predio) }}"
                                                   method="POST"

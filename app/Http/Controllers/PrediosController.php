@@ -32,6 +32,37 @@ class PrediosController extends Controller
             ->with('success', 'El predio se agregó correctamente y quedó en revisión.');
     }
 
+    public function actualizarPredio(Request $request, Predio $predio): RedirectResponse|JsonResponse
+    {
+        abort_if($predio->fk_usuario !== auth()->id(), 403);
+        abort_if($predio->estatus_predio !== Predio::ESTATUS_RECHAZADO, 403, 'Solo puedes corregir un predio rechazado.');
+
+        $campo = 'clave_predio_'.$predio->id_predio;
+
+        $validated = $request->validate([
+            $campo => ['required', 'string', 'max:255'],
+        ], [
+            $campo.'.required' => 'Debes capturar la clave catastral del predio.',
+            $campo.'.max' => 'La clave catastral no puede superar los 255 caracteres.',
+        ]);
+
+        $predio->update([
+            'clave_predio' => $validated[$campo],
+            'estatus_predio' => Predio::ESTATUS_EN_REVISION,
+        ]);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'id_predio' => $predio->id_predio,
+                'clave_predio' => $predio->clave_predio,
+                'estatus' => $predio->estatus_predio,
+            ]);
+        }
+
+        return redirect()->route('indexPerfiles')
+            ->with('success', 'El predio se corrigió y se envió nuevamente a revisión.');
+    }
+
     public function eliminarPredio(Predio $predio): RedirectResponse
     {
         abort_if($predio->fk_usuario !== auth()->id(), 403);
