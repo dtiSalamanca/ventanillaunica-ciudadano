@@ -4,6 +4,10 @@ document.addEventListener("DOMContentLoaded", function () {
     initTabs();
     initSubirDocumento();
     initPollingEstatus();
+    initPollingEstatusPredios();
+    initFormAgregarPredio();
+    initAcordeonPredios();
+    initEliminarPredio();
 });
 
 const INTERVALO_POLLING_MS = 15000;
@@ -27,7 +31,7 @@ async function consultarEstatusDocumentos(url) {
 
         datos.documentos.forEach((documento) => {
             const card = document.querySelector(
-                `.documento-card[data-catalogo-id="${documento.fk_documento_personal}"]`
+                `#panel-documentos .documento-card[data-catalogo-id="${documento.fk_documento_personal}"]`
             );
             if (!card) return;
 
@@ -48,13 +52,76 @@ async function consultarEstatusDocumentos(url) {
     }
 }
 
-function initBarraProgreso() {
-    const barra = document.querySelector(".progreso-barra-fill");
-    if (!barra) return;
+function initPollingEstatusPredios() {
+    const url = window.perfilConfig?.urlEstatusPredios;
+    if (!url) return;
 
-    const porcentaje = barra.dataset.progreso || 0;
-    requestAnimationFrame(() => {
-        barra.style.width = `${porcentaje}%`;
+    setInterval(() => consultarEstatusPredios(url), INTERVALO_POLLING_MS);
+}
+
+async function consultarEstatusPredios(url) {
+    try {
+        const respuesta = await fetch(url, {
+            headers: { Accept: "application/json" },
+        });
+        if (!respuesta.ok) return;
+
+        const datos = await respuesta.json();
+
+        datos.predios.forEach((predio) => {
+            const predioCard = document.querySelector(
+                `.predio-card[data-predio-id="${predio.id_predio}"]`
+            );
+            if (!predioCard) return;
+
+            if (Number(predioCard.dataset.estatusPredio) !== predio.estatus) {
+                actualizarBadgePredio(predioCard, predio.estatus);
+            }
+
+            let huboCambios = false;
+
+            predio.documentos.forEach((documento) => {
+                const card = predioCard.querySelector(
+                    `.documento-card[data-catalogo-id="${documento.fk_cat_documento_predio}"]`
+                );
+                if (!card) return;
+
+                const estatusActual = card.dataset.estatusNum;
+                if (estatusActual !== undefined && Number(estatusActual) === documento.estatus) {
+                    return;
+                }
+
+                actualizarCard(card, documento);
+                huboCambios = true;
+            });
+
+            if (huboCambios) {
+                actualizarResumenPredio(predioCard);
+            }
+        });
+    } catch {
+        // Silencioso: se reintenta en el siguiente ciclo de polling.
+    }
+}
+
+function actualizarBadgePredio(predioCard, estatus) {
+    predioCard.dataset.estatusPredio = estatus;
+
+    const badge = predioCard.querySelector(".predio-card__badge");
+    if (badge) {
+        badge.outerHTML = badgeEstatus(estatus).replace(
+            'class="badge-estatus',
+            'class="predio-card__badge badge-estatus'
+        );
+    }
+}
+
+function initBarraProgreso() {
+    document.querySelectorAll(".progreso-barra-fill").forEach((barra) => {
+        const porcentaje = barra.dataset.progreso || 0;
+        requestAnimationFrame(() => {
+            barra.style.width = `${porcentaje}%`;
+        });
     });
 }
 
@@ -87,31 +154,39 @@ function initFiltroDocumentos() {
 }
 
 function initTabs() {
-    const tabs = document.querySelectorAll('.profile-tabs__tab:not(.profile-tabs__tab--disabled)');
-    if (tabs.length <= 1) return;
+    const sidebarItems = document.querySelectorAll(".perfil-sidebar__item");
+    const tabItems = document.querySelectorAll(".perfil-tab-mobile");
+    if (!sidebarItems.length && !tabItems.length) return;
 
-    tabs.forEach((tab) => {
-        tab.addEventListener("click", () => {
-            const panelId = tab.getAttribute("aria-controls");
-            if (!panelId) return;
-
-            document.querySelectorAll(".profile-tabs__tab").forEach((t) => {
-                t.classList.remove("profile-tabs__tab--active");
-                t.setAttribute("aria-selected", "false");
-            });
-
-            tab.classList.add("profile-tabs__tab--active");
-            tab.setAttribute("aria-selected", "true");
+    const activar = (seccion) => {
+        sidebarItems.forEach((b) => {
+            const activo = b.dataset.seccion === seccion;
+            b.classList.toggle("perfil-sidebar__item--active", activo);
+            b.setAttribute("aria-selected", String(activo));
         });
+        tabItems.forEach((b) => {
+            b.classList.toggle("perfil-tab-mobile--active", b.dataset.seccion === seccion);
+        });
+
+        document.querySelectorAll(".profile-tab-content").forEach((panel) => {
+            panel.hidden = panel.id !== `panel-${seccion}`;
+        });
+    };
+
+    sidebarItems.forEach((btn) => {
+        btn.addEventListener("click", () => activar(btn.dataset.seccion));
+    });
+    tabItems.forEach((btn) => {
+        btn.addEventListener("click", () => activar(btn.dataset.seccion));
     });
 
-    const tablist = document.querySelector(".profile-tabs");
+    const tablist = document.querySelector(".perfil-sidebar__list");
     if (!tablist) return;
 
     tablist.addEventListener("keydown", (e) => {
         if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
 
-        const enabledTabs = Array.from(tabs);
+        const enabledTabs = Array.from(sidebarItems);
         const current = enabledTabs.findIndex(
             (t) => t.getAttribute("aria-selected") === "true"
         );
@@ -161,6 +236,13 @@ function bindFormSubir(form) {
             return;
         }
 
+        const nombreDocumento = card.querySelector(".documento-card__nombre")?.textContent?.trim() ?? "el documento";
+        const confirmado = await confirmarSubida(archivo.name, nombreDocumento);
+        if (!confirmado) {
+            input.value = "";
+            return;
+        }
+
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Subiendo…';
 
@@ -187,7 +269,13 @@ function bindFormSubir(form) {
             }
 
             actualizarCard(card, datos);
-            actualizarContadores();
+
+            const predioCard = card.closest(".predio-card");
+            if (predioCard) {
+                actualizarResumenPredio(predioCard);
+            } else {
+                actualizarContadores();
+            }
 
         } catch {
             mostrarError("No se pudo conectar con el servidor. Intenta de nuevo.");
@@ -271,22 +359,132 @@ function badgeEstatus(estatus) {
 }
 
 function actualizarContadores() {
-    const total     = document.querySelectorAll(".documento-card").length;
-    const cargados  = document.querySelectorAll(".documento-card--cargado").length;
+    const total     = document.querySelectorAll("#panel-documentos .documento-card").length;
+    const cargados  = document.querySelectorAll("#panel-documentos .documento-card--cargado").length;
     const pendientes = total - cargados;
     const porcentaje = total > 0 ? Math.round((cargados / total) * 100) : 0;
 
     const elTotal     = document.querySelector(".profile-stat:nth-child(1) .profile-stat__valor");
     const elCargados  = document.querySelector(".profile-stat--ok .profile-stat__valor");
     const elPendientes = document.querySelector(".profile-stat--pendiente .profile-stat__valor");
-    const elPorcentaje = document.querySelector(".completeness-card__valor");
-    const barra       = document.querySelector(".progreso-barra-fill");
+    const elPorcentaje = document.querySelector("#panel-documentos .documents-card__progreso-valor");
+    const barra       = document.querySelector("#panel-documentos .progreso-barra-fill");
 
     if (elTotal)      elTotal.textContent      = total;
     if (elCargados)   elCargados.textContent   = cargados;
     if (elPendientes) elPendientes.textContent = pendientes;
     if (elPorcentaje) elPorcentaje.textContent = porcentaje + "%";
     if (barra)        barra.style.width        = porcentaje + "%";
+}
+
+function actualizarResumenPredio(predioCard) {
+    const resumen = predioCard.querySelector(".predio-card__resumen");
+    if (!resumen) return;
+
+    const total = predioCard.querySelectorAll(".documento-card").length;
+    const cargados = predioCard.querySelectorAll(".documento-card--cargado").length;
+
+    resumen.textContent = `${cargados} de ${total} documentos cargados`;
+
+    actualizarBarraPredios();
+}
+
+function actualizarBarraPredios() {
+    const totalCards = document.querySelectorAll("#panel-predios .documento-card").length;
+    const cargadosCards = document.querySelectorAll("#panel-predios .documento-card--cargado").length;
+    const porcentaje = totalCards > 0 ? Math.round((cargadosCards / totalCards) * 100) : 0;
+
+    const elPorcentaje = document.querySelector("#panel-predios .documents-card__progreso-valor");
+    const barra = document.querySelector("#panel-predios .progreso-barra-fill");
+
+    if (elPorcentaje) elPorcentaje.textContent = porcentaje + "%";
+    if (barra)        barra.style.width        = porcentaje + "%";
+}
+
+function initFormAgregarPredio() {
+    const form = document.getElementById("form-agregar-predio");
+    const btnMostrar = document.getElementById("btn-mostrar-form-predio");
+    const btnCancelar = document.getElementById("btn-cancelar-form-predio");
+    if (!form || !btnMostrar || !btnCancelar) return;
+
+    btnMostrar.addEventListener("click", () => {
+        form.classList.remove("form-agregar-predio--oculto");
+        form.querySelector("#clave_predio")?.focus();
+    });
+
+    btnCancelar.addEventListener("click", () => {
+        form.reset();
+        form.classList.add("form-agregar-predio--oculto");
+    });
+}
+
+function initAcordeonPredios() {
+    document.querySelectorAll(".predio-card__header").forEach((header) => {
+        header.addEventListener("click", () => {
+            const body = header.nextElementSibling;
+            if (!body) return;
+
+            const abierto = header.getAttribute("aria-expanded") === "true";
+            header.setAttribute("aria-expanded", String(!abierto));
+            body.hidden = abierto;
+        });
+    });
+}
+
+function initEliminarPredio() {
+    document.querySelectorAll(".form-eliminar-predio").forEach((form) => {
+        form.addEventListener("submit", (e) => {
+            if (form.dataset.confirmado) return;
+            e.preventDefault();
+
+            const clave = form.closest(".predio-card")?.querySelector(".predio-card__clave")?.textContent ?? "este predio";
+
+            if (window.Swal) {
+                Swal.fire({
+                    icon: "warning",
+                    title: "¿Eliminar predio?",
+                    text: `Se eliminará «${clave}» junto con sus documentos cargados.`,
+                    showCancelButton: true,
+                    confirmButtonText: "Eliminar",
+                    cancelButtonText: "Cancelar",
+                    confirmButtonColor: "#dc2626",
+                }).then((resultado) => {
+                    if (resultado.isConfirmed) {
+                        form.dataset.confirmado = "1";
+                        form.submit();
+                    }
+                });
+            } else if (confirm(`¿Eliminar «${clave}» junto con sus documentos cargados?`)) {
+                form.dataset.confirmado = "1";
+                form.submit();
+            }
+        });
+    });
+}
+
+function confirmarSubida(nombreArchivo, nombreDocumento) {
+    if (!window.Swal) {
+        return Promise.resolve(confirm(`¿Subir «${nombreArchivo}» para ${nombreDocumento}?`));
+    }
+
+    return Swal.fire({
+        icon: "warning",
+        title: "Confirmar envío",
+        html: `¿Deseas subir el archivo <strong>${escapeHtml(nombreArchivo)}</strong> para <strong>${escapeHtml(nombreDocumento)}</strong>?<br><span class="swal2-confirm-subtitle">Una vez enviado, el documento quedará en revisión.</span>`,
+        showCancelButton: true,
+        confirmButtonText: "Sí, subir",
+        cancelButtonText: "Cancelar",
+        confirmButtonColor: "#601028",
+        cancelButtonColor: "#64748b",
+        reverseButtons: true,
+        focusCancel: true,
+    }).then((resultado) => resultado.isConfirmed);
+}
+
+function escapeHtml(texto) {
+    const div = document.createElement("div");
+    div.textContent = texto;
+    return div.innerHTML;
 }
 
 function mostrarError(mensaje) {

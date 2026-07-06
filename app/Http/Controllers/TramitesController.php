@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\catDocumentoPersonal;
+use App\Models\tblDocumentoPersonal;
 use App\Models\Tramite;
 use Illuminate\View\View;
 
@@ -38,8 +38,8 @@ class TramitesController extends Controller
             'requisitos' => fn ($query) => $query->where('estatus_requisito', 1)->orderBy('nombre_requisito'),
         ]);
 
-        $documentosAprobados = catDocumentoPersonal::where('fk_usuario', auth()->id())
-            ->where('estatus_documento', catDocumentoPersonal::ESTATUS_APROBADO)
+        $documentosAprobados = tblDocumentoPersonal::where('fk_usuario', auth()->id())
+            ->where('estatus_documento', tblDocumentoPersonal::ESTATUS_APROBADO)
             ->with('catalogoDocumento')
             ->orderByDesc('fecha_registro')
             ->get();

@@ -6,10 +6,6 @@
 
 @section('content')
     <div class="main-container">
-        @php
-            $porcentaje = $totalDocumentos > 0 ? (int) round(($documentosCompletados / $totalDocumentos) * 100) : 0;
-        @endphp
-
         <div class="page-header">
             <div class="header-content">
                 <img src="{{ asset('images/escudoBlanco.png') }}" alt="Escudo de Salamanca" class="header-escudo">
@@ -20,77 +16,124 @@
             </div>
         </div>
 
-        @if ($totalDocumentos > 0)
-            <div class="completeness-card">
-                <div class="completeness-card__header">
-                    <span class="completeness-card__label">Documentos completados</span>
-                    <span class="completeness-card__valor">{{ $porcentaje }}%</span>
-                </div>
-                <div class="progreso-barra">
-                    <div class="progreso-barra-fill" data-progreso="{{ $porcentaje }}"></div>
-                </div>
-            </div>
-        @endif
+        @php
+            $abrirTabPredios = $errors->has('clave_predio');
+            $tabActiva = $abrirTabPredios ? 'predios' : 'documentos';
 
-        <div class="profile-tabs" role="tablist" aria-label="Secciones del perfil">
-            <button class="profile-tabs__tab profile-tabs__tab--active" role="tab" aria-selected="true" aria-controls="panel-documentos" id="tab-documentos" type="button">
-                <i class="fas fa-clipboard-list"></i> Documentos
-            </button>
-            <button class="profile-tabs__tab profile-tabs__tab--disabled" role="tab" aria-selected="false" aria-disabled="true" tabindex="-1" title="Próximamente" type="button">
-                <i class="fas fa-clock-rotate-left"></i> Historial
-            </button>
+            $porcentaje = $totalDocumentos > 0 ? (int) round(($documentosCompletados / $totalDocumentos) * 100) : 0;
+
+            $totalDocumentosPrediosGlobal = $predios->count() * $catalogoPredios->count();
+            $documentosPrediosCompletadosGlobal = 0;
+            foreach ($predios as $predioTmp) {
+                $documentosPredioCargadosTmp = $predioTmp->documentos->keyBy('fk_cat_documento_predio');
+                $documentosPrediosCompletadosGlobal += $catalogoPredios->filter(
+                    fn ($doc) => $documentosPredioCargadosTmp->has($doc->id_documento_predio)
+                )->count();
+            }
+            $porcentajePredios = $totalDocumentosPrediosGlobal > 0
+                ? (int) round(($documentosPrediosCompletadosGlobal / $totalDocumentosPrediosGlobal) * 100)
+                : 0;
+        @endphp
+
+        <div class="profile-card">
+            <div class="profile-card__avatar" aria-hidden="true">
+                {{ Str::of(auth()->user()->name)->explode(' ')->map(fn ($palabra) => Str::substr($palabra, 0, 1))->take(2)->implode('') }}
+            </div>
+
+            <div class="profile-card__datos">
+                <h2 class="profile-card__name">{{ auth()->user()->name }}</h2>
+
+                <div class="profile-card__contact">
+                    <div class="profile-card__contact-item">
+                        <i class="fas fa-envelope"></i>
+                        <span>{{ auth()->user()->email }}</span>
+                    </div>
+                </div>
+
+                @if (auth()->user()->email_verified_at)
+                    <span class="badge-verificacion badge-verificacion--ok"><i class="fas fa-circle-check me-1"></i>Correo verificado</span>
+                @else
+                    <span class="badge-verificacion badge-verificacion--pendiente"><i class="fas fa-circle-exclamation me-1"></i>Correo sin verificar</span>
+                @endif
+            </div>
+
+            @if ($totalDocumentos > 0)
+                <div class="profile-card__stats">
+                    <div class="profile-stat">
+                        <div class="profile-stat__icono"><i class="fas fa-folder"></i></div>
+                        <div class="profile-stat__texto">
+                            <span class="profile-stat__valor">{{ $totalDocumentos }}</span>
+                            <span class="profile-stat__label">Total de documentos</span>
+                        </div>
+                    </div>
+                    <div class="profile-stat profile-stat--ok">
+                        <div class="profile-stat__icono"><i class="fas fa-circle-check"></i></div>
+                        <div class="profile-stat__texto">
+                            <span class="profile-stat__valor">{{ $documentosCompletados }}</span>
+                            <span class="profile-stat__label">Cargados</span>
+                        </div>
+                    </div>
+                    <div class="profile-stat profile-stat--pendiente">
+                        <div class="profile-stat__icono"><i class="fas fa-circle-exclamation"></i></div>
+                        <div class="profile-stat__texto">
+                            <span class="profile-stat__valor">{{ $totalDocumentos - $documentosCompletados }}</span>
+                            <span class="profile-stat__label">Pendientes</span>
+                        </div>
+                    </div>
+                </div>
+            @endif
         </div>
 
-        <div class="profile-tab-content" role="tabpanel" id="panel-documentos" aria-labelledby="tab-documentos">
-            <div class="bento-grid">
-                <div class="profile-card">
-                    <div class="profile-card__avatar" aria-hidden="true">
-                        {{ Str::of(auth()->user()->name)->explode(' ')->map(fn ($palabra) => Str::substr($palabra, 0, 1))->take(2)->implode('') }}
-                    </div>
+        <div class="perfil-layout">
+            <aside class="perfil-sidebar">
+                <div class="perfil-sidebar__header">
+                    <h2><i class="fa-solid fa-user-gear"></i> Secciones</h2>
+                </div>
+                <div class="perfil-sidebar__list" role="tablist" aria-label="Secciones del perfil">
+                    <button class="perfil-sidebar__item @if ($tabActiva === 'documentos') perfil-sidebar__item--active @endif"
+                            role="tab"
+                            aria-selected="{{ $tabActiva === 'documentos' ? 'true' : 'false' }}"
+                            aria-controls="panel-documentos"
+                            id="tab-documentos"
+                            data-seccion="documentos"
+                            type="button">
+                        <span class="perfil-sidebar__item-label">
+                            <i class="fas fa-id-card"></i>
+                            <span>Documentos personales</span>
+                        </span>
+                        @if ($totalDocumentos > 0)
+                            <span class="perfil-sidebar__count">{{ $documentosCompletados }}/{{ $totalDocumentos }}</span>
+                        @endif
+                    </button>
+                    <button class="perfil-sidebar__item @if ($tabActiva === 'predios') perfil-sidebar__item--active @endif"
+                            role="tab"
+                            aria-selected="{{ $tabActiva === 'predios' ? 'true' : 'false' }}"
+                            aria-controls="panel-predios"
+                            id="tab-predios"
+                            data-seccion="predios"
+                            type="button">
+                        <span class="perfil-sidebar__item-label">
+                            <i class="fas fa-house"></i>
+                            <span>Predios</span>
+                        </span>
+                        <span class="perfil-sidebar__count">{{ $predios->count() }}</span>
+                    </button>
+                </div>
+            </aside>
 
-                    <h2 class="profile-card__name">{{ auth()->user()->name }}</h2>
-
-                    <div class="profile-card__contact">
-                        <div class="profile-card__contact-item">
-                            <i class="fas fa-envelope"></i>
-                            <span>{{ auth()->user()->email }}</span>
-                        </div>
-                    </div>
-
-                    @if (auth()->user()->email_verified_at)
-                        <span class="badge-verificacion badge-verificacion--ok"><i class="fas fa-circle-check me-1"></i>Correo verificado</span>
-                    @else
-                        <span class="badge-verificacion badge-verificacion--pendiente"><i class="fas fa-circle-exclamation me-1"></i>Correo sin verificar</span>
-                    @endif
-
-                    @if ($totalDocumentos > 0)
-                        <div class="profile-card__stats">
-                            <div class="profile-stat">
-                                <div class="profile-stat__icono"><i class="fas fa-folder"></i></div>
-                                <div class="profile-stat__texto">
-                                    <span class="profile-stat__valor">{{ $totalDocumentos }}</span>
-                                    <span class="profile-stat__label">Total de documentos</span>
-                                </div>
-                            </div>
-                            <div class="profile-stat profile-stat--ok">
-                                <div class="profile-stat__icono"><i class="fas fa-circle-check"></i></div>
-                                <div class="profile-stat__texto">
-                                    <span class="profile-stat__valor">{{ $documentosCompletados }}</span>
-                                    <span class="profile-stat__label">Cargados</span>
-                                </div>
-                            </div>
-                            <div class="profile-stat profile-stat--pendiente">
-                                <div class="profile-stat__icono"><i class="fas fa-circle-exclamation"></i></div>
-                                <div class="profile-stat__texto">
-                                    <span class="profile-stat__valor">{{ $totalDocumentos - $documentosCompletados }}</span>
-                                    <span class="profile-stat__label">Pendientes</span>
-                                </div>
-                            </div>
-                        </div>
-                    @endif
+            <div class="perfil-content">
+                <div class="perfil-tabs-mobile">
+                    <button class="perfil-tab-mobile @if ($tabActiva === 'documentos') perfil-tab-mobile--active @endif" data-seccion="documentos" type="button">
+                        <i class="fas fa-id-card me-1"></i>Documentos
+                    </button>
+                    <button class="perfil-tab-mobile @if ($tabActiva === 'predios') perfil-tab-mobile--active @endif" data-seccion="predios" type="button">
+                        <i class="fas fa-house me-1"></i>Predios
+                    </button>
                 </div>
 
-                <div class="documents-card">
+                <div class="profile-tab-content" role="tabpanel" id="panel-documentos" aria-labelledby="tab-documentos" @if ($tabActiva !== 'documentos') hidden @endif>
+            <div class="bento-grid">
+                <div class="documents-card documents-card--full">
                     <div class="documents-card__header">
                         <h2 class="documents-card__title">Documentos requeridos</h2>
 
@@ -102,6 +145,18 @@
                             </div>
                         @endif
                     </div>
+
+                    @if ($totalDocumentos > 0)
+                        <div class="documents-card__progreso" data-seccion="documentos">
+                            <div class="documents-card__progreso-header">
+                                <span class="documents-card__progreso-label"><i class="fas fa-circle-check me-1"></i>Documentos completados</span>
+                                <span class="documents-card__progreso-valor">{{ $porcentaje }}%</span>
+                            </div>
+                            <div class="progreso-barra">
+                                <div class="progreso-barra-fill" data-progreso="{{ $porcentaje }}"></div>
+                            </div>
+                        </div>
+                    @endif
 
                     @if ($documentosCatalogo->isEmpty())
                         <p class="mensaje-vacio"><i class="fas fa-circle-info me-1"></i>No hay documentos personales disponibles en este momento.</p>
@@ -147,14 +202,14 @@
                                             @else
                                                 <span class="badge-estatus badge-estatus--rechazado"><i class="fas fa-circle-xmark me-1"></i>Rechazado</span>
                                             @endif
-                                            <a href="{{ route('perfiles.documentos.descargar', $cargado->id_documento) }}"
+                                            <a href="{{ route('descargarDocumento', $cargado->id_documento) }}"
                                                class="btn-accion btn-accion--ver"
                                                target="_blank"
                                                title="Ver documento">
                                                 <i class="fas fa-eye"></i>
                                             </a>
                                             @if ($estatus === 0)
-                                                <form action="{{ route('perfiles.documentos.subir', $documento->id_documento) }}"
+                                                <form action="{{ route('subirDocumento', $documento->id_documento) }}"
                                                       method="POST"
                                                       enctype="multipart/form-data"
                                                       class="form-subir-inline">
@@ -171,7 +226,7 @@
                                             @endif
                                         @else
                                             <span class="badge-estatus badge-estatus--pendiente"><i class="fas fa-circle-exclamation me-1"></i>Pendiente</span>
-                                            <form action="{{ route('perfiles.documentos.subir', $documento->id_documento) }}"
+                                            <form action="{{ route('subirDocumento', $documento->id_documento) }}"
                                                   method="POST"
                                                   enctype="multipart/form-data"
                                                   class="form-subir-inline">
@@ -196,13 +251,208 @@
                 </div>
             </div>
         </div>
+
+        <div class="profile-tab-content" role="tabpanel" id="panel-predios" aria-labelledby="tab-predios" @if ($tabActiva !== 'predios') hidden @endif>
+            <div class="bento-grid">
+                <div class="documents-card documents-card--full">
+                    <div class="documents-card__header">
+                        <h2 class="documents-card__title">Mis predios</h2>
+                        <button class="btn-accion btn-accion--cargar" id="btn-mostrar-form-predio" type="button">
+                            <i class="fas fa-plus me-1"></i>Agregar predio
+                        </button>
+                    </div>
+
+                    @if ($predios->isNotEmpty() && $catalogoPredios->isNotEmpty())
+                        <div class="documents-card__progreso" data-seccion="predios">
+                            <div class="documents-card__progreso-header">
+                                <span class="documents-card__progreso-label"><i class="fas fa-circle-check me-1"></i>Documentos completados</span>
+                                <span class="documents-card__progreso-valor">{{ $porcentajePredios }}%</span>
+                            </div>
+                            <div class="progreso-barra">
+                                <div class="progreso-barra-fill" data-progreso="{{ $porcentajePredios }}"></div>
+                            </div>
+                        </div>
+                    @endif
+
+                    <form action="{{ route('agregarPredio') }}"
+                          method="POST"
+                          id="form-agregar-predio"
+                          class="form-agregar-predio @if (!$errors->has('clave_predio')) form-agregar-predio--oculto @endif">
+                        @csrf
+                        <div class="form-agregar-predio__campo">
+                            <label for="clave_predio">Clave catastral del predio</label>
+                            <input type="text"
+                                   name="clave_predio"
+                                   id="clave_predio"
+                                   value="{{ old('clave_predio') }}"
+                                   placeholder="Ej. 123-456-789-000"
+                                   maxlength="255"
+                                   required>
+                            @error('clave_predio')
+                                <span class="form-agregar-predio__error">{{ $message }}</span>
+                            @enderror
+                        </div>
+                        <div class="form-agregar-predio__acciones">
+                            <button type="submit" class="btn-accion btn-accion--cargar">Guardar</button>
+                            <button type="button" class="btn-accion btn-accion--ver" id="btn-cancelar-form-predio">Cancelar</button>
+                        </div>
+                    </form>
+
+                    @if ($predios->isEmpty())
+                        <p class="mensaje-vacio"><i class="fas fa-circle-info me-1"></i>Aún no has agregado predios a tu perfil.</p>
+                    @else
+                        <div class="predios-lista">
+                            @foreach ($predios as $predio)
+                                @php
+                                    $estatusPredio = (int) $predio->estatus_predio;
+                                    $documentosPredioCargados = $predio->documentos->keyBy('fk_cat_documento_predio');
+                                    $totalDocumentosPredio = $catalogoPredios->count();
+                                    $completadosPredio = $catalogoPredios->filter(
+                                        fn ($doc) => $documentosPredioCargados->has($doc->id_documento_predio)
+                                    )->count();
+                                @endphp
+                                <div class="predio-card" data-predio-id="{{ $predio->id_predio }}" data-estatus-predio="{{ $estatusPredio }}">
+                                    <button class="predio-card__header" type="button" aria-expanded="false">
+                                        <div class="predio-card__info">
+                                            <span class="predio-card__icono"><i class="fas fa-house"></i></span>
+                                            <span class="predio-card__textos">
+                                                <span class="predio-card__clave">{{ $predio->clave_predio }}</span>
+                                                <span class="predio-card__resumen">{{ $completadosPredio }} de {{ $totalDocumentosPredio }} documentos cargados</span>
+                                            </span>
+                                        </div>
+                                        <div class="predio-card__acciones-header">
+                                            @if ($estatusPredio === 2)
+                                                <span class="badge-estatus badge-estatus--aprobado predio-card__badge"><i class="fas fa-circle-check me-1"></i>Aprobado</span>
+                                            @elseif ($estatusPredio === 1)
+                                                <span class="badge-estatus badge-estatus--revision predio-card__badge"><i class="fas fa-hourglass-half me-1"></i>En revisión</span>
+                                            @else
+                                                <span class="badge-estatus badge-estatus--rechazado predio-card__badge"><i class="fas fa-circle-xmark me-1"></i>Rechazado</span>
+                                            @endif
+                                            <i class="fas fa-chevron-down predio-card__chevron"></i>
+                                        </div>
+                                    </button>
+
+                                    <div class="predio-card__body" hidden>
+                                        @if ($estatusPredio !== 2)
+                                            <form action="{{ route('eliminarPredio', $predio->id_predio) }}"
+                                                  method="POST"
+                                                  class="form-eliminar-predio">
+                                                @csrf
+                                                <button type="submit" class="btn-accion btn-accion--eliminar">
+                                                    <i class="fas fa-trash me-1"></i>Eliminar predio
+                                                </button>
+                                            </form>
+                                        @endif
+
+                                        @if ($catalogoPredios->isEmpty())
+                                            <p class="mensaje-vacio"><i class="fas fa-circle-info me-1"></i>No hay documentos de predios disponibles en este momento.</p>
+                                        @else
+                                            <div class="documentos-lista">
+                                                @foreach ($catalogoPredios as $documento)
+                                                    @php
+                                                        $cargado = $documentosPredioCargados->get($documento->id_documento_predio);
+                                                        $estatusDoc = $cargado ? 'cargado' : 'pendiente';
+                                                        $fechaVencimiento = $cargado ? $cargado->created_at->copy()->addMonths($documento->vigencia_meses) : null;
+                                                        $diasRestantes = $fechaVencimiento ? now()->diffInDays($fechaVencimiento, false) : null;
+                                                        $estatus = $cargado ? (int) $cargado->estatus_documento : null;
+                                                    @endphp
+                                                    <div class="documento-card {{ $cargado ? 'documento-card--cargado' : '' }}"
+                                                         data-estatus="{{ $estatusDoc }}"
+                                                         data-catalogo-id="{{ $documento->id_documento_predio }}"
+                                                         data-predio-id="{{ $predio->id_predio }}"
+                                                         @if ($cargado) data-estatus-num="{{ $estatus }}" @endif>
+                                                        <div class="documento-card__icono">
+                                                            <i class="fas fa-file-lines"></i>
+                                                        </div>
+                                                        <div class="documento-card__contenido">
+                                                            <span class="documento-card__nombre">{{ $documento->nombre_documento }}</span>
+                                                            <div class="documento-card__meta">
+                                                                @if (!$cargado || $estatus === 2)
+                                                                    <span class="documento-card__vigencia"><i class="fas fa-hourglass-half me-1"></i>Vigencia: {{ $documento->vigencia_meses }} meses</span>
+                                                                @endif
+                                                                @if ($cargado)
+                                                                    <span class="documento-card__fecha"><i class="fas fa-calendar-check me-1"></i>Cargado el {{ $cargado->created_at->format('d/m/Y') }}</span>
+                                                                    @if ($diasRestantes !== null && $diasRestantes <= 0)
+                                                                        <span class="badge-vigencia badge-vigencia--vencido"><i class="fas fa-triangle-exclamation me-1"></i>Vencido</span>
+                                                                    @elseif ($diasRestantes !== null && $diasRestantes <= 60)
+                                                                        <span class="badge-vigencia badge-vigencia--por-vencer"><i class="fas fa-clock me-1"></i>Por vencer</span>
+                                                                    @endif
+                                                                @endif
+                                                            </div>
+                                                        </div>
+                                                        <div class="documento-card__acciones">
+                                                            @if ($cargado)
+                                                                @if ($estatus === 2)
+                                                                    <span class="badge-estatus badge-estatus--aprobado"><i class="fas fa-circle-check me-1"></i>Aprobado</span>
+                                                                @elseif ($estatus === 1)
+                                                                    <span class="badge-estatus badge-estatus--revision"><i class="fas fa-hourglass-half me-1"></i>En revisión</span>
+                                                                @else
+                                                                    <span class="badge-estatus badge-estatus--rechazado"><i class="fas fa-circle-xmark me-1"></i>Rechazado</span>
+                                                                @endif
+                                                                <a href="{{ route('descargarDocumentoPredio', $cargado->id_documento_predio) }}"
+                                                                   class="btn-accion btn-accion--ver"
+                                                                   target="_blank"
+                                                                   title="Ver documento">
+                                                                    <i class="fas fa-eye"></i>
+                                                                </a>
+                                                                @if ($estatus === 0)
+                                                                    <form action="{{ route('subirDocumentoPredio', [$predio->id_predio, $documento->id_documento_predio]) }}"
+                                                                          method="POST"
+                                                                          enctype="multipart/form-data"
+                                                                          class="form-subir-inline">
+                                                                        @csrf
+                                                                        <input type="file"
+                                                                               name="archivo"
+                                                                               class="input-archivo-oculto"
+                                                                               accept=".pdf"
+                                                                               aria-label="Volver a subir {{ $documento->nombre_documento }}">
+                                                                        <button type="button" class="btn-accion btn-accion--cargar btn-trigger-archivo" title="Volver a subir">
+                                                                            <i class="fas fa-rotate-right me-1"></i>Reenviar
+                                                                        </button>
+                                                                    </form>
+                                                                @endif
+                                                            @else
+                                                                <span class="badge-estatus badge-estatus--pendiente"><i class="fas fa-circle-exclamation me-1"></i>Pendiente</span>
+                                                                <form action="{{ route('subirDocumentoPredio', [$predio->id_predio, $documento->id_documento_predio]) }}"
+                                                                      method="POST"
+                                                                      enctype="multipart/form-data"
+                                                                      class="form-subir-inline">
+                                                                    @csrf
+                                                                    <input type="file"
+                                                                           name="archivo"
+                                                                           class="input-archivo-oculto"
+                                                                           accept=".pdf"
+                                                                           aria-label="Seleccionar archivo para {{ $documento->nombre_documento }}">
+                                                                    <button type="button" class="btn-accion btn-accion--cargar btn-trigger-archivo">
+                                                                        <i class="fas fa-upload me-1"></i>Cargar
+                                                                    </button>
+                                                                </form>
+                                                            @endif
+                                                        </div>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+            </div>
+        </div>
     </div>
 
 @endsection
 
 @section('scripts')
     <script>
-        window.perfilConfig = @json(['urlEstatusDocumentos' => route('perfiles.documentos.estatus')]);
+        window.perfilConfig = @json([
+            'urlEstatusDocumentos' => route('estatusDocumentos'),
+            'urlEstatusPredios' => route('estatusPredios'),
+        ]);
     </script>
     <script src="{{ asset('js/perfil/indexPerfil.js') }}" defer></script>
 @endsection

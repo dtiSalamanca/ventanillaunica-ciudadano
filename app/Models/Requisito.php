@@ -13,6 +13,7 @@ class Requisito extends Model
 
     protected $fillable = [
         'nombre_requisito',
+        'descripcion_requisito',
         'estatus_requisito',
     ];
 
