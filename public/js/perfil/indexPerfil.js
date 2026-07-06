@@ -8,6 +8,7 @@ document.addEventListener("DOMContentLoaded", function () {
     initFormAgregarPredio();
     initAcordeonPredios();
     initEliminarPredio();
+    initCorregirPredio();
 });
 
 const INTERVALO_POLLING_MS = 15000;
@@ -459,6 +460,115 @@ function initEliminarPredio() {
                 form.submit();
             }
         });
+    });
+}
+
+function initCorregirPredio() {
+    document.querySelectorAll(".form-corregir-predio").forEach(bindFormCorregirPredio);
+}
+
+function bindFormCorregirPredio(form) {
+    const input = form.querySelector("input[type='text']");
+    const btn = form.querySelector("button[type='submit']");
+    const predioCard = form.closest(".predio-card");
+
+    if (!input || !btn) return;
+
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const claveActual = predioCard?.querySelector(".predio-card__clave")?.textContent ?? "este predio";
+        const nuevaClave = input.value.trim();
+
+        const confirmado = await confirmarCorreccionPredio(claveActual, nuevaClave);
+        if (!confirmado) return;
+
+        const textoOriginal = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Enviando…';
+
+        try {
+            const respuesta = await fetch(form.action, {
+                method: "POST",
+                headers: {
+                    Accept: "application/json",
+                    "X-CSRF-TOKEN": window.adminConfig?.csrfToken ?? "",
+                },
+                body: new FormData(form),
+            });
+
+            const datos = await respuesta.json();
+
+            if (!respuesta.ok) {
+                const mensaje = datos.errors?.[input.name]?.[0] ?? datos.message ?? "Ocurrió un error al corregir el predio.";
+                mostrarErrorCampoPredio(form, mensaje);
+                return;
+            }
+
+            limpiarErrorCampoPredio(form);
+
+            if (predioCard) {
+                actualizarBadgePredio(predioCard, datos.estatus);
+                const claveEl = predioCard.querySelector(".predio-card__clave");
+                if (claveEl) claveEl.textContent = datos.clave_predio;
+            }
+
+            mostrarExitoPredio("El predio se corrigió y se envió nuevamente a revisión.");
+            form.remove();
+        } catch {
+            mostrarError("No se pudo conectar con el servidor. Intenta de nuevo.");
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = textoOriginal;
+        }
+    });
+}
+
+function mostrarErrorCampoPredio(form, mensaje) {
+    const campo = form.querySelector(".form-agregar-predio__campo");
+    if (!campo) return;
+
+    let span = campo.querySelector(".form-agregar-predio__error");
+    if (!span) {
+        span = document.createElement("span");
+        span.className = "form-agregar-predio__error";
+        campo.appendChild(span);
+    }
+    span.textContent = mensaje;
+}
+
+function limpiarErrorCampoPredio(form) {
+    form.querySelector(".form-agregar-predio__error")?.remove();
+}
+
+function confirmarCorreccionPredio(claveActual, nuevaClave) {
+    if (!window.Swal) {
+        return Promise.resolve(confirm(`¿Corregir «${claveActual}» con la clave "${nuevaClave}" y reenviarlo a revisión?`));
+    }
+
+    return Swal.fire({
+        icon: "question",
+        title: "¿Reenviar predio a revisión?",
+        html: `Se corregirá «${escapeHtml(claveActual)}» con la clave <strong>${escapeHtml(nuevaClave)}</strong> y se enviará nuevamente a revisión.`,
+        showCancelButton: true,
+        confirmButtonText: "Sí, reenviar",
+        cancelButtonText: "Cancelar",
+        confirmButtonColor: "#601028",
+        cancelButtonColor: "#64748b",
+        reverseButtons: true,
+        focusCancel: true,
+    }).then((resultado) => resultado.isConfirmed);
+}
+
+function mostrarExitoPredio(mensaje) {
+    if (!window.Swal) return;
+
+    Swal.fire({
+        icon: "success",
+        title: "Listo",
+        text: mensaje,
+        timer: 1800,
+        showConfirmButton: false,
     });
 }
 

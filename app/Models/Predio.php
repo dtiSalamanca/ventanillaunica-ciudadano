@@ -21,12 +21,12 @@ class Predio extends Model
     protected $fillable = [
         'clave_predio',
         'estatus_predio',
-        'fk_user',
+        'fk_usuario',
     ];
 
     public function usuario(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'fk_user', 'id');
+        return $this->belongsTo(User::class, 'fk_usuario', 'id');
     }
 
     public function documentos(): HasMany

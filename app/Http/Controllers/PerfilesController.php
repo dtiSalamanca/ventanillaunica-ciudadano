@@ -34,7 +34,7 @@ class PerfilesController extends Controller
             ->orderBy('nombre_documento')
             ->get();
 
-        $predios = Predio::where('fk_user', auth()->id())
+        $predios = Predio::where('fk_usuario', auth()->id())
             ->with('documentos')
             ->orderByDesc('id_predio')
             ->get();
