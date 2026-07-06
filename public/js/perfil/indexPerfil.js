@@ -236,6 +236,13 @@ function bindFormSubir(form) {
             return;
         }
 
+        const nombreDocumento = card.querySelector(".documento-card__nombre")?.textContent?.trim() ?? "el documento";
+        const confirmado = await confirmarSubida(archivo.name, nombreDocumento);
+        if (!confirmado) {
+            input.value = "";
+            return;
+        }
+
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Subiendo…';
 
@@ -453,6 +460,31 @@ function initEliminarPredio() {
             }
         });
     });
+}
+
+function confirmarSubida(nombreArchivo, nombreDocumento) {
+    if (!window.Swal) {
+        return Promise.resolve(confirm(`¿Subir «${nombreArchivo}» para ${nombreDocumento}?`));
+    }
+
+    return Swal.fire({
+        icon: "warning",
+        title: "Confirmar envío",
+        html: `¿Deseas subir el archivo <strong>${escapeHtml(nombreArchivo)}</strong> para <strong>${escapeHtml(nombreDocumento)}</strong>?<br><span class="swal2-confirm-subtitle">Una vez enviado, el documento quedará en revisión.</span>`,
+        showCancelButton: true,
+        confirmButtonText: "Sí, subir",
+        cancelButtonText: "Cancelar",
+        confirmButtonColor: "#601028",
+        cancelButtonColor: "#64748b",
+        reverseButtons: true,
+        focusCancel: true,
+    }).then((resultado) => resultado.isConfirmed);
+}
+
+function escapeHtml(texto) {
+    const div = document.createElement("div");
+    div.textContent = texto;
+    return div.innerHTML;
 }
 
 function mostrarError(mensaje) {

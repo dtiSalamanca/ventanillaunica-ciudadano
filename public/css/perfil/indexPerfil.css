@@ -1020,6 +1020,32 @@
     }
 }
 
+/* ── SweetAlert2 (heredar tipografía del layout) ── */
+.swal2-popup,
+.swal2-popup .swal2-title,
+.swal2-popup .swal2-html-container,
+.swal2-popup .swal2-actions button {
+    font-family: "Montserrat", sans-serif !important;
+}
+
+.swal2-popup .swal2-title {
+    font-weight: 800;
+    color: #1a202c;
+}
+
+.swal2-popup .swal2-html-container {
+    line-height: 1.45;
+    color: #334155;
+}
+
+.swal2-confirm-subtitle {
+    display: inline-block;
+    margin-top: 0.5rem;
+    font-size: 0.85em;
+    color: #64748b;
+    font-weight: 500;
+}
+
 /* ── Preferencia de movimiento reducido ── */
 @media (prefers-reduced-motion: reduce) {
     .profile-tab-content {
