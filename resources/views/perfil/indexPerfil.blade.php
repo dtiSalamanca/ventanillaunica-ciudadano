@@ -6,10 +6,6 @@
 
 @section('content')
     <div class="main-container">
-        @php
-            $porcentaje = $totalDocumentos > 0 ? (int) round(($documentosCompletados / $totalDocumentos) * 100) : 0;
-        @endphp
-
         <div class="page-header">
             <div class="header-content">
                 <img src="{{ asset('images/escudoBlanco.png') }}" alt="Escudo de Salamanca" class="header-escudo">
@@ -20,81 +16,124 @@
             </div>
         </div>
 
-        @if ($totalDocumentos > 0)
-            <div class="completeness-card">
-                <div class="completeness-card__header">
-                    <span class="completeness-card__label">Documentos completados</span>
-                    <span class="completeness-card__valor">{{ $porcentaje }}%</span>
-                </div>
-                <div class="progreso-barra">
-                    <div class="progreso-barra-fill" data-progreso="{{ $porcentaje }}"></div>
-                </div>
-            </div>
-        @endif
-
         @php
             $abrirTabPredios = $errors->has('clave_predio');
+            $tabActiva = $abrirTabPredios ? 'predios' : 'documentos';
+
+            $porcentaje = $totalDocumentos > 0 ? (int) round(($documentosCompletados / $totalDocumentos) * 100) : 0;
+
+            $totalDocumentosPrediosGlobal = $predios->count() * $catalogoPredios->count();
+            $documentosPrediosCompletadosGlobal = 0;
+            foreach ($predios as $predioTmp) {
+                $documentosPredioCargadosTmp = $predioTmp->documentos->keyBy('fk_cat_documento_predio');
+                $documentosPrediosCompletadosGlobal += $catalogoPredios->filter(
+                    fn ($doc) => $documentosPredioCargadosTmp->has($doc->id_documento_predio)
+                )->count();
+            }
+            $porcentajePredios = $totalDocumentosPrediosGlobal > 0
+                ? (int) round(($documentosPrediosCompletadosGlobal / $totalDocumentosPrediosGlobal) * 100)
+                : 0;
         @endphp
 
-        <div class="profile-tabs" role="tablist" aria-label="Secciones del perfil">
-            <button class="profile-tabs__tab @unless ($abrirTabPredios) profile-tabs__tab--active @endunless" role="tab" aria-selected="{{ $abrirTabPredios ? 'false' : 'true' }}" aria-controls="panel-documentos" id="tab-documentos" type="button">
-                <i class="fas fa-id-card"></i> Documentos Personales
-            </button>
-            <button class="profile-tabs__tab @if ($abrirTabPredios) profile-tabs__tab--active @endif" role="tab" aria-selected="{{ $abrirTabPredios ? 'true' : 'false' }}" aria-controls="panel-predios" id="tab-predios" type="button">
-                <i class="fas fa-house"></i> Predios
-            </button>
-        </div>
+        <div class="profile-card">
+            <div class="profile-card__avatar" aria-hidden="true">
+                {{ Str::of(auth()->user()->name)->explode(' ')->map(fn ($palabra) => Str::substr($palabra, 0, 1))->take(2)->implode('') }}
+            </div>
 
-        <div class="profile-tab-content" role="tabpanel" id="panel-documentos" aria-labelledby="tab-documentos" @if ($abrirTabPredios) hidden @endif>
-            <div class="bento-grid">
-                <div class="profile-card">
-                    <div class="profile-card__avatar" aria-hidden="true">
-                        {{ Str::of(auth()->user()->name)->explode(' ')->map(fn ($palabra) => Str::substr($palabra, 0, 1))->take(2)->implode('') }}
+            <div class="profile-card__datos">
+                <h2 class="profile-card__name">{{ auth()->user()->name }}</h2>
+
+                <div class="profile-card__contact">
+                    <div class="profile-card__contact-item">
+                        <i class="fas fa-envelope"></i>
+                        <span>{{ auth()->user()->email }}</span>
                     </div>
-
-                    <h2 class="profile-card__name">{{ auth()->user()->name }}</h2>
-
-                    <div class="profile-card__contact">
-                        <div class="profile-card__contact-item">
-                            <i class="fas fa-envelope"></i>
-                            <span>{{ auth()->user()->email }}</span>
-                        </div>
-                    </div>
-
-                    @if (auth()->user()->email_verified_at)
-                        <span class="badge-verificacion badge-verificacion--ok"><i class="fas fa-circle-check me-1"></i>Correo verificado</span>
-                    @else
-                        <span class="badge-verificacion badge-verificacion--pendiente"><i class="fas fa-circle-exclamation me-1"></i>Correo sin verificar</span>
-                    @endif
-
-                    @if ($totalDocumentos > 0)
-                        <div class="profile-card__stats">
-                            <div class="profile-stat">
-                                <div class="profile-stat__icono"><i class="fas fa-folder"></i></div>
-                                <div class="profile-stat__texto">
-                                    <span class="profile-stat__valor">{{ $totalDocumentos }}</span>
-                                    <span class="profile-stat__label">Total de documentos</span>
-                                </div>
-                            </div>
-                            <div class="profile-stat profile-stat--ok">
-                                <div class="profile-stat__icono"><i class="fas fa-circle-check"></i></div>
-                                <div class="profile-stat__texto">
-                                    <span class="profile-stat__valor">{{ $documentosCompletados }}</span>
-                                    <span class="profile-stat__label">Cargados</span>
-                                </div>
-                            </div>
-                            <div class="profile-stat profile-stat--pendiente">
-                                <div class="profile-stat__icono"><i class="fas fa-circle-exclamation"></i></div>
-                                <div class="profile-stat__texto">
-                                    <span class="profile-stat__valor">{{ $totalDocumentos - $documentosCompletados }}</span>
-                                    <span class="profile-stat__label">Pendientes</span>
-                                </div>
-                            </div>
-                        </div>
-                    @endif
                 </div>
 
-                <div class="documents-card">
+                @if (auth()->user()->email_verified_at)
+                    <span class="badge-verificacion badge-verificacion--ok"><i class="fas fa-circle-check me-1"></i>Correo verificado</span>
+                @else
+                    <span class="badge-verificacion badge-verificacion--pendiente"><i class="fas fa-circle-exclamation me-1"></i>Correo sin verificar</span>
+                @endif
+            </div>
+
+            @if ($totalDocumentos > 0)
+                <div class="profile-card__stats">
+                    <div class="profile-stat">
+                        <div class="profile-stat__icono"><i class="fas fa-folder"></i></div>
+                        <div class="profile-stat__texto">
+                            <span class="profile-stat__valor">{{ $totalDocumentos }}</span>
+                            <span class="profile-stat__label">Total de documentos</span>
+                        </div>
+                    </div>
+                    <div class="profile-stat profile-stat--ok">
+                        <div class="profile-stat__icono"><i class="fas fa-circle-check"></i></div>
+                        <div class="profile-stat__texto">
+                            <span class="profile-stat__valor">{{ $documentosCompletados }}</span>
+                            <span class="profile-stat__label">Cargados</span>
+                        </div>
+                    </div>
+                    <div class="profile-stat profile-stat--pendiente">
+                        <div class="profile-stat__icono"><i class="fas fa-circle-exclamation"></i></div>
+                        <div class="profile-stat__texto">
+                            <span class="profile-stat__valor">{{ $totalDocumentos - $documentosCompletados }}</span>
+                            <span class="profile-stat__label">Pendientes</span>
+                        </div>
+                    </div>
+                </div>
+            @endif
+        </div>
+
+        <div class="perfil-layout">
+            <aside class="perfil-sidebar">
+                <div class="perfil-sidebar__header">
+                    <h2><i class="fa-solid fa-user-gear"></i> Secciones</h2>
+                </div>
+                <div class="perfil-sidebar__list" role="tablist" aria-label="Secciones del perfil">
+                    <button class="perfil-sidebar__item @if ($tabActiva === 'documentos') perfil-sidebar__item--active @endif"
+                            role="tab"
+                            aria-selected="{{ $tabActiva === 'documentos' ? 'true' : 'false' }}"
+                            aria-controls="panel-documentos"
+                            id="tab-documentos"
+                            data-seccion="documentos"
+                            type="button">
+                        <span class="perfil-sidebar__item-label">
+                            <i class="fas fa-id-card"></i>
+                            <span>Documentos personales</span>
+                        </span>
+                        @if ($totalDocumentos > 0)
+                            <span class="perfil-sidebar__count">{{ $documentosCompletados }}/{{ $totalDocumentos }}</span>
+                        @endif
+                    </button>
+                    <button class="perfil-sidebar__item @if ($tabActiva === 'predios') perfil-sidebar__item--active @endif"
+                            role="tab"
+                            aria-selected="{{ $tabActiva === 'predios' ? 'true' : 'false' }}"
+                            aria-controls="panel-predios"
+                            id="tab-predios"
+                            data-seccion="predios"
+                            type="button">
+                        <span class="perfil-sidebar__item-label">
+                            <i class="fas fa-house"></i>
+                            <span>Predios</span>
+                        </span>
+                        <span class="perfil-sidebar__count">{{ $predios->count() }}</span>
+                    </button>
+                </div>
+            </aside>
+
+            <div class="perfil-content">
+                <div class="perfil-tabs-mobile">
+                    <button class="perfil-tab-mobile @if ($tabActiva === 'documentos') perfil-tab-mobile--active @endif" data-seccion="documentos" type="button">
+                        <i class="fas fa-id-card me-1"></i>Documentos
+                    </button>
+                    <button class="perfil-tab-mobile @if ($tabActiva === 'predios') perfil-tab-mobile--active @endif" data-seccion="predios" type="button">
+                        <i class="fas fa-house me-1"></i>Predios
+                    </button>
+                </div>
+
+                <div class="profile-tab-content" role="tabpanel" id="panel-documentos" aria-labelledby="tab-documentos" @if ($tabActiva !== 'documentos') hidden @endif>
+            <div class="bento-grid">
+                <div class="documents-card documents-card--full">
                     <div class="documents-card__header">
                         <h2 class="documents-card__title">Documentos requeridos</h2>
 
@@ -106,6 +145,18 @@
                             </div>
                         @endif
                     </div>
+
+                    @if ($totalDocumentos > 0)
+                        <div class="documents-card__progreso" data-seccion="documentos">
+                            <div class="documents-card__progreso-header">
+                                <span class="documents-card__progreso-label"><i class="fas fa-circle-check me-1"></i>Documentos completados</span>
+                                <span class="documents-card__progreso-valor">{{ $porcentaje }}%</span>
+                            </div>
+                            <div class="progreso-barra">
+                                <div class="progreso-barra-fill" data-progreso="{{ $porcentaje }}"></div>
+                            </div>
+                        </div>
+                    @endif
 
                     @if ($documentosCatalogo->isEmpty())
                         <p class="mensaje-vacio"><i class="fas fa-circle-info me-1"></i>No hay documentos personales disponibles en este momento.</p>
@@ -201,7 +252,7 @@
             </div>
         </div>
 
-        <div class="profile-tab-content" role="tabpanel" id="panel-predios" aria-labelledby="tab-predios" @unless ($abrirTabPredios) hidden @endunless>
+        <div class="profile-tab-content" role="tabpanel" id="panel-predios" aria-labelledby="tab-predios" @if ($tabActiva !== 'predios') hidden @endif>
             <div class="bento-grid">
                 <div class="documents-card documents-card--full">
                     <div class="documents-card__header">
@@ -210,6 +261,18 @@
                             <i class="fas fa-plus me-1"></i>Agregar predio
                         </button>
                     </div>
+
+                    @if ($predios->isNotEmpty() && $catalogoPredios->isNotEmpty())
+                        <div class="documents-card__progreso" data-seccion="predios">
+                            <div class="documents-card__progreso-header">
+                                <span class="documents-card__progreso-label"><i class="fas fa-circle-check me-1"></i>Documentos completados</span>
+                                <span class="documents-card__progreso-valor">{{ $porcentajePredios }}%</span>
+                            </div>
+                            <div class="progreso-barra">
+                                <div class="progreso-barra-fill" data-progreso="{{ $porcentajePredios }}"></div>
+                            </div>
+                        </div>
+                    @endif
 
                     <form action="{{ route('agregarPredio') }}"
                           method="POST"
@@ -376,6 +439,8 @@
                         </div>
                     @endif
                 </div>
+            </div>
+        </div>
             </div>
         </div>
     </div>

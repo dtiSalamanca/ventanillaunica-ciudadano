@@ -117,12 +117,11 @@ function actualizarBadgePredio(predioCard, estatus) {
 }
 
 function initBarraProgreso() {
-    const barra = document.querySelector(".progreso-barra-fill");
-    if (!barra) return;
-
-    const porcentaje = barra.dataset.progreso || 0;
-    requestAnimationFrame(() => {
-        barra.style.width = `${porcentaje}%`;
+    document.querySelectorAll(".progreso-barra-fill").forEach((barra) => {
+        const porcentaje = barra.dataset.progreso || 0;
+        requestAnimationFrame(() => {
+            barra.style.width = `${porcentaje}%`;
+        });
     });
 }
 
@@ -155,35 +154,39 @@ function initFiltroDocumentos() {
 }
 
 function initTabs() {
-    const tabs = document.querySelectorAll('.profile-tabs__tab:not(.profile-tabs__tab--disabled)');
-    if (tabs.length <= 1) return;
+    const sidebarItems = document.querySelectorAll(".perfil-sidebar__item");
+    const tabItems = document.querySelectorAll(".perfil-tab-mobile");
+    if (!sidebarItems.length && !tabItems.length) return;
 
-    tabs.forEach((tab) => {
-        tab.addEventListener("click", () => {
-            const panelId = tab.getAttribute("aria-controls");
-            if (!panelId) return;
-
-            document.querySelectorAll(".profile-tabs__tab").forEach((t) => {
-                t.classList.remove("profile-tabs__tab--active");
-                t.setAttribute("aria-selected", "false");
-            });
-
-            tab.classList.add("profile-tabs__tab--active");
-            tab.setAttribute("aria-selected", "true");
-
-            document.querySelectorAll(".profile-tab-content").forEach((panel) => {
-                panel.hidden = panel.id !== panelId;
-            });
+    const activar = (seccion) => {
+        sidebarItems.forEach((b) => {
+            const activo = b.dataset.seccion === seccion;
+            b.classList.toggle("perfil-sidebar__item--active", activo);
+            b.setAttribute("aria-selected", String(activo));
         });
+        tabItems.forEach((b) => {
+            b.classList.toggle("perfil-tab-mobile--active", b.dataset.seccion === seccion);
+        });
+
+        document.querySelectorAll(".profile-tab-content").forEach((panel) => {
+            panel.hidden = panel.id !== `panel-${seccion}`;
+        });
+    };
+
+    sidebarItems.forEach((btn) => {
+        btn.addEventListener("click", () => activar(btn.dataset.seccion));
+    });
+    tabItems.forEach((btn) => {
+        btn.addEventListener("click", () => activar(btn.dataset.seccion));
     });
 
-    const tablist = document.querySelector(".profile-tabs");
+    const tablist = document.querySelector(".perfil-sidebar__list");
     if (!tablist) return;
 
     tablist.addEventListener("keydown", (e) => {
         if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
 
-        const enabledTabs = Array.from(tabs);
+        const enabledTabs = Array.from(sidebarItems);
         const current = enabledTabs.findIndex(
             (t) => t.getAttribute("aria-selected") === "true"
         );
@@ -357,8 +360,8 @@ function actualizarContadores() {
     const elTotal     = document.querySelector(".profile-stat:nth-child(1) .profile-stat__valor");
     const elCargados  = document.querySelector(".profile-stat--ok .profile-stat__valor");
     const elPendientes = document.querySelector(".profile-stat--pendiente .profile-stat__valor");
-    const elPorcentaje = document.querySelector(".completeness-card__valor");
-    const barra       = document.querySelector(".progreso-barra-fill");
+    const elPorcentaje = document.querySelector("#panel-documentos .documents-card__progreso-valor");
+    const barra       = document.querySelector("#panel-documentos .progreso-barra-fill");
 
     if (elTotal)      elTotal.textContent      = total;
     if (elCargados)   elCargados.textContent   = cargados;
@@ -375,6 +378,20 @@ function actualizarResumenPredio(predioCard) {
     const cargados = predioCard.querySelectorAll(".documento-card--cargado").length;
 
     resumen.textContent = `${cargados} de ${total} documentos cargados`;
+
+    actualizarBarraPredios();
+}
+
+function actualizarBarraPredios() {
+    const totalCards = document.querySelectorAll("#panel-predios .documento-card").length;
+    const cargadosCards = document.querySelectorAll("#panel-predios .documento-card--cargado").length;
+    const porcentaje = totalCards > 0 ? Math.round((cargadosCards / totalCards) * 100) : 0;
+
+    const elPorcentaje = document.querySelector("#panel-predios .documents-card__progreso-valor");
+    const barra = document.querySelector("#panel-predios .progreso-barra-fill");
+
+    if (elPorcentaje) elPorcentaje.textContent = porcentaje + "%";
+    if (barra)        barra.style.width        = porcentaje + "%";
 }
 
 function initFormAgregarPredio() {
