@@ -13,7 +13,7 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class PrediosController extends Controller
 {
-    public function agregarPredio(Request $request): RedirectResponse
+    public function agregarPredio(Request $request): RedirectResponse|JsonResponse
     {
         $request->validate([
             'clave_predio' => ['required', 'string', 'max:255'],
@@ -22,11 +22,29 @@ class PrediosController extends Controller
             'clave_predio.max' => 'La clave catastral no puede superar los 255 caracteres.',
         ]);
 
-        Predio::create([
+        $predio = Predio::create([
             'clave_predio' => $request->input('clave_predio'),
             'estatus_predio' => Predio::ESTATUS_EN_REVISION,
             'fk_usuario' => auth()->id(),
-        ]);
+        ])->load('documentos');
+
+        if ($request->expectsJson()) {
+            $catalogoPredios = catDocumentoPredio::where('estatus_documento', 1)
+                ->orderBy('nombre_documento')
+                ->get();
+
+            $html = view('perfil.predio-card', [
+                'predio' => $predio,
+                'catalogoPredios' => $catalogoPredios,
+            ])->render();
+
+            return response()->json([
+                'html' => $html,
+                'id_predio' => $predio->id_predio,
+                'clave_predio' => $predio->clave_predio,
+                'estatus' => $predio->estatus_predio,
+            ]);
+        }
 
         return redirect()->route('indexPerfiles')
             ->with('success', 'El predio se agregó correctamente y quedó en revisión.');
@@ -78,6 +96,7 @@ class PrediosController extends Controller
     public function subirDocumentoPredio(Request $request, Predio $predio, catDocumentoPredio $catalogoDocumento): RedirectResponse|JsonResponse
     {
         abort_if($predio->fk_usuario !== auth()->id(), 403);
+        abort_if($predio->estatus_predio !== Predio::ESTATUS_APROBADO, 403, 'El predio debe estar aprobado antes de cargar documentos.');
 
         $request->validate([
             'archivo' => ['required', 'file', 'mimes:pdf', 'max:10240'],
