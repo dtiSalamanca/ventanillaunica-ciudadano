@@ -265,6 +265,11 @@
                         </button>
                     </div>
 
+                    <div class="aviso-predios" role="note">
+                        <i class="fas fa-circle-info"></i>
+                        <span>Para cargar los documentos de un predio, es necesario que su clave catastral haya sido <strong>validada previamente</strong>.</span>
+                    </div>
+
                     @if ($predios->isNotEmpty() && $catalogoPredios->isNotEmpty())
                         <div class="documents-card__progreso" data-seccion="predios">
                             <div class="documents-card__progreso-header">
@@ -282,22 +287,36 @@
                           id="form-agregar-predio"
                           class="form-agregar-predio @if (!$errors->has('clave_predio')) form-agregar-predio--oculto @endif">
                         @csrf
-                        <div class="form-agregar-predio__campo">
-                            <label for="clave_predio">Clave catastral del predio</label>
-                            <input type="text"
-                                   name="clave_predio"
-                                   id="clave_predio"
-                                   value="{{ old('clave_predio') }}"
-                                   placeholder="Ej. 123-456-789-000"
-                                   maxlength="255"
-                                   required>
-                            @error('clave_predio')
-                                <span class="form-agregar-predio__error">{{ $message }}</span>
-                            @enderror
+                        <div class="form-agregar-predio__titulo">
+                            <i class="fas fa-house-circle-plus"></i>
+                            <span>Nuevo predio</span>
                         </div>
-                        <div class="form-agregar-predio__acciones">
-                            <button type="submit" class="btn-accion btn-accion--cargar">Guardar</button>
-                            <button type="button" class="btn-accion btn-accion--ver" id="btn-cancelar-form-predio">Cancelar</button>
+                        <div class="form-agregar-predio__contenido">
+                            <div class="form-agregar-predio__campo">
+                                <label for="clave_predio">Clave catastral del predio</label>
+                                <div class="form-agregar-predio__input-wrap">
+                                    <i class="fas fa-location-dot form-agregar-predio__input-icono"></i>
+                                    <input type="text"
+                                           name="clave_predio"
+                                           id="clave_predio"
+                                           value="{{ old('clave_predio') }}"
+                                           placeholder="Ej. 123-456-789-000"
+                                           maxlength="255"
+                                           required>
+                                </div>
+                                <span class="form-agregar-predio__ayuda">Captura la clave tal como aparece en tu recibo predial o boleta.</span>
+                                @error('clave_predio')
+                                    <span class="form-agregar-predio__error">{{ $message }}</span>
+                                @enderror
+                            </div>
+                            <div class="form-agregar-predio__acciones">
+                                <button type="submit" class="btn-accion btn-accion--cargar">
+                                    <i class="fas fa-floppy-disk me-1"></i>Guardar
+                                </button>
+                                <button type="button" class="btn-accion btn-accion--cancelar" id="btn-cancelar-form-predio">
+                                    <i class="fas fa-xmark me-1"></i>Cancelar
+                                </button>
+                            </div>
                         </div>
                     </form>
 
