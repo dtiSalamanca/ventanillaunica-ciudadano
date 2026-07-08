@@ -76,7 +76,10 @@ async function consultarEstatusPredios(url) {
             if (!predioCard) return;
 
             if (Number(predioCard.dataset.estatusPredio) !== predio.estatus) {
-                actualizarBadgePredio(predioCard, predio.estatus);
+                // El estatus del predio cambió: recargar para reflejar de forma
+                // consistente la habilitación/inhabilitación de la carga de documentos.
+                window.location.reload();
+                return;
             }
 
             let huboCambios = false;
@@ -312,8 +315,12 @@ function actualizarCard(card, datos) {
     const acciones = card.querySelector(".documento-card__acciones");
     if (!acciones) return;
 
+    // Solo permitir reenvío de documentos cuando el predio (si aplica) está aprobado.
+    const predioCard = card.closest(".predio-card");
+    const predioAprobado = !predioCard || Number(predioCard.dataset.estatusPredio) === 2;
+
     const badgeHtml = badgeEstatus(datos.estatus);
-    const reenviarHtml = datos.estatus === 0
+    const reenviarHtml = (datos.estatus === 0 && predioAprobado)
         ? `
         <form action="${datos.url_subir}"
               method="POST"
@@ -415,51 +422,183 @@ function initFormAgregarPredio() {
 
     btnCancelar.addEventListener("click", () => {
         form.reset();
+        limpiarErrorAgregarPredio(form);
         form.classList.add("form-agregar-predio--oculto");
+    });
+
+    form.addEventListener("submit", async (e) => {
+        if (form.dataset.enviando === "1") return;
+        e.preventDefault();
+
+        limpiarErrorAgregarPredio(form);
+
+        const input = form.querySelector("#clave_predio");
+        const clave = (input?.value ?? "").trim();
+        if (!clave) {
+            mostrarErrorAgregarPredio(form, "Debes capturar la clave catastral del predio.");
+            return;
+        }
+
+        const confirmado = await confirmarAgregarPredio(clave);
+        if (!confirmado) return;
+
+        const btnSubmit = form.querySelector("button[type='submit']");
+        const textoOriginal = btnSubmit?.innerHTML;
+        if (btnSubmit) {
+            btnSubmit.disabled = true;
+            btnSubmit.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Guardando…';
+        }
+
+        try {
+            const respuesta = await fetch(form.action, {
+                method: "POST",
+                headers: {
+                    Accept: "application/json",
+                    "X-CSRF-TOKEN": window.adminConfig?.csrfToken ?? "",
+                },
+                body: new FormData(form),
+            });
+
+            const datos = await respuesta.json();
+
+            if (!respuesta.ok) {
+                const mensaje = datos.errors?.clave_predio?.[0] ?? datos.message ?? "Ocurrió un error al agregar el predio.";
+                mostrarErrorAgregarPredio(form, mensaje);
+                return;
+            }
+
+            const lista = document.getElementById("predios-lista");
+            if (lista) {
+                lista.insertAdjacentHTML("afterbegin", datos.html);
+                const nuevaCard = lista.querySelector(`.predio-card[data-predio-id="${datos.id_predio}"]`);
+                if (nuevaCard) {
+                    initListenersPredioCard(nuevaCard);
+                }
+            } else {
+                // No había lista visible (mensaje-vacio). Recargar para reconstruirla.
+                window.location.reload();
+                return;
+            }
+
+            const mensajeVacio = document.querySelector("#panel-predios .mensaje-vacio");
+            if (mensajeVacio && !mensajeVacio.id) {
+                mensajeVacio.remove();
+            }
+
+            form.reset();
+            form.classList.add("form-agregar-predio--oculto");
+            actualizarConteoPredios();
+            actualizarBarraPredios();
+            mostrarExitoPredio("El predio se agregó correctamente y quedó en revisión.");
+        } catch {
+            mostrarError("No se pudo conectar con el servidor. Intenta de nuevo.");
+        } finally {
+            if (btnSubmit) {
+                btnSubmit.disabled = false;
+                btnSubmit.innerHTML = textoOriginal;
+            }
+        }
     });
 }
 
-function initAcordeonPredios() {
-    document.querySelectorAll(".predio-card__header").forEach((header) => {
-        header.addEventListener("click", () => {
-            const body = header.nextElementSibling;
-            if (!body) return;
+function initListenersPredioCard(predioCard) {
+    const header = predioCard.querySelector(".predio-card__header");
+    if (header) initAcordeonPredioHeader(header);
+    predioCard.querySelectorAll(".form-eliminar-predio").forEach(initEliminarPredioForm);
+    predioCard.querySelectorAll(".form-corregir-predio").forEach(bindFormCorregirPredio);
+    predioCard.querySelectorAll(".form-subir-inline").forEach(bindFormSubir);
+}
 
-            const abierto = header.getAttribute("aria-expanded") === "true";
-            header.setAttribute("aria-expanded", String(!abierto));
-            body.hidden = abierto;
-        });
+function actualizarConteoPredios() {
+    const total = document.querySelectorAll(".predio-card").length;
+    const contador = document.querySelector('#tab-predios .perfil-sidebar__count');
+    if (contador) contador.textContent = String(total);
+}
+
+function confirmarAgregarPredio(clave) {
+    if (!window.Swal) {
+        return Promise.resolve(confirm(`¿Agregar el predio con clave catastral "${clave}"?`));
+    }
+
+    return Swal.fire({
+        icon: "question",
+        title: "¿Agregar predio?",
+        html: `Se agregará el predio con clave <strong>${escapeHtml(clave)}</strong> y quedará en revisión.`,
+        showCancelButton: true,
+        confirmButtonText: "Sí, agregar",
+        cancelButtonText: "Cancelar",
+        confirmButtonColor: "#601028",
+        cancelButtonColor: "#64748b",
+        reverseButtons: true,
+        focusCancel: true,
+    }).then((resultado) => resultado.isConfirmed);
+}
+
+function mostrarErrorAgregarPredio(form, mensaje) {
+    const campo = form.querySelector(".form-agregar-predio__campo");
+    if (!campo) {
+        mostrarError(mensaje);
+        return;
+    }
+
+    let span = campo.querySelector(".form-agregar-predio__error");
+    if (!span) {
+        span = document.createElement("span");
+        span.className = "form-agregar-predio__error";
+        campo.appendChild(span);
+    }
+    span.textContent = mensaje;
+}
+
+function limpiarErrorAgregarPredio(form) {
+    form.querySelector(".form-agregar-predio__error")?.remove();
+}
+
+function initAcordeonPredios() {
+    document.querySelectorAll(".predio-card__header").forEach(initAcordeonPredioHeader);
+}
+
+function initAcordeonPredioHeader(header) {
+    header.addEventListener("click", () => {
+        const body = header.nextElementSibling;
+        if (!body) return;
+
+        const abierto = header.getAttribute("aria-expanded") === "true";
+        header.setAttribute("aria-expanded", String(!abierto));
+        body.hidden = abierto;
     });
 }
 
 function initEliminarPredio() {
-    document.querySelectorAll(".form-eliminar-predio").forEach((form) => {
-        form.addEventListener("submit", (e) => {
-            if (form.dataset.confirmado) return;
-            e.preventDefault();
+    document.querySelectorAll(".form-eliminar-predio").forEach(initEliminarPredioForm);
+}
 
-            const clave = form.closest(".predio-card")?.querySelector(".predio-card__clave")?.textContent ?? "este predio";
+function initEliminarPredioForm(form) {
+    form.addEventListener("submit", (e) => {
+        if (form.dataset.confirmado) return;
+        e.preventDefault();
 
-            if (window.Swal) {
-                Swal.fire({
-                    icon: "warning",
-                    title: "¿Eliminar predio?",
-                    text: `Se eliminará «${clave}» junto con sus documentos cargados.`,
-                    showCancelButton: true,
-                    confirmButtonText: "Eliminar",
-                    cancelButtonText: "Cancelar",
-                    confirmButtonColor: "#dc2626",
-                }).then((resultado) => {
-                    if (resultado.isConfirmed) {
-                        form.dataset.confirmado = "1";
-                        form.submit();
-                    }
-                });
-            } else if (confirm(`¿Eliminar «${clave}» junto con sus documentos cargados?`)) {
-                form.dataset.confirmado = "1";
-                form.submit();
-            }
-        });
+        const clave = form.closest(".predio-card")?.querySelector(".predio-card__clave")?.textContent ?? "este predio";
+
+        if (window.Swal) {
+            Swal.fire({
+                icon: "warning",
+                title: "¿Eliminar predio?",
+                text: `Se eliminará «${clave}» junto con sus documentos cargados.`,
+                showCancelButton: true,
+                confirmButtonText: "Eliminar",
+                cancelButtonText: "Cancelar",
+                confirmButtonColor: "#dc2626",
+            }).then((resultado) => {
+                if (resultado.isConfirmed) {
+                    form.dataset.confirmado = "1";
+                    form.submit();
+                }
+            });
+        } else if (confirm(`¿Eliminar «${clave}» junto con sus documentos cargados?`)) {
+            form.dataset.confirmado = "1";
+            form.submit();
+        }
     });
 }
 
