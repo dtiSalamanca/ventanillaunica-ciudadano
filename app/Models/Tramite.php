@@ -18,6 +18,7 @@ class Tramite extends Model
         'estatus_tramite',
         'fk_dependencia',
         'precio_tramite',
+        'cuenta_predial',
     ];
 
     public function dependencia(): BelongsTo

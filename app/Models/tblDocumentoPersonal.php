@@ -38,4 +38,12 @@ class tblDocumentoPersonal extends Model
     {
         return $this->belongsTo(catDocumentoPersonal::class, 'fk_documento_personal', 'id_documento');
     }
+
+    /**
+     * Obtiene el directorio donde se almacenan los archivos de este documento.
+     */
+    public function directorioArchivo(): string
+    {
+        return 'documentos_personales/'.$this->fk_usuario.'/'.$this->fk_documento_personal;
+    }
 }

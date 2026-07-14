@@ -2,14 +2,11 @@ document.addEventListener("DOMContentLoaded", function () {
     initAnimacionEntrada();
     initMatchingDocumentosPersonales();
     initSelectorPredio();
-    initOpcionesRequisitos();
     initActualizacionProgreso();
-    initValidacionArchivos();
     initEnvioSolicitud();
     initAcordeonRequisitos();
 });
 
-const MAX_BYTES_ARCHIVO = 10 * 1024 * 1024;
 const baseUrlPerfil = "/perfiles/mi-perfil";
 
 /* ── Entrada escalonada de la vista (fade + slide) ── */
@@ -92,9 +89,8 @@ function initMatchingDocumentosPersonales() {
         }
     });
 
-    // 2) Para requisitos que coinciden con documentos NO aprobados, mostrar aviso
+    // 2) Para requisitos NO cumplidos, mostrar aviso-perfil (dirige a Mi Perfil)
     requisitos.forEach(function (requisito) {
-        // Si ya está cumplido (por doc aprobado), no hacer nada
         if (requisito.classList.contains("requisito-cumplimiento--cumplido"))
             return;
 
@@ -114,7 +110,9 @@ function initMatchingDocumentosPersonales() {
         );
 
         if (coincideNoAprobado) {
-            agregarAvisoPerfil(requisito);
+            agregarAvisoPerfil(requisito, "revision");
+        } else {
+            agregarAvisoPerfil(requisito, "faltante");
         }
     });
 
@@ -122,10 +120,11 @@ function initMatchingDocumentosPersonales() {
 }
 
 /**
- * Agrega un mensaje al requisito indicando que el documento está en revisión
- * o rechazado, con un link para ir al perfil.
+ * Agrega un mensaje al requisito indicando que debe completarse desde el perfil.
+ * @param {HTMLElement} requisito - Elemento del requisito
+ * @param {string} tipo - "revision" (subido pero no aprobado) o "faltante" (no subido)
  */
-function agregarAvisoPerfil(requisito) {
+function agregarAvisoPerfil(requisito, tipo) {
     // Evitar duplicados
     if (requisito.querySelector(".aviso-perfil")) return;
 
@@ -136,12 +135,23 @@ function agregarAvisoPerfil(requisito) {
 
     const aviso = document.createElement("div");
     aviso.className = "aviso-perfil";
-    aviso.innerHTML =
-        '<i class="fa-solid fa-circle-exclamation me-1"></i>' +
-        "Ya subiste este documento pero aún está en revisión o fue rechazado. " +
-        '<a href="' +
-        baseUrlPerfil +
-        '" class="aviso-perfil__link">Revisa su estado en Mi Perfil</a>.';
+
+    if (tipo === "revision") {
+        aviso.innerHTML =
+            '<i class="fa-solid fa-circle-exclamation me-1"></i>' +
+            "Ya subiste este documento pero aún está en revisión o fue rechazado. " +
+            '<a href="' +
+            baseUrlPerfil +
+            '" class="aviso-perfil__link">Revisa su estado en Mi Perfil</a>.';
+    } else {
+        aviso.innerHTML =
+            '<i class="fa-solid fa-circle-info me-1"></i>' +
+            "Este requisito se cubre desde tu perfil. " +
+            '<a href="' +
+            baseUrlPerfil +
+            '" class="aviso-perfil__link">Ve a Mi Perfil</a> para cargar el documento faltante.';
+    }
+
     cuerpo.appendChild(aviso);
 }
 
@@ -159,11 +169,6 @@ function marcarPrecumplidoPersonal(requisito, tipo) {
         "requisito-cumplimiento--cumplido",
         "requisito-cumplimiento--precumplido",
     );
-
-    const opciones = requisito.querySelector(".requisito-opciones");
-    const controles = requisito.querySelector(".requisito-controles");
-    if (opciones) opciones.hidden = true;
-    if (controles) controles.hidden = true;
 
     const badge = requisito.querySelector(".badge-estado");
     if (badge) {
@@ -274,7 +279,7 @@ function initSelectorPredio() {
             }
         });
 
-        // 3) Aviso de documentos no aprobados (para los que no cubrió nada)
+        // 3) Aviso-perfil para los que no cubrió ningún documento aprobado
         let nombresNoAprobados = [];
         try {
             nombresNoAprobados = JSON.parse(
@@ -307,7 +312,9 @@ function initSelectorPredio() {
             );
 
             if (coincideNoAprobado) {
-                agregarAvisoPerfil(requisito);
+                agregarAvisoPerfil(requisito, "revision");
+            } else {
+                agregarAvisoPerfil(requisito, "faltante");
             }
         });
 
@@ -352,11 +359,9 @@ function resetearPrecumplido(requisito) {
         "requisito-cumplimiento--precumplido",
     );
 
-    const opciones = requisito.querySelector(".requisito-opciones");
-    const controles = requisito.querySelector(".requisito-controles");
-
-    if (opciones) opciones.hidden = false;
-    if (controles) controles.hidden = false;
+    // Eliminar aviso-perfil si existe (se volverá a evaluar)
+    const aviso = requisito.querySelector(".aviso-perfil");
+    if (aviso) aviso.remove();
 
     const badge = requisito.querySelector(".badge-estado");
     if (badge) {
@@ -368,115 +373,8 @@ function resetearPrecumplido(requisito) {
     expandirRequisito(requisito);
 }
 
-/* ── Opciones de cumplimiento (radio + control dinámico) ── */
-function initOpcionesRequisitos() {
-    const requisitos = document.querySelectorAll(".requisito-cumplimiento");
-
-    requisitos.forEach((requisito) => {
-        const radios = requisito.querySelectorAll(".requisito-opcion__radio");
-        const controles = requisito.querySelectorAll(".requisito-control");
-
-        radios.forEach((radio) => {
-            radio.addEventListener("change", () => {
-                if (!radio.checked) return;
-
-                // Habilitar y mostrar sólo el control del método elegido.
-                controles.forEach((control) => {
-                    const coincide = control.dataset.control === radio.value;
-                    control.hidden = !coincide;
-
-                    const input = control.querySelector("select, input");
-                    if (input) input.disabled = !coincide;
-                });
-
-                actualizarEstadoRequisito(requisito);
-            });
-        });
-    });
-}
-
 /* ── Estado de cumplimiento y barra de progreso ── */
 function initActualizacionProgreso() {
-    const requisitos = document.querySelectorAll(".requisito-cumplimiento");
-
-    requisitos.forEach((requisito) => {
-        const selects = requisito.querySelectorAll(
-            ".requisito-control__select",
-        );
-        const archivo = requisito.querySelector(".requisito-control__archivo");
-
-        selects.forEach((select) =>
-            select.addEventListener("change", () =>
-                actualizarEstadoRequisito(requisito),
-            ),
-        );
-
-        if (archivo) {
-            archivo.addEventListener("change", () =>
-                actualizarEstadoRequisito(requisito),
-            );
-        }
-    });
-
-    actualizarProgresoGlobal();
-}
-
-function actualizarEstadoRequisito(requisito) {
-    const radioActivo = requisito.querySelector(
-        ".requisito-opcion__radio:checked",
-    );
-    const badge = requisito.querySelector(".badge-estado");
-
-    let cumplido = false;
-
-    if (radioActivo) {
-        const control = requisito.querySelector(
-            `.requisito-control[data-control="${radioActivo.value}"]`,
-        );
-
-        if (control) {
-            const select = control.querySelector(".requisito-control__select");
-            const archivo = control.querySelector(
-                ".requisito-control__archivo",
-            );
-
-            if (select) {
-                cumplido = select.value !== "" && select.value !== null;
-            } else if (archivo) {
-                cumplido = archivo.files.length > 0;
-            }
-        }
-    }
-
-    const yaCumplido = requisito.classList.contains(
-        "requisito-cumplimiento--cumplido",
-    );
-
-    requisito.classList.toggle("requisito-cumplimiento--cumplido", cumplido);
-
-    if (badge) {
-        if (cumplido) {
-            badge.className = "badge-estado badge-estado--cumplido";
-            badge.innerHTML =
-                '<i class="fa-solid fa-circle-check me-1"></i>Cumplido';
-        } else {
-            badge.className = "badge-estado badge-estado--pendiente";
-            badge.innerHTML =
-                '<i class="fa-solid fa-circle-exclamation me-1"></i>Pendiente';
-        }
-    }
-
-    const botonReabrir = requisito.querySelector(
-        ".requisito-cumplimiento__reabrir",
-    );
-    if (botonReabrir) botonReabrir.hidden = !cumplido;
-
-    if (cumplido && !yaCumplido) {
-        colapsarRequisito(requisito);
-    } else if (!cumplido) {
-        expandirRequisito(requisito);
-    }
-
     actualizarProgresoGlobal();
 }
 
@@ -547,57 +445,6 @@ function actualizarProgresoGlobal() {
     }
 }
 
-/* ── Validación de archivos (PDF, máx. 10 MB) ── */
-function initValidacionArchivos() {
-    const archivos = document.querySelectorAll(".requisito-control__archivo");
-
-    archivos.forEach((input) => {
-        input.addEventListener("change", () => {
-            if (input.files.length === 0) return;
-
-            const archivo = input.files[0];
-            const extension = archivo.name.split(".").pop().toLowerCase();
-
-            if (extension !== "pdf") {
-                mostrarError("Solo se permiten archivos PDF.");
-                input.value = "";
-                actualizarNombreArchivo(input);
-                return;
-            }
-
-            if (archivo.size > MAX_BYTES_ARCHIVO) {
-                mostrarError("El archivo no puede superar los 10 MB.");
-                input.value = "";
-                actualizarNombreArchivo(input);
-                return;
-            }
-
-            actualizarNombreArchivo(input);
-
-            const requisito = input.closest(".requisito-cumplimiento");
-            if (requisito) actualizarEstadoRequisito(requisito);
-        });
-    });
-}
-
-/* ── Nombre del archivo seleccionado (selector personalizado) ── */
-function actualizarNombreArchivo(input) {
-    const nombreEl = input
-        .closest(".archivo-selector")
-        ?.querySelector(".archivo-selector__nombre");
-    if (!nombreEl) return;
-
-    const archivo = input.files[0];
-
-    if (archivo) {
-        nombreEl.textContent = archivo.name;
-        nombreEl.classList.add("archivo-selector__nombre--seleccionado");
-    } else {
-        nombreEl.textContent = nombreEl.dataset.placeholder;
-        nombreEl.classList.remove("archivo-selector__nombre--seleccionado");
-    }
-}
-
 /* ── Envío de solicitud (concepto: Swal informativo) ── */
 function initEnvioSolicitud() {
     const boton = document.getElementById("btn-enviar-solicitud");
@@ -609,20 +456,6 @@ function initEnvioSolicitud() {
             "El envío de la solicitud aún no está disponible. Esta vista es un concepto de la interfaz.",
         );
     });
-}
-
-/* ── Helpers de alertas ── */
-function mostrarError(mensaje) {
-    if (window.Swal) {
-        Swal.fire({
-            icon: "error",
-            title: "Error",
-            text: mensaje,
-            confirmButtonColor: "#dc2626",
-        });
-    } else {
-        alert(mensaje);
-    }
 }
 
 function mostrarAviso(titulo, texto) {

@@ -32,12 +32,15 @@ async function consultarEstatusDocumentos(url) {
 
         datos.documentos.forEach((documento) => {
             const card = document.querySelector(
-                `#panel-documentos .documento-card[data-catalogo-id="${documento.fk_documento_personal}"]`
+                `#panel-documentos .documento-card[data-catalogo-id="${documento.fk_documento_personal}"]`,
             );
             if (!card) return;
 
             const estatusActual = card.dataset.estatusNum;
-            if (estatusActual !== undefined && Number(estatusActual) === documento.estatus) {
+            if (
+                estatusActual !== undefined &&
+                Number(estatusActual) === documento.estatus
+            ) {
                 return;
             }
 
@@ -71,7 +74,7 @@ async function consultarEstatusPredios(url) {
 
         datos.predios.forEach((predio) => {
             const predioCard = document.querySelector(
-                `.predio-card[data-predio-id="${predio.id_predio}"]`
+                `.predio-card[data-predio-id="${predio.id_predio}"]`,
             );
             if (!predioCard) return;
 
@@ -86,12 +89,15 @@ async function consultarEstatusPredios(url) {
 
             predio.documentos.forEach((documento) => {
                 const card = predioCard.querySelector(
-                    `.documento-card[data-catalogo-id="${documento.fk_cat_documento_predio}"]`
+                    `.documento-card[data-catalogo-id="${documento.fk_cat_documento_predio}"]`,
                 );
                 if (!card) return;
 
                 const estatusActual = card.dataset.estatusNum;
-                if (estatusActual !== undefined && Number(estatusActual) === documento.estatus) {
+                if (
+                    estatusActual !== undefined &&
+                    Number(estatusActual) === documento.estatus
+                ) {
                     return;
                 }
 
@@ -115,7 +121,7 @@ function actualizarBadgePredio(predioCard, estatus) {
     if (badge) {
         badge.outerHTML = badgeEstatus(estatus).replace(
             'class="badge-estatus',
-            'class="predio-card__badge badge-estatus'
+            'class="predio-card__badge badge-estatus',
         );
     }
 }
@@ -169,7 +175,10 @@ function initTabs() {
             b.setAttribute("aria-selected", String(activo));
         });
         tabItems.forEach((b) => {
-            b.classList.toggle("perfil-tab-mobile--active", b.dataset.seccion === seccion);
+            b.classList.toggle(
+                "perfil-tab-mobile--active",
+                b.dataset.seccion === seccion,
+            );
         });
 
         document.querySelectorAll(".profile-tab-content").forEach((panel) => {
@@ -192,7 +201,7 @@ function initTabs() {
 
         const enabledTabs = Array.from(sidebarItems);
         const current = enabledTabs.findIndex(
-            (t) => t.getAttribute("aria-selected") === "true"
+            (t) => t.getAttribute("aria-selected") === "true",
         );
         if (current === -1) return;
 
@@ -214,8 +223,8 @@ function initSubirDocumento() {
 
 function bindFormSubir(form) {
     const input = form.querySelector(".input-archivo-oculto");
-    const btn   = form.querySelector(".btn-trigger-archivo");
-    const card  = form.closest(".documento-card");
+    const btn = form.querySelector(".btn-trigger-archivo");
+    const card = form.closest(".documento-card");
 
     if (!input || !btn || !card) return;
 
@@ -240,7 +249,10 @@ function bindFormSubir(form) {
             return;
         }
 
-        const nombreDocumento = card.querySelector(".documento-card__nombre")?.textContent?.trim() ?? "el documento";
+        const nombreDocumento =
+            card
+                .querySelector(".documento-card__nombre")
+                ?.textContent?.trim() ?? "el documento";
         const confirmado = await confirmarSubida(archivo.name, nombreDocumento);
         if (!confirmado) {
             input.value = "";
@@ -257,20 +269,25 @@ function bindFormSubir(form) {
                 method: "POST",
                 headers: {
                     Accept: "application/json",
-                    "X-CSRF-TOKEN": window.adminConfig?.csrfToken ?? "",
+                    "X-CSRF-TOKEN": window.perfilConfig?.csrfToken ?? "",
                 },
                 body: formData,
             });
 
-            const datos = await respuesta.json();
-
             if (!respuesta.ok) {
-                const mensaje = datos.errors?.archivo?.[0]
-                    ?? datos.message
-                    ?? "Ocurrió un error al subir el documento.";
+                let mensaje = `Error del servidor (${respuesta.status})`;
+                try {
+                    const datos = await respuesta.json();
+                    mensaje =
+                        datos.errors?.archivo?.[0] ?? datos.message ?? mensaje;
+                } catch {
+                    // No se pudo parsear JSON, usamos el mensaje genérico
+                }
                 mostrarError(mensaje);
                 return;
             }
+
+            const datos = await respuesta.json();
 
             actualizarCard(card, datos);
 
@@ -281,8 +298,13 @@ function bindFormSubir(form) {
                 actualizarContadores();
             }
 
-        } catch {
-            mostrarError("No se pudo conectar con el servidor. Intenta de nuevo.");
+            mostrarExitoDocumento(
+                "El documento se envió para revisión correctamente.",
+            );
+        } catch (error) {
+            mostrarError(
+                `No se pudo conectar con el servidor. ${error.message}`,
+            );
         } finally {
             input.value = "";
             btn.disabled = false;
@@ -317,16 +339,18 @@ function actualizarCard(card, datos) {
 
     // Solo permitir reenvío de documentos cuando el predio (si aplica) está aprobado.
     const predioCard = card.closest(".predio-card");
-    const predioAprobado = !predioCard || Number(predioCard.dataset.estatusPredio) === 2;
+    const predioAprobado =
+        !predioCard || Number(predioCard.dataset.estatusPredio) === 2;
 
     const badgeHtml = badgeEstatus(datos.estatus);
-    const reenviarHtml = (datos.estatus === 0 && predioAprobado)
-        ? `
+    const reenviarHtml =
+        datos.estatus === 0 && predioAprobado
+            ? `
         <form action="${datos.url_subir}"
               method="POST"
               enctype="multipart/form-data"
               class="form-subir-inline">
-            <input type="hidden" name="_token" value="${window.adminConfig?.csrfToken ?? ""}">
+            <input type="hidden" name="_token" value="${window.perfilConfig?.csrfToken ?? ""}">
             <input type="file"
                    name="archivo"
                    class="input-archivo-oculto"
@@ -337,7 +361,7 @@ function actualizarCard(card, datos) {
             </button>
         </form>
         `
-        : "";
+            : "";
 
     acciones.innerHTML = `
         ${badgeHtml}
@@ -367,22 +391,36 @@ function badgeEstatus(estatus) {
 }
 
 function actualizarContadores() {
-    const total     = document.querySelectorAll("#panel-documentos .documento-card").length;
-    const cargados  = document.querySelectorAll("#panel-documentos .documento-card--cargado").length;
+    const total = document.querySelectorAll(
+        "#panel-documentos .documento-card",
+    ).length;
+    const cargados = document.querySelectorAll(
+        "#panel-documentos .documento-card--cargado",
+    ).length;
     const pendientes = total - cargados;
     const porcentaje = total > 0 ? Math.round((cargados / total) * 100) : 0;
 
-    const elTotal     = document.querySelector(".profile-stat:nth-child(1) .profile-stat__valor");
-    const elCargados  = document.querySelector(".profile-stat--ok .profile-stat__valor");
-    const elPendientes = document.querySelector(".profile-stat--pendiente .profile-stat__valor");
-    const elPorcentaje = document.querySelector("#panel-documentos .documents-card__progreso-valor");
-    const barra       = document.querySelector("#panel-documentos .progreso-barra-fill");
+    const elTotal = document.querySelector(
+        ".profile-stat:nth-child(1) .profile-stat__valor",
+    );
+    const elCargados = document.querySelector(
+        ".profile-stat--ok .profile-stat__valor",
+    );
+    const elPendientes = document.querySelector(
+        ".profile-stat--pendiente .profile-stat__valor",
+    );
+    const elPorcentaje = document.querySelector(
+        "#panel-documentos .documents-card__progreso-valor",
+    );
+    const barra = document.querySelector(
+        "#panel-documentos .progreso-barra-fill",
+    );
 
-    if (elTotal)      elTotal.textContent      = total;
-    if (elCargados)   elCargados.textContent   = cargados;
+    if (elTotal) elTotal.textContent = total;
+    if (elCargados) elCargados.textContent = cargados;
     if (elPendientes) elPendientes.textContent = pendientes;
     if (elPorcentaje) elPorcentaje.textContent = porcentaje + "%";
-    if (barra)        barra.style.width        = porcentaje + "%";
+    if (barra) barra.style.width = porcentaje + "%";
 }
 
 function actualizarResumenPredio(predioCard) {
@@ -390,7 +428,9 @@ function actualizarResumenPredio(predioCard) {
     if (!resumen) return;
 
     const total = predioCard.querySelectorAll(".documento-card").length;
-    const cargados = predioCard.querySelectorAll(".documento-card--cargado").length;
+    const cargados = predioCard.querySelectorAll(
+        ".documento-card--cargado",
+    ).length;
 
     resumen.textContent = `${cargados} de ${total} documentos cargados`;
 
@@ -398,15 +438,22 @@ function actualizarResumenPredio(predioCard) {
 }
 
 function actualizarBarraPredios() {
-    const totalCards = document.querySelectorAll("#panel-predios .documento-card").length;
-    const cargadosCards = document.querySelectorAll("#panel-predios .documento-card--cargado").length;
-    const porcentaje = totalCards > 0 ? Math.round((cargadosCards / totalCards) * 100) : 0;
+    const totalCards = document.querySelectorAll(
+        "#panel-predios .documento-card",
+    ).length;
+    const cargadosCards = document.querySelectorAll(
+        "#panel-predios .documento-card--cargado",
+    ).length;
+    const porcentaje =
+        totalCards > 0 ? Math.round((cargadosCards / totalCards) * 100) : 0;
 
-    const elPorcentaje = document.querySelector("#panel-predios .documents-card__progreso-valor");
+    const elPorcentaje = document.querySelector(
+        "#panel-predios .documents-card__progreso-valor",
+    );
     const barra = document.querySelector("#panel-predios .progreso-barra-fill");
 
     if (elPorcentaje) elPorcentaje.textContent = porcentaje + "%";
-    if (barra)        barra.style.width        = porcentaje + "%";
+    if (barra) barra.style.width = porcentaje + "%";
 }
 
 function initFormAgregarPredio() {
@@ -435,7 +482,10 @@ function initFormAgregarPredio() {
         const input = form.querySelector("#clave_predio");
         const clave = (input?.value ?? "").trim();
         if (!clave) {
-            mostrarErrorAgregarPredio(form, "Debes capturar la clave catastral del predio.");
+            mostrarErrorAgregarPredio(
+                form,
+                "Debes capturar la clave catastral del predio.",
+            );
             return;
         }
 
@@ -446,7 +496,8 @@ function initFormAgregarPredio() {
         const textoOriginal = btnSubmit?.innerHTML;
         if (btnSubmit) {
             btnSubmit.disabled = true;
-            btnSubmit.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Guardando…';
+            btnSubmit.innerHTML =
+                '<i class="fas fa-spinner fa-spin me-1"></i>Guardando…';
         }
 
         try {
@@ -454,23 +505,34 @@ function initFormAgregarPredio() {
                 method: "POST",
                 headers: {
                     Accept: "application/json",
-                    "X-CSRF-TOKEN": window.adminConfig?.csrfToken ?? "",
+                    "X-CSRF-TOKEN": window.perfilConfig?.csrfToken ?? "",
                 },
                 body: new FormData(form),
             });
 
-            const datos = await respuesta.json();
-
             if (!respuesta.ok) {
-                const mensaje = datos.errors?.clave_predio?.[0] ?? datos.message ?? "Ocurrió un error al agregar el predio.";
+                let mensaje = `Error del servidor (${respuesta.status})`;
+                try {
+                    const datos = await respuesta.json();
+                    mensaje =
+                        datos.errors?.clave_predio?.[0] ??
+                        datos.message ??
+                        mensaje;
+                } catch {
+                    // No se pudo parsear JSON
+                }
                 mostrarErrorAgregarPredio(form, mensaje);
                 return;
             }
 
+            const datos = await respuesta.json();
+
             const lista = document.getElementById("predios-lista");
             if (lista) {
                 lista.insertAdjacentHTML("afterbegin", datos.html);
-                const nuevaCard = lista.querySelector(`.predio-card[data-predio-id="${datos.id_predio}"]`);
+                const nuevaCard = lista.querySelector(
+                    `.predio-card[data-predio-id="${datos.id_predio}"]`,
+                );
                 if (nuevaCard) {
                     initListenersPredioCard(nuevaCard);
                 }
@@ -480,7 +542,9 @@ function initFormAgregarPredio() {
                 return;
             }
 
-            const mensajeVacio = document.querySelector("#panel-predios .mensaje-vacio");
+            const mensajeVacio = document.querySelector(
+                "#panel-predios .mensaje-vacio",
+            );
             if (mensajeVacio && !mensajeVacio.id) {
                 mensajeVacio.remove();
             }
@@ -489,9 +553,13 @@ function initFormAgregarPredio() {
             form.classList.add("form-agregar-predio--oculto");
             actualizarConteoPredios();
             actualizarBarraPredios();
-            mostrarExitoPredio("El predio se agregó correctamente y quedó en revisión.");
+            mostrarExitoPredio(
+                "El predio se agregó correctamente y quedó en revisión.",
+            );
         } catch {
-            mostrarError("No se pudo conectar con el servidor. Intenta de nuevo.");
+            mostrarError(
+                "No se pudo conectar con el servidor. Intenta de nuevo.",
+            );
         } finally {
             if (btnSubmit) {
                 btnSubmit.disabled = false;
@@ -504,20 +572,28 @@ function initFormAgregarPredio() {
 function initListenersPredioCard(predioCard) {
     const header = predioCard.querySelector(".predio-card__header");
     if (header) initAcordeonPredioHeader(header);
-    predioCard.querySelectorAll(".form-eliminar-predio").forEach(initEliminarPredioForm);
-    predioCard.querySelectorAll(".form-corregir-predio").forEach(bindFormCorregirPredio);
+    predioCard
+        .querySelectorAll(".form-eliminar-predio")
+        .forEach(initEliminarPredioForm);
+    predioCard
+        .querySelectorAll(".form-corregir-predio")
+        .forEach(bindFormCorregirPredio);
     predioCard.querySelectorAll(".form-subir-inline").forEach(bindFormSubir);
 }
 
 function actualizarConteoPredios() {
     const total = document.querySelectorAll(".predio-card").length;
-    const contador = document.querySelector('#tab-predios .perfil-sidebar__count');
+    const contador = document.querySelector(
+        "#tab-predios .perfil-sidebar__count",
+    );
     if (contador) contador.textContent = String(total);
 }
 
 function confirmarAgregarPredio(clave) {
     if (!window.Swal) {
-        return Promise.resolve(confirm(`¿Agregar el predio con clave catastral "${clave}"?`));
+        return Promise.resolve(
+            confirm(`¿Agregar el predio con clave catastral "${clave}"?`),
+        );
     }
 
     return Swal.fire({
@@ -555,7 +631,9 @@ function limpiarErrorAgregarPredio(form) {
 }
 
 function initAcordeonPredios() {
-    document.querySelectorAll(".predio-card__header").forEach(initAcordeonPredioHeader);
+    document
+        .querySelectorAll(".predio-card__header")
+        .forEach(initAcordeonPredioHeader);
 }
 
 function initAcordeonPredioHeader(header) {
@@ -570,7 +648,9 @@ function initAcordeonPredioHeader(header) {
 }
 
 function initEliminarPredio() {
-    document.querySelectorAll(".form-eliminar-predio").forEach(initEliminarPredioForm);
+    document
+        .querySelectorAll(".form-eliminar-predio")
+        .forEach(initEliminarPredioForm);
 }
 
 function initEliminarPredioForm(form) {
@@ -578,7 +658,9 @@ function initEliminarPredioForm(form) {
         if (form.dataset.confirmado) return;
         e.preventDefault();
 
-        const clave = form.closest(".predio-card")?.querySelector(".predio-card__clave")?.textContent ?? "este predio";
+        const clave =
+            form.closest(".predio-card")?.querySelector(".predio-card__clave")
+                ?.textContent ?? "este predio";
 
         if (window.Swal) {
             Swal.fire({
@@ -595,7 +677,9 @@ function initEliminarPredioForm(form) {
                     form.submit();
                 }
             });
-        } else if (confirm(`¿Eliminar «${clave}» junto con sus documentos cargados?`)) {
+        } else if (
+            confirm(`¿Eliminar «${clave}» junto con sus documentos cargados?`)
+        ) {
             form.dataset.confirmado = "1";
             form.submit();
         }
@@ -603,7 +687,9 @@ function initEliminarPredioForm(form) {
 }
 
 function initCorregirPredio() {
-    document.querySelectorAll(".form-corregir-predio").forEach(bindFormCorregirPredio);
+    document
+        .querySelectorAll(".form-corregir-predio")
+        .forEach(bindFormCorregirPredio);
 }
 
 function bindFormCorregirPredio(form) {
@@ -616,10 +702,15 @@ function bindFormCorregirPredio(form) {
     form.addEventListener("submit", async (e) => {
         e.preventDefault();
 
-        const claveActual = predioCard?.querySelector(".predio-card__clave")?.textContent ?? "este predio";
+        const claveActual =
+            predioCard?.querySelector(".predio-card__clave")?.textContent ??
+            "este predio";
         const nuevaClave = input.value.trim();
 
-        const confirmado = await confirmarCorreccionPredio(claveActual, nuevaClave);
+        const confirmado = await confirmarCorreccionPredio(
+            claveActual,
+            nuevaClave,
+        );
         if (!confirmado) return;
 
         const textoOriginal = btn.innerHTML;
@@ -631,18 +722,27 @@ function bindFormCorregirPredio(form) {
                 method: "POST",
                 headers: {
                     Accept: "application/json",
-                    "X-CSRF-TOKEN": window.adminConfig?.csrfToken ?? "",
+                    "X-CSRF-TOKEN": window.perfilConfig?.csrfToken ?? "",
                 },
                 body: new FormData(form),
             });
 
-            const datos = await respuesta.json();
-
             if (!respuesta.ok) {
-                const mensaje = datos.errors?.[input.name]?.[0] ?? datos.message ?? "Ocurrió un error al corregir el predio.";
+                let mensaje = `Error del servidor (${respuesta.status})`;
+                try {
+                    const datos = await respuesta.json();
+                    mensaje =
+                        datos.errors?.[input.name]?.[0] ??
+                        datos.message ??
+                        mensaje;
+                } catch {
+                    // No se pudo parsear JSON
+                }
                 mostrarErrorCampoPredio(form, mensaje);
                 return;
             }
+
+            const datos = await respuesta.json();
 
             limpiarErrorCampoPredio(form);
 
@@ -652,10 +752,14 @@ function bindFormCorregirPredio(form) {
                 if (claveEl) claveEl.textContent = datos.clave_predio;
             }
 
-            mostrarExitoPredio("El predio se corrigió y se envió nuevamente a revisión.");
+            mostrarExitoPredio(
+                "El predio se corrigió y se envió nuevamente a revisión.",
+            );
             form.remove();
         } catch {
-            mostrarError("No se pudo conectar con el servidor. Intenta de nuevo.");
+            mostrarError(
+                "No se pudo conectar con el servidor. Intenta de nuevo.",
+            );
         } finally {
             btn.disabled = false;
             btn.innerHTML = textoOriginal;
@@ -682,7 +786,11 @@ function limpiarErrorCampoPredio(form) {
 
 function confirmarCorreccionPredio(claveActual, nuevaClave) {
     if (!window.Swal) {
-        return Promise.resolve(confirm(`¿Corregir «${claveActual}» con la clave "${nuevaClave}" y reenviarlo a revisión?`));
+        return Promise.resolve(
+            confirm(
+                `¿Corregir «${claveActual}» con la clave "${nuevaClave}" y reenviarlo a revisión?`,
+            ),
+        );
     }
 
     return Swal.fire({
@@ -699,6 +807,18 @@ function confirmarCorreccionPredio(claveActual, nuevaClave) {
     }).then((resultado) => resultado.isConfirmed);
 }
 
+function mostrarExitoDocumento(mensaje) {
+    if (!window.Swal) return;
+
+    Swal.fire({
+        icon: "success",
+        title: "Documento subido",
+        text: mensaje,
+        timer: 1800,
+        showConfirmButton: false,
+    });
+}
+
 function mostrarExitoPredio(mensaje) {
     if (!window.Swal) return;
 
@@ -713,7 +833,9 @@ function mostrarExitoPredio(mensaje) {
 
 function confirmarSubida(nombreArchivo, nombreDocumento) {
     if (!window.Swal) {
-        return Promise.resolve(confirm(`¿Subir «${nombreArchivo}» para ${nombreDocumento}?`));
+        return Promise.resolve(
+            confirm(`¿Subir «${nombreArchivo}» para ${nombreDocumento}?`),
+        );
     }
 
     return Swal.fire({

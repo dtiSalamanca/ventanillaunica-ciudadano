@@ -8,16 +8,6 @@
     @php
         $requisitos = $tramite->requisitos;
         $totalRequisitos = $requisitos->count();
-
-        // Placeholder: trámites previos finalizados. Sustituir cuando se definan los estados de Solicitud.
-        $tramitesPrevios = [
-            (object) ['id' => 'demo-001', 'nombre' => 'Licencia de Uso de Suelo #2024-0123', 'fecha' => '15/01/2024'],
-            (object) [
-                'id' => 'demo-002',
-                'nombre' => 'Constancia de Clave Catastral #2023-0456',
-                'fecha' => '03/06/2023',
-            ],
-        ];
     @endphp
 
     <div class="main-container">
@@ -126,8 +116,8 @@
 
                     <p class="instrucciones">
                         <i class="fa-solid fa-circle-info me-1"></i>
-                        Para cada requisito, elige cómo quieres cumplirlo: usando un documento personal aprobado,
-                        subiendo un archivo o indicando un trámite previamente finalizado.
+                        Los requisitos se cumplen automáticamente con los documentos que hayas cargado y aprobado
+                        en tu perfil. Si falta algún documento, dirígete a <strong>Mi Perfil</strong> para subirlo.
                     </p>
 
                     <div class="requisitos-cumplimiento-lista" data-personal-documentos='@json($documentosPersonalesNombres ?? [])'
@@ -135,7 +125,6 @@
                         @foreach ($requisitos as $requisito)
                             @php
                                 $idRequisito = $requisito->id_requisito;
-                                $nombreRadio = "requisito_{$idRequisito}";
                             @endphp
 
                             <div class="requisito-cumplimiento" data-requisito="{{ $idRequisito }}"
@@ -155,7 +144,7 @@
                                 <div class="requisito-cumplimiento__cuerpo">
                                     <div class="requisito-cumplimiento__cuerpo-inner">
                                         {{-- Opciones de cumplimiento --}}
-                                        <div class="requisito-opciones" role="radiogroup"
+                                        {{-- <div class="requisito-opciones" role="radiogroup"
                                             aria-label="Forma de cumplir {{ $requisito->nombre_requisito }}">
                                             <label class="requisito-opcion" data-metodo="documento">
                                                 <input type="radio" name="{{ $nombreRadio }}" value="documento"
@@ -192,12 +181,12 @@
                                                 </span>
                                                 <i class="fa-solid fa-circle-check requisito-opcion__check"></i>
                                             </label>
-                                        </div>
+                                        </div> --}}
 
                                         {{-- Controles dinámicos --}}
-                                        <div class="requisito-controles">
-                                            {{-- Documento personal aprobado --}}
-                                            <div class="requisito-control" data-control="documento" hidden>
+                                        {{-- <div class="requisito-controles"> --}}
+                                        {{-- Documento personal aprobado --}}
+                                        {{-- <div class="requisito-control" data-control="documento" hidden>
                                                 <label class="requisito-control__label"
                                                     for="documento-{{ $idRequisito }}">
                                                     Selecciona un documento aprobado
@@ -226,12 +215,11 @@
                                                             perfil</a>.
                                                     </p>
                                                 @endif
-                                            </div>
+                                            </div> --}}
 
-                                            {{-- Subir archivo --}}
-                                            <div class="requisito-control" data-control="subir" hidden>
-                                                <label class="requisito-control__label"
-                                                    for="archivo-{{ $idRequisito }}">
+                                        {{-- Subir archivo --}}
+                                        {{-- <div class="requisito-control" data-control="subir" hidden>
+                                                <label class="requisito-control__label" for="archivo-{{ $idRequisito }}">
                                                     Selecciona el archivo a subir
                                                 </label>
                                                 <div class="archivo-selector">
@@ -248,10 +236,10 @@
                                                 <p class="mensaje-ayuda">
                                                     <i class="fa-solid fa-file-pdf me-1"></i>PDF, máximo 10 MB.
                                                 </p>
-                                            </div>
+                                            </div> --}}
 
-                                            {{-- Trámite previo finalizado --}}
-                                            <div class="requisito-control" data-control="tramite" hidden>
+                                        {{-- Trámite previo finalizado --}}
+                                        {{-- <div class="requisito-control" data-control="tramite" hidden>
                                                 <label class="requisito-control__label"
                                                     for="tramite-{{ $idRequisito }}">
                                                     Selecciona un trámite finalizado
@@ -269,8 +257,8 @@
                                                     <i class="fa-solid fa-circle-info me-1"></i>
                                                     Trámites finalizados que entregan un documento oficial.
                                                 </p>
-                                            </div>
-                                        </div>
+                                            </div> --}}
+                                        {{-- </div> --}}
                                     </div>
                                 </div>
                             </div>
