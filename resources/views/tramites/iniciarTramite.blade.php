@@ -12,7 +12,11 @@
         // Placeholder: trámites previos finalizados. Sustituir cuando se definan los estados de Solicitud.
         $tramitesPrevios = [
             (object) ['id' => 'demo-001', 'nombre' => 'Licencia de Uso de Suelo #2024-0123', 'fecha' => '15/01/2024'],
-            (object) ['id' => 'demo-002', 'nombre' => 'Constancia de Clave Catastral #2023-0456', 'fecha' => '03/06/2023'],
+            (object) [
+                'id' => 'demo-002',
+                'nombre' => 'Constancia de Clave Catastral #2023-0456',
+                'fecha' => '03/06/2023',
+            ],
         ];
     @endphp
 
@@ -86,148 +90,188 @@
                         <p>Este trámite no tiene requisitos registrados.</p>
                     </div>
                 @else
+                    {{-- Selector de predio para trámites con cuenta_predial activa --}}
+                    @if ($esTramitePredial ?? false)
+                        <div class="selector-predio">
+                            <div class="selector-predio__header">
+                                <i class="fa-solid fa-map-pin"></i>
+                                <span>Selecciona el predio para este trámite</span>
+                            </div>
+
+                            @if (($prediosAprobados ?? collect())->isEmpty())
+                                <div class="selector-predio__vacio">
+                                    <i class="fa-solid fa-triangle-exclamation"></i>
+                                    <p>No tienes predios aprobados.</p>
+                                    <a href="{{ route('indexPerfiles') }}" class="btn-predio-perfil">
+                                        <i class="fa-solid fa-building-circle-check"></i> Ir a Mi Perfil
+                                    </a>
+                                </div>
+                            @else
+                                <select id="selector-predio" class="selector-predio__select"
+                                    aria-label="Selecciona un predio aprobado">
+                                    <option value="" selected disabled>— Elige un predio —</option>
+                                    @foreach ($prediosAprobados as $predio)
+                                        <option value="{{ $predio->id_predio }}"
+                                            data-documentos='@json($predio->documentos->map(fn($doc) => mb_strtolower($doc->catalogoDocumento?->nombre_documento ?? ''))->filter()->values())'>
+                                            {{ $predio->clave_predio }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            @endif
+                        </div>
+
+                        {{-- Los requisitos se ocultan hasta seleccionar predio --}}
+                        <div id="seccion-requisitos" hidden>
+                    @endif
+
                     <p class="instrucciones">
                         <i class="fa-solid fa-circle-info me-1"></i>
                         Para cada requisito, elige cómo quieres cumplirlo: usando un documento personal aprobado,
                         subiendo un archivo o indicando un trámite previamente finalizado.
                     </p>
 
-                    <div class="requisitos-cumplimiento-lista">
+                    <div class="requisitos-cumplimiento-lista" data-personal-documentos='@json($documentosPersonalesNombres ?? [])'
+                        data-personal-no-aprobados='@json($documentosNoAprobadosNombres ?? [])'>
                         @foreach ($requisitos as $requisito)
                             @php
                                 $idRequisito = $requisito->id_requisito;
                                 $nombreRadio = "requisito_{$idRequisito}";
                             @endphp
 
-                            <div class="requisito-cumplimiento" data-requisito="{{ $idRequisito }}">
+                            <div class="requisito-cumplimiento" data-requisito="{{ $idRequisito }}"
+                                data-nombre-requisito="{{ mb_strtolower($requisito->nombre_requisito) }}">
                                 <div class="requisito-cumplimiento__cabecera" data-toggle-acordeon>
                                     <span class="requisito-cumplimiento__nombre">{{ $requisito->nombre_requisito }}</span>
                                     <span class="badge-estado badge-estado--pendiente">
                                         <i class="fa-solid fa-circle-exclamation me-1"></i>Pendiente
                                     </span>
-                                    <button type="button" class="requisito-cumplimiento__reabrir" title="Editar requisito" hidden>
+                                    <button type="button" class="requisito-cumplimiento__reabrir" title="Editar requisito"
+                                        hidden>
                                         <i class="fa-solid fa-pen"></i>
                                     </button>
                                     <i class="fa-solid fa-chevron-down requisito-cumplimiento__chevron"></i>
                                 </div>
 
                                 <div class="requisito-cumplimiento__cuerpo">
-                                <div class="requisito-cumplimiento__cuerpo-inner">
-                                {{-- Opciones de cumplimiento --}}
-                                <div class="requisito-opciones" role="radiogroup" aria-label="Forma de cumplir {{ $requisito->nombre_requisito }}">
-                                    <label class="requisito-opcion" data-metodo="documento">
-                                        <input type="radio"
-                                               name="{{ $nombreRadio }}"
-                                               value="documento"
-                                               class="requisito-opcion__radio">
-                                        <span class="requisito-opcion__icono"><i class="fa-solid fa-id-card"></i></span>
-                                        <span class="requisito-opcion__texto">
-                                            <span class="requisito-opcion__titulo">Documento personal</span>
-                                            <span class="requisito-opcion__detalle">Usa uno ya aprobado</span>
-                                        </span>
-                                        <i class="fa-solid fa-circle-check requisito-opcion__check"></i>
-                                    </label>
-
-                                    <label class="requisito-opcion" data-metodo="subir">
-                                        <input type="radio"
-                                               name="{{ $nombreRadio }}"
-                                               value="subir"
-                                               class="requisito-opcion__radio">
-                                        <span class="requisito-opcion__icono"><i class="fa-solid fa-upload"></i></span>
-                                        <span class="requisito-opcion__texto">
-                                            <span class="requisito-opcion__titulo">Subir archivo</span>
-                                            <span class="requisito-opcion__detalle">PDF, máx. 10 MB</span>
-                                        </span>
-                                        <i class="fa-solid fa-circle-check requisito-opcion__check"></i>
-                                    </label>
-
-                                    <label class="requisito-opcion" data-metodo="tramite">
-                                        <input type="radio"
-                                               name="{{ $nombreRadio }}"
-                                               value="tramite"
-                                               class="requisito-opcion__radio">
-                                        <span class="requisito-opcion__icono"><i class="fa-solid fa-file-circle-check"></i></span>
-                                        <span class="requisito-opcion__texto">
-                                            <span class="requisito-opcion__titulo">Trámite previo</span>
-                                            <span class="requisito-opcion__detalle">Ya finalizado</span>
-                                        </span>
-                                        <i class="fa-solid fa-circle-check requisito-opcion__check"></i>
-                                    </label>
-                                </div>
-
-                                {{-- Controles dinámicos --}}
-                                <div class="requisito-controles">
-                                    {{-- Documento personal aprobado --}}
-                                    <div class="requisito-control" data-control="documento" hidden>
-                                        <label class="requisito-control__label" for="documento-{{ $idRequisito }}">
-                                            Selecciona un documento aprobado
-                                        </label>
-                                        <select id="documento-{{ $idRequisito }}"
-                                                class="requisito-control__select"
-                                                disabled>
-                                            @if ($documentosAprobados->isEmpty())
-                                                <option value="" disabled selected>Sin documentos aprobados</option>
-                                            @else
-                                                <option value="" disabled selected>Elige un documento...</option>
-                                                @foreach ($documentosAprobados as $documento)
-                                                    <option value="{{ $documento->id_documento }}">
-                                                        {{ $documento->catalogoDocumento?->nombre_documento ?? 'Documento' }} — Aprobado
-                                                    </option>
-                                                @endforeach
-                                            @endif
-                                        </select>
-                                        @if ($documentosAprobados->isEmpty())
-                                            <p class="mensaje-ayuda">
-                                                <i class="fa-solid fa-circle-info me-1"></i>
-                                                No tienes documentos aprobados.
-                                                <a href="{{ route('indexPerfiles') }}">Súbelos desde Mi perfil</a>.
-                                            </p>
-                                        @endif
-                                    </div>
-
-                                    {{-- Subir archivo --}}
-                                    <div class="requisito-control" data-control="subir" hidden>
-                                        <label class="requisito-control__label" for="archivo-{{ $idRequisito }}">
-                                            Selecciona el archivo a subir
-                                        </label>
-                                        <div class="archivo-selector">
-                                            <label for="archivo-{{ $idRequisito }}" class="archivo-selector__boton">
-                                                <i class="fa-solid fa-paperclip"></i> Elegir archivo
+                                    <div class="requisito-cumplimiento__cuerpo-inner">
+                                        {{-- Opciones de cumplimiento --}}
+                                        <div class="requisito-opciones" role="radiogroup"
+                                            aria-label="Forma de cumplir {{ $requisito->nombre_requisito }}">
+                                            <label class="requisito-opcion" data-metodo="documento">
+                                                <input type="radio" name="{{ $nombreRadio }}" value="documento"
+                                                    class="requisito-opcion__radio">
+                                                <span class="requisito-opcion__icono"><i
+                                                        class="fa-solid fa-id-card"></i></span>
+                                                <span class="requisito-opcion__texto">
+                                                    <span class="requisito-opcion__titulo">Documento personal</span>
+                                                    <span class="requisito-opcion__detalle">Usa uno ya aprobado</span>
+                                                </span>
+                                                <i class="fa-solid fa-circle-check requisito-opcion__check"></i>
                                             </label>
-                                            <span class="archivo-selector__nombre" data-placeholder="Ningún archivo seleccionado">Ningún archivo seleccionado</span>
-                                            <input type="file"
-                                                   id="archivo-{{ $idRequisito }}"
-                                                   class="requisito-control__archivo"
-                                                   accept=".pdf"
-                                                   disabled>
-                                        </div>
-                                        <p class="mensaje-ayuda">
-                                            <i class="fa-solid fa-file-pdf me-1"></i>PDF, máximo 10 MB.
-                                        </p>
-                                    </div>
 
-                                    {{-- Trámite previo finalizado --}}
-                                    <div class="requisito-control" data-control="tramite" hidden>
-                                        <label class="requisito-control__label" for="tramite-{{ $idRequisito }}">
-                                            Selecciona un trámite finalizado
-                                        </label>
-                                        <select id="tramite-{{ $idRequisito }}"
-                                                class="requisito-control__select"
-                                                disabled>
-                                            <option value="" disabled selected>Elige un trámite...</option>
-                                            @foreach ($tramitesPrevios as $tramitePrevio)
-                                                <option value="{{ $tramitePrevio->id }}">
-                                                    {{ $tramitePrevio->nombre }} — {{ $tramitePrevio->fecha }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                        <p class="mensaje-ayuda">
-                                            <i class="fa-solid fa-circle-info me-1"></i>
-                                            Trámites finalizados que entregan un documento oficial.
-                                        </p>
+                                            <label class="requisito-opcion" data-metodo="subir">
+                                                <input type="radio" name="{{ $nombreRadio }}" value="subir"
+                                                    class="requisito-opcion__radio">
+                                                <span class="requisito-opcion__icono"><i
+                                                        class="fa-solid fa-upload"></i></span>
+                                                <span class="requisito-opcion__texto">
+                                                    <span class="requisito-opcion__titulo">Subir archivo</span>
+                                                    <span class="requisito-opcion__detalle">PDF, máx. 10 MB</span>
+                                                </span>
+                                                <i class="fa-solid fa-circle-check requisito-opcion__check"></i>
+                                            </label>
+
+                                            <label class="requisito-opcion" data-metodo="tramite">
+                                                <input type="radio" name="{{ $nombreRadio }}" value="tramite"
+                                                    class="requisito-opcion__radio">
+                                                <span class="requisito-opcion__icono"><i
+                                                        class="fa-solid fa-file-circle-check"></i></span>
+                                                <span class="requisito-opcion__texto">
+                                                    <span class="requisito-opcion__titulo">Trámite previo</span>
+                                                    <span class="requisito-opcion__detalle">Ya finalizado</span>
+                                                </span>
+                                                <i class="fa-solid fa-circle-check requisito-opcion__check"></i>
+                                            </label>
+                                        </div>
+
+                                        {{-- Controles dinámicos --}}
+                                        <div class="requisito-controles">
+                                            {{-- Documento personal aprobado --}}
+                                            <div class="requisito-control" data-control="documento" hidden>
+                                                <label class="requisito-control__label"
+                                                    for="documento-{{ $idRequisito }}">
+                                                    Selecciona un documento aprobado
+                                                </label>
+                                                <select id="documento-{{ $idRequisito }}"
+                                                    class="requisito-control__select" disabled>
+                                                    @if ($documentosAprobados->isEmpty())
+                                                        <option value="" disabled selected>Sin documentos aprobados
+                                                        </option>
+                                                    @else
+                                                        <option value="" disabled selected>Elige un documento...
+                                                        </option>
+                                                        @foreach ($documentosAprobados as $documento)
+                                                            <option value="{{ $documento->id_documento }}">
+                                                                {{ $documento->catalogoDocumento?->nombre_documento ?? 'Documento' }}
+                                                                — Aprobado
+                                                            </option>
+                                                        @endforeach
+                                                    @endif
+                                                </select>
+                                                @if ($documentosAprobados->isEmpty())
+                                                    <p class="mensaje-ayuda">
+                                                        <i class="fa-solid fa-circle-info me-1"></i>
+                                                        No tienes documentos aprobados.
+                                                        <a href="{{ route('indexPerfiles') }}">Súbelos desde Mi
+                                                            perfil</a>.
+                                                    </p>
+                                                @endif
+                                            </div>
+
+                                            {{-- Subir archivo --}}
+                                            <div class="requisito-control" data-control="subir" hidden>
+                                                <label class="requisito-control__label"
+                                                    for="archivo-{{ $idRequisito }}">
+                                                    Selecciona el archivo a subir
+                                                </label>
+                                                <div class="archivo-selector">
+                                                    <label for="archivo-{{ $idRequisito }}"
+                                                        class="archivo-selector__boton">
+                                                        <i class="fa-solid fa-paperclip"></i> Elegir archivo
+                                                    </label>
+                                                    <span class="archivo-selector__nombre"
+                                                        data-placeholder="Ningún archivo seleccionado">Ningún archivo
+                                                        seleccionado</span>
+                                                    <input type="file" id="archivo-{{ $idRequisito }}"
+                                                        class="requisito-control__archivo" accept=".pdf" disabled>
+                                                </div>
+                                                <p class="mensaje-ayuda">
+                                                    <i class="fa-solid fa-file-pdf me-1"></i>PDF, máximo 10 MB.
+                                                </p>
+                                            </div>
+
+                                            {{-- Trámite previo finalizado --}}
+                                            <div class="requisito-control" data-control="tramite" hidden>
+                                                <label class="requisito-control__label"
+                                                    for="tramite-{{ $idRequisito }}">
+                                                    Selecciona un trámite finalizado
+                                                </label>
+                                                <select id="tramite-{{ $idRequisito }}"
+                                                    class="requisito-control__select" disabled>
+                                                    <option value="" disabled selected>Elige un trámite...</option>
+                                                    @foreach ($tramitesPrevios as $tramitePrevio)
+                                                        <option value="{{ $tramitePrevio->id }}">
+                                                            {{ $tramitePrevio->nombre }} — {{ $tramitePrevio->fecha }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                                <p class="mensaje-ayuda">
+                                                    <i class="fa-solid fa-circle-info me-1"></i>
+                                                    Trámites finalizados que entregan un documento oficial.
+                                                </p>
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                                </div>
                                 </div>
                             </div>
                         @endforeach
@@ -235,13 +279,17 @@
 
                     {{-- Acción final --}}
                     <div class="acciones-finales">
-                        <button type="button" id="btn-enviar-solicitud" class="btn-enviar-solicitud">
+                        <button type="button" id="btn-enviar-solicitud" class="btn-enviar-solicitud" disabled>
                             <i class="fa-solid fa-paper-plane"></i> Enviar solicitud
                         </button>
                     </div>
-                @endif
-            </div>
+
+                    @if ($esTramitePredial ?? false)
+            </div>{{-- Cierra #seccion-requisitos --}}
+            @endif
+            @endif
         </div>
+    </div>
     </div>
 @endsection
 

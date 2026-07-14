@@ -97,10 +97,12 @@ class TramitesPruebaSeeder extends Seeder
      */
     private function sembrarTramites(Collection $dependencias, Collection $requisitos): void
     {
-        // 'Nombre del trámite' => ['dependencia' => ..., 'requisitos' => [...]]
+        // 'Nombre del trámite' => ['dependencia' => ..., 'cuenta_predial' => ..., 'requisitos' => [...]]
         $tramites = [
             'Licencia de Construcción' => [
                 'dependencia' => 'Desarrollo Urbano y Ordenamiento Territorial',
+                'cuenta_predial' => 1,
+                'precio' => 1850.00,
                 'requisitos' => [
                     'Identificación oficial vigente (INE/IFE)',
                     'Clave Única de Registro de Población (CURP)',
@@ -113,6 +115,8 @@ class TramitesPruebaSeeder extends Seeder
             ],
             'Licencia de Uso de Suelo' => [
                 'dependencia' => 'Desarrollo Urbano y Ordenamiento Territorial',
+                'cuenta_predial' => 1,
+                'precio' => 1200.00,
                 'requisitos' => [
                     'Identificación oficial vigente (INE/IFE)',
                     'Clave Única de Registro de Población (CURP)',
@@ -123,6 +127,8 @@ class TramitesPruebaSeeder extends Seeder
             ],
             'Manifestación de Construcción' => [
                 'dependencia' => 'Desarrollo Urbano y Ordenamiento Territorial',
+                'cuenta_predial' => 1,
+                'precio' => 950.00,
                 'requisitos' => [
                     'Identificación oficial vigente (INE/IFE)',
                     'Clave Única de Registro de Población (CURP)',
@@ -133,6 +139,8 @@ class TramitesPruebaSeeder extends Seeder
             ],
             'Pago de Impuesto Predial' => [
                 'dependencia' => 'Tesorería Municipal',
+                'cuenta_predial' => 1,
+                'precio' => 0.00,
                 'requisitos' => [
                     'Identificación oficial vigente (INE/IFE)',
                     'Recibo de pago del impuesto predial del año en curso',
@@ -141,6 +149,8 @@ class TramitesPruebaSeeder extends Seeder
             ],
             'Constancia de No Adeudo de Predial' => [
                 'dependencia' => 'Tesorería Municipal',
+                'cuenta_predial' => 1,
+                'precio' => 150.00,
                 'requisitos' => [
                     'Identificación oficial vigente (INE/IFE)',
                     'Solicitud por escrito dirigida al titular del área',
@@ -148,6 +158,8 @@ class TramitesPruebaSeeder extends Seeder
             ],
             'Acta de Nacimiento (copia certificada)' => [
                 'dependencia' => 'Registro Civil',
+                'cuenta_predial' => 0,
+                'precio' => 120.00,
                 'requisitos' => [
                     'Identificación oficial vigente (INE/IFE)',
                     'Clave Única de Registro de Población (CURP)',
@@ -156,6 +168,8 @@ class TramitesPruebaSeeder extends Seeder
             ],
             'Acta de Matrimonio' => [
                 'dependencia' => 'Registro Civil',
+                'cuenta_predial' => 0,
+                'precio' => 250.00,
                 'requisitos' => [
                     'Identificación oficial vigente (INE/IFE)',
                     'Clave Única de Registro de Población (CURP)',
@@ -165,6 +179,8 @@ class TramitesPruebaSeeder extends Seeder
             ],
             'Avalúo Catastral' => [
                 'dependencia' => 'Catastro Municipal',
+                'cuenta_predial' => 1,
+                'precio' => 700.00,
                 'requisitos' => [
                     'Identificación oficial vigente (INE/IFE)',
                     'Clave Única de Registro de Población (CURP)',
@@ -175,6 +191,8 @@ class TramitesPruebaSeeder extends Seeder
             ],
             'Constancia Catastral' => [
                 'dependencia' => 'Catastro Municipal',
+                'cuenta_predial' => 1,
+                'precio' => 350.00,
                 'requisitos' => [
                     'Identificación oficial vigente (INE/IFE)',
                     'Clave Única de Registro de Población (CURP)',
@@ -183,6 +201,8 @@ class TramitesPruebaSeeder extends Seeder
             ],
             'Permiso de Obra Menor' => [
                 'dependencia' => 'Obras Públicas',
+                'cuenta_predial' => 1,
+                'precio' => 650.00,
                 'requisitos' => [
                     'Identificación oficial vigente (INE/IFE)',
                     'Clave Única de Registro de Población (CURP)',
@@ -194,6 +214,8 @@ class TramitesPruebaSeeder extends Seeder
             ],
             'Solicitud de Baja de Servicios (agua/alumbrado)' => [
                 'dependencia' => 'Servicios Públicos Municipales',
+                'cuenta_predial' => 0,
+                'precio' => 80.00,
                 'requisitos' => [
                     'Identificación oficial vigente (INE/IFE)',
                     'Comprobante de domicilio (no mayor a 3 meses)',
@@ -207,6 +229,8 @@ class TramitesPruebaSeeder extends Seeder
                 'nombre_tramite' => $nombreTramite,
                 'estatus_tramite' => 1,
                 'fk_dependencia' => $dependencias[$config['dependencia']]->id_dependencia,
+                'cuenta_predial' => $config['cuenta_predial'],
+                'precio_tramite' => $config['precio'],
             ]);
 
             foreach ($config['requisitos'] as $nombreRequisito) {

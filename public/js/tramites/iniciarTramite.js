@@ -1,5 +1,7 @@
 document.addEventListener("DOMContentLoaded", function () {
     initAnimacionEntrada();
+    initMatchingDocumentosPersonales();
+    initSelectorPredio();
     initOpcionesRequisitos();
     initActualizacionProgreso();
     initValidacionArchivos();
@@ -8,6 +10,7 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 const MAX_BYTES_ARCHIVO = 10 * 1024 * 1024;
+const baseUrlPerfil = "/perfiles/mi-perfil";
 
 /* ── Entrada escalonada de la vista (fade + slide) ── */
 function initAnimacionEntrada() {
@@ -49,6 +52,322 @@ function initAnimacionEntrada() {
     }
 }
 
+/* ── Matching automático: documentos personales aprobados vs requisitos ── */
+function initMatchingDocumentosPersonales() {
+    const lista = document.querySelector(".requisitos-cumplimiento-lista");
+    if (!lista) return;
+
+    let nombresPersonales = [];
+    let nombresNoAprobados = [];
+    try {
+        nombresPersonales = JSON.parse(
+            lista.dataset.personalDocumentos || "[]",
+        );
+        nombresNoAprobados = JSON.parse(
+            lista.dataset.personalNoAprobados || "[]",
+        );
+    } catch (e) {
+        return;
+    }
+
+    // 1) Marcar como cumplidos los que coinciden con docs aprobados
+    const requisitos = document.querySelectorAll(".requisito-cumplimiento");
+
+    requisitos.forEach(function (requisito) {
+        const nombreRequisito = (requisito.dataset.nombreRequisito || "")
+            .trim()
+            .toLowerCase();
+        if (!nombreRequisito) return;
+
+        const coincide = nombresPersonales.some(function (nombreDoc) {
+            return (
+                nombreDoc === nombreRequisito ||
+                nombreRequisito.includes(nombreDoc) ||
+                nombreDoc.includes(nombreRequisito)
+            );
+        });
+
+        if (coincide) {
+            marcarPrecumplidoPersonal(requisito, "Documento personal");
+        }
+    });
+
+    // 2) Para requisitos que coinciden con documentos NO aprobados, mostrar aviso
+    requisitos.forEach(function (requisito) {
+        // Si ya está cumplido (por doc aprobado), no hacer nada
+        if (requisito.classList.contains("requisito-cumplimiento--cumplido"))
+            return;
+
+        const nombreRequisito = (requisito.dataset.nombreRequisito || "")
+            .trim()
+            .toLowerCase();
+        if (!nombreRequisito) return;
+
+        const coincideNoAprobado = nombresNoAprobados.some(
+            function (nombreDoc) {
+                return (
+                    nombreDoc === nombreRequisito ||
+                    nombreRequisito.includes(nombreDoc) ||
+                    nombreDoc.includes(nombreRequisito)
+                );
+            },
+        );
+
+        if (coincideNoAprobado) {
+            agregarAvisoPerfil(requisito);
+        }
+    });
+
+    actualizarProgresoGlobal();
+}
+
+/**
+ * Agrega un mensaje al requisito indicando que el documento está en revisión
+ * o rechazado, con un link para ir al perfil.
+ */
+function agregarAvisoPerfil(requisito) {
+    // Evitar duplicados
+    if (requisito.querySelector(".aviso-perfil")) return;
+
+    const cuerpo = requisito.querySelector(
+        ".requisito-cumplimiento__cuerpo-inner",
+    );
+    if (!cuerpo) return;
+
+    const aviso = document.createElement("div");
+    aviso.className = "aviso-perfil";
+    aviso.innerHTML =
+        '<i class="fa-solid fa-circle-exclamation me-1"></i>' +
+        "Ya subiste este documento pero aún está en revisión o fue rechazado. " +
+        '<a href="' +
+        baseUrlPerfil +
+        '" class="aviso-perfil__link">Revisa su estado en Mi Perfil</a>.';
+    cuerpo.appendChild(aviso);
+}
+
+/* ── Selector de predio (trámites prediales) ── */
+
+/**
+ * Marca un requisito como pre-cumplido por tener documento personal aprobado.
+ */
+function marcarPrecumplidoPersonal(requisito, tipo) {
+    // Si ya está pre-cumplido por predio, no sobreescribir
+    if (requisito.classList.contains("requisito-cumplimiento--precumplido"))
+        return;
+
+    requisito.classList.add(
+        "requisito-cumplimiento--cumplido",
+        "requisito-cumplimiento--precumplido",
+    );
+
+    const opciones = requisito.querySelector(".requisito-opciones");
+    const controles = requisito.querySelector(".requisito-controles");
+    if (opciones) opciones.hidden = true;
+    if (controles) controles.hidden = true;
+
+    const badge = requisito.querySelector(".badge-estado");
+    if (badge) {
+        badge.className = "badge-estado badge-estado--cumplido";
+        badge.innerHTML =
+            '<i class="fa-solid fa-circle-check me-1"></i>Cumplido (' +
+            tipo +
+            ")";
+    }
+
+    colapsarRequisito(requisito);
+}
+
+/* ── Selector de predio (trámites prediales) ── */
+function initSelectorPredio() {
+    const selectPredio = document.getElementById("selector-predio");
+    const seccionRequisitos = document.getElementById("seccion-requisitos");
+
+    if (!selectPredio || !seccionRequisitos) return;
+
+    selectPredio.addEventListener("change", function () {
+        const opcionSeleccionada =
+            selectPredio.options[selectPredio.selectedIndex];
+        if (!opcionSeleccionada || !opcionSeleccionada.value) return;
+
+        // Mostrar la sección de requisitos
+        seccionRequisitos.hidden = false;
+
+        // Obtener los nombres de documentos aprobados del predio (normalizados)
+        let documentosPredio = [];
+        try {
+            documentosPredio = JSON.parse(
+                opcionSeleccionada.dataset.documentos || "[]",
+            );
+        } catch (e) {
+            documentosPredio = [];
+        }
+
+        // Resetear todos los requisitos que estaban pre-cumplidos
+        document
+            .querySelectorAll(".requisito-cumplimiento--precumplido")
+            .forEach(function (req) {
+                resetearPrecumplido(req);
+            });
+
+        // 1) Matching por documentos del predio
+        const requisitos = document.querySelectorAll(".requisito-cumplimiento");
+
+        requisitos.forEach(function (requisito) {
+            const nombreRequisito = (requisito.dataset.nombreRequisito || "")
+                .trim()
+                .toLowerCase();
+
+            if (!nombreRequisito) return;
+
+            const coincidePredio = documentosPredio.some(function (nombreDoc) {
+                return (
+                    nombreDoc === nombreRequisito ||
+                    nombreRequisito.includes(nombreDoc) ||
+                    nombreDoc.includes(nombreRequisito)
+                );
+            });
+
+            if (coincidePredio) {
+                marcarPrecumplidoPersonal(requisito, "Predio");
+            }
+        });
+
+        // 2) Matching por documentos personales (para los que no cubrió el predio)
+        const listaReqs = document.querySelector(
+            ".requisitos-cumplimiento-lista",
+        );
+        let nombresPersonales = [];
+        try {
+            nombresPersonales = JSON.parse(
+                listaReqs?.dataset.personalDocumentos || "[]",
+            );
+        } catch (e) {
+            nombresPersonales = [];
+        }
+
+        requisitos.forEach(function (requisito) {
+            if (
+                requisito.classList.contains(
+                    "requisito-cumplimiento--precumplido",
+                )
+            )
+                return;
+
+            const nombreRequisito = (requisito.dataset.nombreRequisito || "")
+                .trim()
+                .toLowerCase();
+
+            if (!nombreRequisito) return;
+
+            const coincidePersonal = nombresPersonales.some(
+                function (nombreDoc) {
+                    return (
+                        nombreDoc === nombreRequisito ||
+                        nombreRequisito.includes(nombreDoc) ||
+                        nombreDoc.includes(nombreRequisito)
+                    );
+                },
+            );
+
+            if (coincidePersonal) {
+                marcarPrecumplidoPersonal(requisito, "Documento personal");
+            }
+        });
+
+        // 3) Aviso de documentos no aprobados (para los que no cubrió nada)
+        let nombresNoAprobados = [];
+        try {
+            nombresNoAprobados = JSON.parse(
+                listaReqs?.dataset.personalNoAprobados || "[]",
+            );
+        } catch (e) {
+            nombresNoAprobados = [];
+        }
+
+        requisitos.forEach(function (requisito) {
+            if (
+                requisito.classList.contains("requisito-cumplimiento--cumplido")
+            )
+                return;
+
+            const nombreRequisito = (requisito.dataset.nombreRequisito || "")
+                .trim()
+                .toLowerCase();
+
+            if (!nombreRequisito) return;
+
+            const coincideNoAprobado = nombresNoAprobados.some(
+                function (nombreDoc) {
+                    return (
+                        nombreDoc === nombreRequisito ||
+                        nombreRequisito.includes(nombreDoc) ||
+                        nombreDoc.includes(nombreRequisito)
+                    );
+                },
+            );
+
+            if (coincideNoAprobado) {
+                agregarAvisoPerfil(requisito);
+            }
+        });
+
+        actualizarProgresoGlobal();
+
+        // Animar la entrada de los requisitos
+        if (typeof anime !== "undefined") {
+            anime({
+                targets: ".requisito-cumplimiento",
+                opacity: [0, 1],
+                translateY: [18, 0],
+                duration: 550,
+                delay: anime.stagger(90),
+                easing: "easeOutQuad",
+            });
+
+            const acciones = document.querySelector(".acciones-finales");
+            if (acciones) {
+                anime({
+                    targets: acciones,
+                    opacity: [0, 1],
+                    translateY: [10, 0],
+                    duration: 450,
+                    delay: requisitos.length * 90 + 160,
+                    easing: "easeOutQuad",
+                });
+            }
+        }
+    });
+}
+
+/**
+ * Marca un requisito como pre-cumplido por tener documento de predio aprobado.
+ * Lo deja fijo (solo lectura visual), sin opciones ni controles editables.
+ */
+/**
+ * Revierte un requisito del estado pre-cumplido a su estado normal (pendiente).
+ */
+function resetearPrecumplido(requisito) {
+    requisito.classList.remove(
+        "requisito-cumplimiento--cumplido",
+        "requisito-cumplimiento--precumplido",
+    );
+
+    const opciones = requisito.querySelector(".requisito-opciones");
+    const controles = requisito.querySelector(".requisito-controles");
+
+    if (opciones) opciones.hidden = false;
+    if (controles) controles.hidden = false;
+
+    const badge = requisito.querySelector(".badge-estado");
+    if (badge) {
+        badge.className = "badge-estado badge-estado--pendiente";
+        badge.innerHTML =
+            '<i class="fa-solid fa-circle-exclamation me-1"></i>Pendiente';
+    }
+
+    expandirRequisito(requisito);
+}
+
 /* ── Opciones de cumplimiento (radio + control dinámico) ── */
 function initOpcionesRequisitos() {
     const requisitos = document.querySelectorAll(".requisito-cumplimiento");
@@ -81,15 +400,21 @@ function initActualizacionProgreso() {
     const requisitos = document.querySelectorAll(".requisito-cumplimiento");
 
     requisitos.forEach((requisito) => {
-        const selects = requisito.querySelectorAll(".requisito-control__select");
+        const selects = requisito.querySelectorAll(
+            ".requisito-control__select",
+        );
         const archivo = requisito.querySelector(".requisito-control__archivo");
 
         selects.forEach((select) =>
-            select.addEventListener("change", () => actualizarEstadoRequisito(requisito))
+            select.addEventListener("change", () =>
+                actualizarEstadoRequisito(requisito),
+            ),
         );
 
         if (archivo) {
-            archivo.addEventListener("change", () => actualizarEstadoRequisito(requisito));
+            archivo.addEventListener("change", () =>
+                actualizarEstadoRequisito(requisito),
+            );
         }
     });
 
@@ -97,19 +422,23 @@ function initActualizacionProgreso() {
 }
 
 function actualizarEstadoRequisito(requisito) {
-    const radioActivo = requisito.querySelector(".requisito-opcion__radio:checked");
+    const radioActivo = requisito.querySelector(
+        ".requisito-opcion__radio:checked",
+    );
     const badge = requisito.querySelector(".badge-estado");
 
     let cumplido = false;
 
     if (radioActivo) {
         const control = requisito.querySelector(
-            `.requisito-control[data-control="${radioActivo.value}"]`
+            `.requisito-control[data-control="${radioActivo.value}"]`,
         );
 
         if (control) {
             const select = control.querySelector(".requisito-control__select");
-            const archivo = control.querySelector(".requisito-control__archivo");
+            const archivo = control.querySelector(
+                ".requisito-control__archivo",
+            );
 
             if (select) {
                 cumplido = select.value !== "" && select.value !== null;
@@ -119,21 +448,27 @@ function actualizarEstadoRequisito(requisito) {
         }
     }
 
-    const yaCumplido = requisito.classList.contains("requisito-cumplimiento--cumplido");
+    const yaCumplido = requisito.classList.contains(
+        "requisito-cumplimiento--cumplido",
+    );
 
     requisito.classList.toggle("requisito-cumplimiento--cumplido", cumplido);
 
     if (badge) {
         if (cumplido) {
             badge.className = "badge-estado badge-estado--cumplido";
-            badge.innerHTML = '<i class="fa-solid fa-circle-check me-1"></i>Cumplido';
+            badge.innerHTML =
+                '<i class="fa-solid fa-circle-check me-1"></i>Cumplido';
         } else {
             badge.className = "badge-estado badge-estado--pendiente";
-            badge.innerHTML = '<i class="fa-solid fa-circle-exclamation me-1"></i>Pendiente';
+            badge.innerHTML =
+                '<i class="fa-solid fa-circle-exclamation me-1"></i>Pendiente';
         }
     }
 
-    const botonReabrir = requisito.querySelector(".requisito-cumplimiento__reabrir");
+    const botonReabrir = requisito.querySelector(
+        ".requisito-cumplimiento__reabrir",
+    );
     if (botonReabrir) botonReabrir.hidden = !cumplido;
 
     if (cumplido && !yaCumplido) {
@@ -151,11 +486,17 @@ function initAcordeonRequisitos() {
 
     requisitos.forEach((requisito) => {
         const cabecera = requisito.querySelector("[data-toggle-acordeon]");
-        const botonReabrir = requisito.querySelector(".requisito-cumplimiento__reabrir");
+        const botonReabrir = requisito.querySelector(
+            ".requisito-cumplimiento__reabrir",
+        );
 
         if (cabecera) {
             cabecera.addEventListener("click", () => {
-                if (requisito.classList.contains("requisito-cumplimiento--colapsado")) {
+                if (
+                    requisito.classList.contains(
+                        "requisito-cumplimiento--colapsado",
+                    )
+                ) {
                     expandirRequisito(requisito);
                 }
             });
@@ -182,7 +523,7 @@ function actualizarProgresoGlobal() {
     const requisitos = document.querySelectorAll(".requisito-cumplimiento");
     const total = requisitos.length;
     const cumplidos = Array.from(requisitos).filter((r) =>
-        r.classList.contains("requisito-cumplimiento--cumplido")
+        r.classList.contains("requisito-cumplimiento--cumplido"),
     ).length;
 
     const elActual = document.getElementById("progreso-actual");
@@ -190,8 +531,15 @@ function actualizarProgresoGlobal() {
 
     if (elActual) elActual.textContent = cumplidos;
 
+    // Habilitar/deshabilitar botón de envío
+    const boton = document.getElementById("btn-enviar-solicitud");
+    if (boton) {
+        boton.disabled = cumplidos < total;
+    }
+
     if (elFill) {
-        const porcentaje = total > 0 ? Math.round((cumplidos / total) * 100) : 0;
+        const porcentaje =
+            total > 0 ? Math.round((cumplidos / total) * 100) : 0;
         elFill.dataset.progreso = porcentaje;
         requestAnimationFrame(() => {
             elFill.style.width = `${porcentaje}%`;
@@ -234,7 +582,9 @@ function initValidacionArchivos() {
 
 /* ── Nombre del archivo seleccionado (selector personalizado) ── */
 function actualizarNombreArchivo(input) {
-    const nombreEl = input.closest(".archivo-selector")?.querySelector(".archivo-selector__nombre");
+    const nombreEl = input
+        .closest(".archivo-selector")
+        ?.querySelector(".archivo-selector__nombre");
     if (!nombreEl) return;
 
     const archivo = input.files[0];
@@ -254,22 +604,9 @@ function initEnvioSolicitud() {
     if (!boton) return;
 
     boton.addEventListener("click", () => {
-        const total = document.querySelectorAll(".requisito-cumplimiento").length;
-        const cumplidos = document.querySelectorAll(
-            ".requisito-cumplimiento--cumplido"
-        ).length;
-
-        if (total > 0 && cumplidos < total) {
-            mostrarAviso(
-                "Aún faltan requisitos por cumplir",
-                `Has completado ${cumplidos} de ${total} requisitos. Completa todos antes de enviar.`
-            );
-            return;
-        }
-
         mostrarAviso(
             "Próximamente",
-            "El envío de la solicitud aún no está disponible. Esta vista es un concepto de la interfaz."
+            "El envío de la solicitud aún no está disponible. Esta vista es un concepto de la interfaz.",
         );
     });
 }

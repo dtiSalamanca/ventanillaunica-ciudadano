@@ -27,7 +27,12 @@
     max-width: 1400px;
     margin: 0 auto;
     padding: 2rem 1.5rem;
-    font-family: "Montserrat", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-family:
+        "Montserrat",
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
 }
 
 /* ── Header ── */
@@ -333,7 +338,9 @@
     display: grid;
     grid-template-rows: 1fr;
     opacity: 1;
-    transition: grid-template-rows 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease;
+    transition:
+        grid-template-rows 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+        opacity 0.25s ease;
 }
 
 .requisito-cumplimiento__cuerpo > * {
@@ -499,17 +506,20 @@
     color: var(--primary-dark);
 }
 
-.requisito-opcion:has(.requisito-opcion__radio:checked) .requisito-opcion__icono {
+.requisito-opcion:has(.requisito-opcion__radio:checked)
+    .requisito-opcion__icono {
     background: var(--primary);
     color: #fff;
 }
 
-.requisito-opcion:has(.requisito-opcion__radio:checked) .requisito-opcion__detalle {
+.requisito-opcion:has(.requisito-opcion__radio:checked)
+    .requisito-opcion__detalle {
     color: var(--primary-dark);
     opacity: 0.85;
 }
 
-.requisito-opcion:has(.requisito-opcion__radio:checked) .requisito-opcion__check {
+.requisito-opcion:has(.requisito-opcion__radio:checked)
+    .requisito-opcion__check {
     opacity: 1;
     transform: scale(1);
 }
@@ -598,14 +608,16 @@
     color: #fff;
 }
 
-.archivo-selector:has(.requisito-control__archivo:disabled) .archivo-selector__boton {
+.archivo-selector:has(.requisito-control__archivo:disabled)
+    .archivo-selector__boton {
     border-color: var(--border);
     background: var(--bg-subtle);
     color: var(--text-secondary);
     cursor: not-allowed;
 }
 
-.archivo-selector:has(.requisito-control__archivo:focus-visible) .archivo-selector__boton {
+.archivo-selector:has(.requisito-control__archivo:focus-visible)
+    .archivo-selector__boton {
     outline: 3px solid rgba(30, 92, 80, 0.25);
     outline-offset: 2px;
 }
@@ -674,6 +686,13 @@
 
 .btn-enviar-solicitud:active {
     transform: translateY(1px);
+}
+
+.btn-enviar-solicitud:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: var(--text-secondary);
+    pointer-events: none;
 }
 
 .btn-enviar-solicitud:focus-visible {
@@ -802,6 +821,135 @@
     .requisito-opciones {
         grid-template-columns: 1fr;
     }
+}
+
+/* ── Selector de predio (trámites prediales) ── */
+.selector-predio {
+    background: var(--bg-subtle);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.selector-predio__header {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.75rem;
+}
+
+.selector-predio__header i {
+    color: var(--primary);
+    font-size: 1.05rem;
+}
+
+.selector-predio__select {
+    width: 100%;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 0.6rem 0.85rem;
+    font-size: 0.9rem;
+    font-family: inherit;
+    color: var(--text-primary);
+    background: var(--bg-surface);
+    cursor: pointer;
+    transition: var(--transition);
+    appearance: auto;
+}
+
+.selector-predio__select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(96, 16, 40, 0.12);
+}
+
+.selector-predio__select option {
+    padding: 0.5rem;
+}
+
+.selector-predio__vacio {
+    text-align: center;
+    padding: 1rem 0.5rem;
+}
+
+.selector-predio__vacio i {
+    font-size: 2rem;
+    color: var(--primary-light);
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.selector-predio__vacio p {
+    margin: 0 0 0.75rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-size: 0.88rem;
+}
+
+.btn-predio-perfil {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.5rem 1rem;
+    border: 1.5px solid var(--primary);
+    border-radius: var(--radius-md);
+    background: var(--primary);
+    color: #fff;
+    font-weight: 600;
+    font-size: 0.82rem;
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+.btn-predio-perfil:hover {
+    background: var(--primary-dark);
+    color: #fff;
+}
+
+/* ── Requisito pre-cumplido por documento ── */
+.requisito-cumplimiento--precumplido {
+    border-color: var(--primary);
+    border-left: 4px solid var(--primary);
+    background: #f9fdfb;
+}
+
+.requisito-cumplimiento--precumplido .requisito-cumplimiento__chevron {
+    display: none;
+}
+
+/* ── Aviso para ir al perfil si el documento no está aprobado ── */
+.aviso-perfil {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.45rem;
+    margin-top: 0.75rem;
+    padding: 0.6rem 0.8rem;
+    background: #fef3c7;
+    border: 1px solid #fbbf24;
+    border-radius: var(--radius-sm);
+    font-size: 0.8rem;
+    color: #92400e;
+    line-height: 1.4;
+}
+
+.aviso-perfil i {
+    margin-top: 0.15rem;
+    flex-shrink: 0;
+    color: #d97706;
+}
+
+.aviso-perfil__link {
+    color: var(--primary);
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.aviso-perfil__link:hover {
+    text-decoration: underline;
 }
 
 /* ── Preferencia de movimiento reducido ── */
