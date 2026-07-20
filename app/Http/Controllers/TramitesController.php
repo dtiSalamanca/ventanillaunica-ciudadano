@@ -3,9 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\DocumentoPredio;
+use App\Models\DocumentoTramite;
 use App\Models\Predio;
+use App\Models\Solicitud;
 use App\Models\tblDocumentoPersonal;
 use App\Models\Tramite;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class TramitesController extends Controller
@@ -77,8 +82,17 @@ class TramitesController extends Controller
         // Si el trámite tiene cuenta_predial activa (1), cargar predios aprobados
         // para que el ciudadano seleccione el predio y se pre-llenen requisitos.
         if ($tramite->cuenta_predial) {
+            // IDs de predios que ya tienen una solicitud pendiente para este trámite
+            $prediosConSolicitudPendiente = Solicitud::where('fk_tramite', $tramite->id_tramite)
+                ->where('fk_usuario', auth()->id())
+                ->where('estatus_solicitud', 0) // 0 = Pendiente
+                ->whereNotNull('fk_predio')
+                ->pluck('fk_predio')
+                ->toArray();
+
             $prediosAprobados = Predio::where('fk_usuario', auth()->id())
                 ->where('estatus_predio', Predio::ESTATUS_APROBADO)
+                ->whereNotIn('id_predio', $prediosConSolicitudPendiente)
                 ->with([
                     'documentos' => fn ($q) => $q
                         ->where('estatus_documento', DocumentoPredio::ESTATUS_APROBADO)
@@ -89,8 +103,186 @@ class TramitesController extends Controller
 
             $data['prediosAprobados'] = $prediosAprobados;
             $data['esTramitePredial'] = true;
+
+            // Verificar si el usuario tiene predios pero todos están bloqueados por solicitudes pendientes
+            $totalPrediosAprobados = Predio::where('fk_usuario', auth()->id())
+                ->where('estatus_predio', Predio::ESTATUS_APROBADO)
+                ->count();
+
+            $data['tienePrediosBloqueados'] = $totalPrediosAprobados > 0 && $prediosAprobados->isEmpty();
         }
 
         return view('tramites.iniciarTramite', $data);
+    }
+
+    public function enviarSolicitud(Request $request): JsonResponse
+    {
+        $request->validate([
+            'tramite_id' => ['required', 'integer', 'exists:cat_tramites,id_tramite'],
+            'predio_id' => ['nullable', 'integer', 'exists:tbl_predios,id_predio'],
+        ]);
+
+        $tramite = Tramite::with([
+            'requisitos' => fn ($q) => $q->where('estatus_requisito', 1),
+        ])->findOrFail($request->integer('tramite_id'));
+
+        // Validar que el predio no tenga ya una solicitud pendiente para este trámite
+        if ($tramite->cuenta_predial && $request->filled('predio_id')) {
+            $yaTieneSolicitud = Solicitud::where('fk_tramite', $tramite->id_tramite)
+                ->where('fk_usuario', auth()->id())
+                ->where('fk_predio', $request->integer('predio_id'))
+                ->where('estatus_solicitud', 0)
+                ->exists();
+
+            if ($yaTieneSolicitud) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Este predio ya tiene una solicitud pendiente para este trámite.',
+                ], 422);
+            }
+        }
+
+        $user = auth()->user();
+
+        // Obtener documentos personales aprobados del usuario
+        $documentosAprobados = tblDocumentoPersonal::where('fk_usuario', $user->id)
+            ->where('estatus_documento', tblDocumentoPersonal::ESTATUS_APROBADO)
+            ->with('catalogoDocumento')
+            ->get();
+
+        // Mapa: nombre_documento (normalizado) => id del documento personal
+        $documentosMap = $documentosAprobados
+            ->mapWithKeys(fn ($doc) => [
+                mb_strtolower(trim($doc->catalogoDocumento?->nombre_documento ?? '')) => $doc->id_documento,
+            ])
+            ->filter()
+            ->toArray();
+
+        // Si es trámite predial, también considerar documentos del predio seleccionado
+        $documentosPredioMap = [];
+        if ($tramite->cuenta_predial && $request->filled('predio_id')) {
+            $documentosPredio = DocumentoPredio::where('fk_predio', $request->integer('predio_id'))
+                ->where('estatus_documento', DocumentoPredio::ESTATUS_APROBADO)
+                ->with('catalogoDocumento')
+                ->get();
+
+            $documentosPredioMap = $documentosPredio
+                ->mapWithKeys(fn ($doc) => [
+                    mb_strtolower(trim($doc->catalogoDocumento?->nombre_documento ?? '')) => $doc->id_documento_predio,
+                ])
+                ->filter()
+                ->toArray();
+        }
+
+        // Hacer matching requisito vs documento personal/predio
+        $requisitosCubiertos = [];
+        $todosCubiertos = true;
+
+        foreach ($tramite->requisitos as $requisito) {
+            $nombreRequisito = mb_strtolower(trim($requisito->nombre_requisito));
+            $documentoId = null;
+            $tipoDocumento = null;
+
+            // Buscar primero en documentos personales aprobados
+            foreach ($documentosMap as $nombreDoc => $idDoc) {
+                if (
+                    $nombreDoc === $nombreRequisito ||
+                    str_contains($nombreRequisito, $nombreDoc) ||
+                    str_contains($nombreDoc, $nombreRequisito)
+                ) {
+                    $documentoId = $idDoc;
+                    $tipoDocumento = 'personal';
+                    break;
+                }
+            }
+
+            // Si no se encontró en personales y hay predio, buscar en documentos del predio
+            if ($documentoId === null && ! empty($documentosPredioMap)) {
+                foreach ($documentosPredioMap as $nombreDoc => $idDoc) {
+                    if (
+                        $nombreDoc === $nombreRequisito ||
+                        str_contains($nombreRequisito, $nombreDoc) ||
+                        str_contains($nombreDoc, $nombreRequisito)
+                    ) {
+                        $documentoId = $idDoc;
+                        $tipoDocumento = 'predio';
+                        break;
+                    }
+                }
+            }
+
+            if ($documentoId === null) {
+                $todosCubiertos = false;
+                break;
+            }
+
+            $requisitosCubiertos[] = [
+                'requisito' => $requisito,
+                'documento_id' => $documentoId,
+                'tipo' => $tipoDocumento,
+            ];
+        }
+
+        if (! $todosCubiertos) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No todos los requisitos están cumplidos. Revisa los documentos en tu perfil.',
+            ], 422);
+        }
+
+        // Crear la solicitud en una transacción
+        try {
+            $solicitud = DB::transaction(function () use ($user, $tramite, $request, $requisitosCubiertos) {
+                $solicitud = Solicitud::create([
+                    'fk_usuario' => $user->id,
+                    'fk_tramite' => $tramite->id_tramite,
+                    'fk_predio' => $request->filled('predio_id') ? $request->integer('predio_id') : null,
+                    'fecha_solicitud' => now(),
+                    'estatus_solicitud' => 0, // 0 = Pendiente
+                ]);
+
+                // Registrar cada requisito cubierto en tbl_documentos_tramites
+                foreach ($requisitosCubiertos as $item) {
+                    $data = [
+                        'fk_requisito' => $item['requisito']->id_requisito,
+                        'fk_solicitud' => $solicitud->id_solicitud,
+                    ];
+
+                    if ($item['tipo'] === 'personal') {
+                        $data['fk_documento_personal'] = $item['documento_id'];
+                    }
+
+                    DocumentoTramite::create($data);
+                }
+
+                return $solicitud;
+            });
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Ocurrió un error al enviar la solicitud. Intenta de nuevo.',
+            ], 500);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Solicitud enviada correctamente. Un administrador revisará tu trámite.',
+            'solicitud_id' => $solicitud->id_solicitud,
+        ]);
+    }
+
+    public function misTramites(): View
+    {
+        $solicitudes = Solicitud::with([
+            'tramite.dependencia',
+            'predio',
+        ])
+            ->where('fk_usuario', auth()->id())
+            ->orderByDesc('fecha_solicitud')
+            ->get();
+
+        return view('tramites.misTramites', [
+            'solicitudes' => $solicitudes,
+        ]);
     }
 }

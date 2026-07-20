@@ -1,0 +1,542 @@
+/* ==========================================================================
+   Home / Dashboard - Ventanilla Única Ciudadano
+   Estilo inspirado en el portal de Padrón de Proveedores de Salamanca
+   ========================================================================== */
+
+:root {
+    --primary: #a62346;
+    --primary-light: #f6e8ec;
+    --secondary: #1e5c50;
+    --accent: #a62346;
+    --light: #eae1cb;
+    --dark: #2c3e50;
+    --gray: #95a5a6;
+    --border: 1px solid #d5dbdb;
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md:
+        0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg:
+        0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body {
+    background-color: #f5f5f0;
+    font-family:
+        "Inter",
+        -apple-system,
+        BlinkMacSystemFont,
+        sans-serif;
+    color: var(--dark);
+    line-height: 1.5;
+}
+
+.home-container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1.5rem;
+}
+
+/* ── Hero ── */
+.hero-section {
+    background: white;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+    margin-bottom: 2rem;
+}
+
+.hero-header {
+    background: #1e5c50;
+    color: white;
+    padding: 3rem 2rem;
+    text-align: center;
+    position: relative;
+}
+
+.hero-bg-pattern {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    opacity: 0.05;
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+
+.hero-title {
+    font-size: 2.2rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+    position: relative;
+    color: #fff;
+}
+
+.hero-subtitle {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    font-weight: 400;
+    max-width: 800px;
+    margin: 0 auto;
+    position: relative;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.hero-body {
+    padding: 2rem 2.5rem;
+    text-align: center;
+}
+
+.hero-image {
+    max-width: 100px;
+    margin: 0 auto 1rem;
+    display: block;
+}
+
+.hero-welcome {
+    font-size: 1.2rem;
+    color: var(--dark);
+    margin: 0 0 0.75rem;
+}
+
+.hero-welcome strong {
+    color: var(--secondary);
+}
+
+.hero-description {
+    font-size: 0.95rem;
+    color: var(--dark);
+    max-width: 700px;
+    margin: 0 auto;
+    line-height: 1.6;
+}
+
+/* ── Feature Cards ── */
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.feature-card {
+    background: white;
+    border-radius: var(--radius-md);
+    padding: 2rem;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid #d5dbdb;
+    transition: var(--transition);
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--secondary);
+}
+
+.feature-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    margin-bottom: 1.25rem;
+    background-color: var(--primary-light);
+    color: var(--secondary);
+}
+
+.feature-icon svg {
+    width: 30px;
+    height: 30px;
+}
+
+.feature-title {
+    font-size: 1.15rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    color: var(--secondary);
+}
+
+.feature-text {
+    color: var(--dark);
+    font-size: 0.9rem;
+    line-height: 1.6;
+    margin: 0;
+}
+
+/* ── Info Section (Documentos Requeridos) ── */
+.info-section {
+    background: white;
+    border-radius: var(--radius-md);
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow-sm);
+}
+
+.info-header {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: var(--secondary);
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid var(--primary-light);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.info-header svg {
+    flex-shrink: 0;
+    width: 1.25rem;
+    height: 1.25rem;
+    color: var(--secondary);
+}
+
+.info-content {
+    font-size: 0.95rem;
+    color: var(--dark);
+    line-height: 1.7;
+}
+
+.info-content p {
+    margin-bottom: 1rem;
+}
+
+.info-empty {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem;
+    color: var(--gray);
+    font-size: 0.9rem;
+    flex-wrap: wrap;
+}
+
+.info-link {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--secondary);
+    text-decoration: none;
+    padding: 0.35rem 0.75rem;
+    border-radius: var(--radius-sm);
+    background: var(--primary-light);
+    transition: var(--transition);
+}
+
+.info-link:hover {
+    background: var(--secondary);
+    color: #fff;
+}
+
+/* ── Progress summary ── */
+.progress-summary {
+    margin-bottom: 1rem;
+}
+
+.progress-summary-label {
+    font-size: 0.85rem;
+    color: var(--dark);
+    margin-bottom: 0.4rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.progress-summary-label i {
+    color: var(--secondary);
+}
+
+.progress-summary-label strong {
+    color: var(--secondary);
+}
+
+.progress-bar {
+    height: 6px;
+    border-radius: 999px;
+    background: #e9ecef;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: var(--secondary);
+    transition: width 1s ease;
+}
+
+/* ── Requirements List ── */
+.requirements-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.requirement-item {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    background: #f8f9fa;
+    padding: 0.7rem 0.85rem;
+    border-radius: var(--radius-sm);
+    border-left: 3px solid var(--secondary);
+    transition: var(--transition);
+    flex-wrap: wrap;
+}
+
+.requirement-item--ok {
+    border-left-color: var(--secondary);
+    background: #f0faf8;
+}
+
+.requirement-icon {
+    color: var(--secondary);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+}
+
+.requirement-text {
+    font-size: 0.85rem;
+    flex: 1;
+    min-width: 0;
+}
+
+.requirement-badge {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.requirement-badge--ok {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.requirement-badge--review {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.requirement-badge--no {
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+.requirement-badge--pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+/* ── Predio groups ── */
+.predio-group {
+    margin-top: 1rem;
+    border: 1px solid #d5dbdb;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+}
+
+.predio-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 0.85rem;
+    background: #f8f9fa;
+    border-bottom: 1px solid #d5dbdb;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--dark);
+}
+
+.predio-header svg {
+    color: var(--secondary);
+    flex-shrink: 0;
+}
+
+.predio-clave {
+    flex: 1;
+    font-family: "Roboto Mono", "Courier New", monospace;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    font-size: 0.82rem;
+}
+
+.predio-count {
+    flex-shrink: 0;
+    background: var(--primary-light);
+    color: var(--secondary);
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+}
+
+.predio-group .requirements-list {
+    padding: 0.5rem;
+    gap: 0.35rem;
+    margin-top: 0;
+}
+
+.predio-group .requirement-item {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.88rem;
+}
+
+/* ── CTA Section ── */
+.cta-section {
+    background: white;
+    border-radius: var(--radius-lg);
+    padding: 3rem 2rem;
+    text-align: center;
+    box-shadow: var(--shadow-md);
+    border-top: 4px solid var(--secondary);
+    margin-bottom: 2rem;
+}
+
+.cta-title {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 1rem;
+}
+
+.cta-section p {
+    color: var(--dark);
+    margin-bottom: 1.5rem;
+    font-size: 0.95rem;
+}
+
+.btn-primary {
+    background: var(--secondary);
+    color: white;
+    border: none;
+    padding: 0.75rem 2rem;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 1rem;
+    transition: var(--transition);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-primary:hover {
+    background: #174941;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    text-decoration: none;
+    color: white;
+}
+
+.btn-primary svg {
+    width: 1rem;
+    height: 1rem;
+}
+
+.btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--primary-light);
+    color: var(--secondary);
+    padding: 0.6rem 1.25rem;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+.btn-secondary:hover {
+    background: var(--secondary);
+    color: white;
+}
+
+.btn-secondary svg {
+    width: 0.9rem;
+    height: 0.9rem;
+}
+
+/* ── Footer note ── */
+.footer-note {
+    text-align: center;
+    color: var(--gray);
+    font-size: 0.85rem;
+    margin-top: 2rem;
+}
+
+.mb-4 {
+    margin-bottom: 1.5rem;
+}
+
+/* ── Responsive ── */
+@media (max-width: 992px) {
+    .features-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .requirements-list {
+        grid-template-columns: 1fr;
+    }
+
+    .hero-title {
+        font-size: 1.8rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .home-container {
+        padding: 0 1rem;
+        margin: 1.5rem auto;
+    }
+
+    .hero-header {
+        padding: 2rem 1.25rem;
+    }
+
+    .hero-title {
+        font-size: 1.5rem;
+    }
+
+    .hero-subtitle {
+        font-size: 0.95rem;
+    }
+
+    .hero-body {
+        padding: 1.5rem;
+    }
+
+    .features-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .info-section {
+        padding: 1.25rem;
+    }
+
+    .cta-section {
+        padding: 2rem 1.25rem;
+    }
+
+    .cta-title {
+        font-size: 1.3rem;
+    }
+
+    .requirement-item {
+        flex-wrap: wrap;
+    }
+}

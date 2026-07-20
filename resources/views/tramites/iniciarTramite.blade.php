@@ -91,10 +91,20 @@
                             @if (($prediosAprobados ?? collect())->isEmpty())
                                 <div class="selector-predio__vacio">
                                     <i class="fa-solid fa-triangle-exclamation"></i>
-                                    <p>No tienes predios aprobados.</p>
-                                    <a href="{{ route('indexPerfiles') }}" class="btn-predio-perfil">
-                                        <i class="fa-solid fa-building-circle-check"></i> Ir a Mi Perfil
-                                    </a>
+                                    @if ($tienePrediosBloqueados ?? false)
+                                        <p>Algunos de tus predios ya están en proceso de este trámite. Para generar uno
+                                            nuevo, puedes registrar otro predio desde <a href="{{ route('indexPerfiles') }}"
+                                                class="enlace-perfil">Mi Perfil</a> o esperar a
+                                            que se resuelva la solicitud actual.</p>
+                                        <a href="{{ route('misTramites') }}" class="btn-predio-perfil">
+                                            <i class="fa-solid fa-list"></i> Ver mis trámites
+                                        </a>
+                                    @else
+                                        <p>No tienes predios aprobados.</p>
+                                        <a href="{{ route('indexPerfiles') }}" class="btn-predio-perfil">
+                                            <i class="fa-solid fa-building-circle-check"></i> Ir a Mi Perfil
+                                        </a>
+                                    @endif
                                 </div>
                             @else
                                 <select id="selector-predio" class="selector-predio__select"

@@ -38,7 +38,9 @@ Route::middleware('auth')->controller(PrediosController::class)->group(function 
 
 Route::middleware('auth')->controller(TramitesController::class)->group(function () {
     Route::get('/tramites', 'indexTramites')->name('indexTramites');
+    Route::get('/tramites/mis-tramites', 'misTramites')->name('misTramites');
     Route::get('/tramites/iniciar/{tramite}', 'iniciarTramite')->name('iniciarTramite');
+    Route::post('/tramites/enviar-solicitud', 'enviarSolicitud')->name('enviarSolicitud');
 });
 
 Route::middleware('auth')->controller(UsuariosController::class)->group(function () {

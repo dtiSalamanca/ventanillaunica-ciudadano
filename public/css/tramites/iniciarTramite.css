@@ -910,6 +910,16 @@
     color: #fff;
 }
 
+.enlace-perfil {
+    color: var(--primary);
+    font-weight: 700;
+    text-decoration: underline;
+}
+
+.enlace-perfil:hover {
+    color: var(--primary-dark);
+}
+
 /* ── Requisito pre-cumplido por documento ── */
 .requisito-cumplimiento--precumplido {
     border-color: var(--primary);

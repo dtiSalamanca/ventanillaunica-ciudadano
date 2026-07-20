@@ -445,28 +445,111 @@ function actualizarProgresoGlobal() {
     }
 }
 
-/* ── Envío de solicitud (concepto: Swal informativo) ── */
+/* ── Envío de solicitud real ── */
 function initEnvioSolicitud() {
     const boton = document.getElementById("btn-enviar-solicitud");
     if (!boton) return;
 
-    boton.addEventListener("click", () => {
-        mostrarAviso(
-            "Próximamente",
-            "El envío de la solicitud aún no está disponible. Esta vista es un concepto de la interfaz.",
-        );
+    boton.addEventListener("click", function () {
+        const tramiteId = obtenerTramiteId();
+        if (!tramiteId) {
+            mostrarError("No se pudo identificar el trámite.");
+            return;
+        }
+
+        const predioSelect = document.getElementById("selector-predio");
+        const predioId =
+            predioSelect && predioSelect.value ? predioSelect.value : null;
+
+        // Deshabilitar botón y mostrar loading
+        boton.disabled = true;
+        boton.innerHTML =
+            '<i class="fa-solid fa-spinner fa-spin"></i> Enviando...';
+
+        const formData = new FormData();
+        formData.append("_token", window.adminConfig?.csrfToken || "");
+        formData.append("tramite_id", tramiteId);
+        if (predioId) {
+            formData.append("predio_id", predioId);
+        }
+
+        fetch("/tramites/enviar-solicitud", {
+            method: "POST",
+            body: formData,
+        })
+            .then(function (respuesta) {
+                return respuesta.json().then(function (data) {
+                    return { ok: respuesta.ok, data: data };
+                });
+            })
+            .then(function ({ ok, data }) {
+                if (ok && data.success) {
+                    mostrarExito(data.message, data.solicitud_id);
+                } else {
+                    mostrarError(
+                        data.message || "Error al enviar la solicitud.",
+                    );
+                    boton.disabled = false;
+                    boton.innerHTML =
+                        '<i class="fa-solid fa-paper-plane"></i> Enviar solicitud';
+                }
+            })
+            .catch(function () {
+                mostrarError(
+                    "Error de conexión. Verifica tu conexión e intenta de nuevo.",
+                );
+                boton.disabled = false;
+                boton.innerHTML =
+                    '<i class="fa-solid fa-paper-plane"></i> Enviar solicitud';
+            });
     });
 }
 
-function mostrarAviso(titulo, texto) {
+/**
+ * Obtiene el ID del trámite desde la URL.
+ * La URL tiene el formato: /tramites/iniciar/{id}
+ */
+function obtenerTramiteId() {
+    const partes = window.location.pathname.split("/");
+    const idx = partes.indexOf("iniciar");
+    if (idx !== -1 && partes[idx + 1]) {
+        return partes[idx + 1];
+    }
+    return null;
+}
+
+function mostrarExito(mensaje, solicitudId) {
+    const texto = solicitudId
+        ? mensaje
+        : mensaje || "Solicitud enviada correctamente.";
+
     if (window.Swal) {
         Swal.fire({
-            icon: "info",
-            title: titulo,
+            icon: "success",
+            title: "¡Solicitud enviada!",
             text: texto,
-            confirmButtonColor: "#1e5c50",
+            confirmButtonColor: "#601028",
+            confirmButtonText: "Volver a trámites",
+        }).then(function (resultado) {
+            if (resultado.isConfirmed) {
+                window.location.href = "/tramites";
+            }
         });
     } else {
-        alert(`${titulo}\n\n${texto}`);
+        alert(texto);
+        window.location.href = "/tramites";
+    }
+}
+
+function mostrarError(mensaje) {
+    if (window.Swal) {
+        Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: mensaje,
+            confirmButtonColor: "#601028",
+        });
+    } else {
+        alert("Error: " + mensaje);
     }
 }

@@ -69,12 +69,14 @@
                     </li>
                     <li>
                         <a class="dropdown-item" href="{{ route('indexPerfiles') }}">
-                            <i class="fas fa-user-circle me-2"></i><span class="highlight-text">{{ __('Mi perfil') }}</span>
+                            <i class="fas fa-user-circle me-2"></i><span
+                                class="highlight-text">{{ __('Mi perfil') }}</span>
                         </a>
                     </li>
                     <li>
                         <a class="dropdown-item" href="{{ route('cambiarContrasena') }}">
-                            <i class="fas fa-key me-2"></i><span class="highlight-text">{{ __('Cambiar contraseña') }}</span>
+                            <i class="fas fa-key me-2"></i><span
+                                class="highlight-text">{{ __('Cambiar contraseña') }}</span>
                         </a>
                     </li>
                     <li>
@@ -134,8 +136,8 @@
                             Generar trámite
                         </a>
 
-                        <a class="nav-link active {{ request()->routeIs('indexTramites') ? 'active-current' : '' }}"
-                            href="{{ route('indexTramites') }}">
+                        <a class="nav-link active {{ request()->routeIs('misTramites') ? 'active-current' : '' }}"
+                            href="{{ route('misTramites') }}">
                             <div class="sb-nav-link-icon"><i class="fa-solid fa-list"></i></div>
                             Mis trámites
                         </a>

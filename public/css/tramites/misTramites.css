@@ -1,0 +1,458 @@
+:root {
+    --primary: #601028;
+    --primary-dark: #4b0b1e;
+    --primary-light: #f5dde4;
+    --accent: #a62346;
+    --accent-dark: #8a1c36;
+    --text-primary: #1a202c;
+    --text-secondary: #64748b;
+    --border: #e2e8f0;
+    --bg-surface: #ffffff;
+    --bg-subtle: #f8fafc;
+    --bg-hover: #f1f5f9;
+    --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-sm:
+        0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    --shadow-md:
+        0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg:
+        0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 16px;
+    --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.main-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+    font-family:
+        "Montserrat",
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+    overflow-x: clip;
+    box-sizing: border-box;
+}
+
+/* ── Header ── */
+.page-header {
+    position: relative;
+    overflow: hidden;
+    border-radius: 10px;
+    background: #601028 url("/images/fondo_rojo.png") center / cover no-repeat;
+    padding: 1.1rem 2rem;
+    color: #fff;
+    margin-bottom: 2rem;
+}
+
+.header-content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.45rem;
+}
+
+.header-escudo {
+    width: 52px;
+    height: auto;
+    opacity: 0.92;
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
+}
+
+.header-main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.page-title {
+    margin: 0;
+    font-size: clamp(1.2rem, 2.4vw, 1.6rem);
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 0.01em;
+    line-height: 1.2;
+}
+
+.page-subtitle {
+    margin: 0.15rem auto 0;
+    max-width: 740px;
+    font-size: 0.88rem;
+    line-height: 1.4;
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 500;
+}
+
+/* ── Búsqueda ── */
+.mis-tramites-search {
+    margin-bottom: 1.25rem;
+}
+
+.search-bar {
+    position: relative;
+    max-width: 420px;
+}
+
+.search-bar i.fa-magnifying-glass {
+    position: absolute;
+    top: 50%;
+    left: 0.9rem;
+    transform: translateY(-50%);
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+.search-bar input[type="text"] {
+    width: 100%;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 0.55rem 2.25rem;
+    font-size: 0.88rem;
+    color: var(--text-primary);
+    transition: var(--transition);
+}
+
+.search-bar input[type="text"]:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(96, 16, 40, 0.12);
+}
+
+.search-clear {
+    position: absolute;
+    top: 50%;
+    right: 0.75rem;
+    transform: translateY(-50%);
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+}
+
+.search-clear:hover {
+    color: var(--accent);
+}
+
+/* ── Grid de tarjetas ── */
+.mis-tramites-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+/* ── Tarjeta de solicitud ── */
+.solicitud-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-xs);
+    transition: var(--transition);
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+.solicitud-card:hover {
+    box-shadow: var(--shadow-sm);
+}
+
+.solicitud-card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 1.1rem 1.25rem;
+}
+
+.solicitud-card-icono {
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: var(--primary-light);
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+}
+
+.solicitud-card-info {
+    min-width: 0;
+    flex: 1;
+}
+
+.solicitud-card-nombre {
+    font-weight: 700;
+    color: var(--text-primary);
+    font-size: 0.98rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.solicitud-card-dependencia {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.solicitud-card-dependencia i {
+    color: var(--primary);
+}
+
+.solicitud-card-dependencia-label {
+    font-weight: 600;
+}
+
+/* ── Badge de estatus ── */
+.badge-estatus {
+    flex-shrink: 0;
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 0.3rem 0.65rem;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+}
+
+.estatus--pendiente {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.estatus--aprobada {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.estatus--rechazada {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.estatus--desconocido {
+    background: var(--bg-subtle);
+    color: var(--text-secondary);
+}
+
+/* ── Cuerpo de la tarjeta ── */
+.solicitud-card-body {
+    padding: 0 1.25rem 1rem;
+}
+
+.solicitud-card-detalle {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 0.75rem;
+}
+
+.solicitud-card-detalle-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.detalle-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.detalle-valor {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.detalle-valor--precio {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.solicitud-card-observacion {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    margin-top: 1rem;
+    padding: 0.75rem 1rem;
+    background: var(--bg-subtle);
+    border-left: 3px solid var(--primary-light);
+    border-radius: var(--radius-sm);
+}
+
+.solicitud-card-observacion-icono {
+    flex-shrink: 0;
+    margin-top: 0.15rem;
+    font-size: 0.75rem;
+    color: var(--primary);
+    opacity: 0.6;
+}
+
+.solicitud-card-observacion p {
+    margin: 0;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    color: var(--text-secondary);
+}
+
+/* ── Footer ── */
+.solicitud-card-footer {
+    padding: 0.75rem 1.25rem;
+    border-top: 1px solid var(--border);
+    background: var(--bg-subtle);
+}
+
+.solicitud-card-id {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+/* ── Botón ir a trámites ── */
+.btn-ir-tramites {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.6rem 1rem;
+    border: 1.5px solid var(--primary);
+    border-radius: var(--radius-md);
+    background: var(--bg-surface);
+    color: var(--primary);
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-decoration: none;
+    cursor: pointer;
+    transition: var(--transition);
+    margin-top: 0.75rem;
+}
+
+.btn-ir-tramites:hover {
+    background: var(--primary);
+    color: #fff;
+}
+
+.btn-ir-tramites:active {
+    background: var(--primary-dark);
+    border-color: var(--primary-dark);
+}
+
+.btn-ir-tramites:focus-visible {
+    outline: 3px solid rgba(96, 16, 40, 0.25);
+    outline-offset: 2px;
+}
+
+/* ── Estado vacío ── */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 3rem 1.5rem;
+    color: var(--text-secondary);
+}
+
+.empty-state i {
+    font-size: 2.5rem;
+    color: var(--primary-light);
+    margin-bottom: 1rem;
+}
+
+.empty-state p {
+    margin: 0;
+    font-weight: 600;
+}
+
+/* ── Responsive ── */
+@media (max-width: 1024px) {
+    .main-container {
+        padding: 1rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .main-container {
+        padding: 1rem;
+    }
+
+    .page-header {
+        padding: 1rem;
+        border-radius: 10px;
+    }
+
+    .page-title {
+        font-size: 1.25rem;
+    }
+
+    .header-escudo {
+        width: 46px;
+    }
+
+    .page-subtitle {
+        font-size: 0.82rem;
+    }
+
+    .search-bar {
+        max-width: 100%;
+    }
+
+    .solicitud-card-header {
+        flex-wrap: wrap;
+    }
+
+    .solicitud-card-nombre {
+        white-space: normal;
+        word-break: break-word;
+    }
+
+    .solicitud-card-dependencia {
+        white-space: normal;
+        word-break: break-word;
+    }
+
+    .solicitud-card-detalle {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .main-container {
+        padding: 0.75rem;
+    }
+
+    .page-header {
+        padding: 0.95rem 0.75rem;
+    }
+
+    .page-title {
+        font-size: 1.12rem;
+    }
+
+    .header-escudo {
+        width: 42px;
+    }
+
+    .page-subtitle {
+        font-size: 0.78rem;
+    }
+}
+
+/* ── Preferencia de movimiento reducido ── */
+@media (prefers-reduced-motion: reduce) {
+    .solicitud-card,
+    .search-bar input[type="text"] {
+        transition: none;
+    }
+}
