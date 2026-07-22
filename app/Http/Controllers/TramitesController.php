@@ -11,6 +11,7 @@ use App\Models\Tramite;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class TramitesController extends Controller
@@ -43,7 +44,39 @@ class TramitesController extends Controller
         $tramite->load([
             'dependencia',
             'requisitos' => fn ($query) => $query->where('estatus_requisito', 1)->orderBy('nombre_requisito'),
+            'tramitesRequeridos',
         ]);
+
+        // ── Validar prerequisitos del trámite ──
+        $prerequisitos = $tramite->tramitesRequeridos;
+        $prerequisitosPendientes = collect();
+        $usuarioId = auth()->id();
+
+        $idsTramitesRequeridos = $prerequisitos->pluck('id_tramite');
+
+        foreach ($prerequisitos as $prerequisito) {
+            $completado = Solicitud::where('fk_usuario', $usuarioId)
+                ->where('fk_tramite', $prerequisito->id_tramite)
+                ->where('estatus_solicitud', 4) // 4 = Completado
+                ->exists();
+
+            if (! $completado) {
+                $prerequisitosPendientes->push($prerequisito);
+            }
+        }
+
+        // Nombres de tramites prerequisitos que el usuario ya completó
+        $tramitesCompletadosNombres = collect();
+        if ($idsTramitesRequeridos->isNotEmpty()) {
+            $tramitesCompletadosNombres = Solicitud::where('fk_usuario', $usuarioId)
+                ->whereIn('fk_tramite', $idsTramitesRequeridos)
+                ->where('estatus_solicitud', 4)
+                ->with('tramite')
+                ->get()
+                ->map(fn ($s) => trim($s->tramite?->nombre_tramite ?? ''))
+                ->filter()
+                ->values();
+        }
 
         $documentosAprobados = tblDocumentoPersonal::where('fk_usuario', auth()->id())
             ->where('estatus_documento', tblDocumentoPersonal::ESTATUS_APROBADO)
@@ -72,11 +105,29 @@ class TramitesController extends Controller
             ->values()
             ->toArray();
 
+        // Crear requisitos virtuales para los trámites prerequisitos que el usuario ya completó
+        // para que se muestren visualmente en la lista de requisitos
+        $requisitosVirtuales = collect();
+        if ($prerequisitosPendientes->isEmpty() && $tramitesCompletadosNombres->isNotEmpty()) {
+            $requisitosVirtuales = $tramitesCompletadosNombres->map(fn ($nombre) => (object) [
+                'id_requisito' => 'prereq_'.mb_strtolower(Str::slug($nombre)),
+                'nombre_requisito' => $nombre,
+                'es_virtual' => true,
+            ]);
+        }
+
+        $todosRequisitos = $requisitosVirtuales->merge($tramite->requisitos);
+        $totalRequisitos = $todosRequisitos->count();
+
         $data = [
             'tramite' => $tramite,
+            'todosRequisitos' => $todosRequisitos,
+            'totalRequisitos' => $totalRequisitos,
             'documentosAprobados' => $documentosAprobados,
             'documentosPersonalesNombres' => $documentosPersonalesNombres,
             'documentosNoAprobadosNombres' => $documentosNoAprobadosNombres,
+            'prerequisitosPendientes' => $prerequisitosPendientes,
+            'tramitesCompletadosNombres' => $tramitesCompletadosNombres,
         ];
 
         // Si el trámite tiene cuenta_predial activa (1), cargar predios aprobados
@@ -124,7 +175,48 @@ class TramitesController extends Controller
 
         $tramite = Tramite::with([
             'requisitos' => fn ($q) => $q->where('estatus_requisito', 1),
+            'tramitesRequeridos',
         ])->findOrFail($request->integer('tramite_id'));
+
+        // ── Validar prerequisitos del trámite ──
+        $usuarioId = auth()->id();
+        $prerequisitosPendientes = collect();
+
+        $prerequisitos = $tramite->tramitesRequeridos;
+        $idsTramitesRequeridos = $prerequisitos->pluck('id_tramite');
+
+        foreach ($prerequisitos as $prerequisito) {
+            $completado = Solicitud::where('fk_usuario', $usuarioId)
+                ->where('fk_tramite', $prerequisito->id_tramite)
+                ->where('estatus_solicitud', 4) // 4 = Completado
+                ->exists();
+
+            if (! $completado) {
+                $prerequisitosPendientes->push($prerequisito);
+            }
+        }
+
+        if ($prerequisitosPendientes->isNotEmpty()) {
+            $nombres = $prerequisitosPendientes->pluck('nombre_tramite')->implode('", "');
+
+            return response()->json([
+                'success' => false,
+                'message' => "Para solicitar **{$tramite->nombre_tramite}**, primero debes completar el trámite: \"{$nombres}\".",
+            ], 422);
+        }
+
+        // Nombres de tramites prerequisitos completados por el usuario
+        $tramitesCompletadosNombres = collect();
+        if ($idsTramitesRequeridos->isNotEmpty()) {
+            $tramitesCompletadosNombres = Solicitud::where('fk_usuario', $usuarioId)
+                ->whereIn('fk_tramite', $idsTramitesRequeridos)
+                ->where('estatus_solicitud', 4)
+                ->with('tramite')
+                ->get()
+                ->map(fn ($s) => trim($s->tramite?->nombre_tramite ?? ''))
+                ->filter()
+                ->values();
+        }
 
         // Validar que el predio no tenga ya una solicitud pendiente para este trámite
         if ($tramite->cuenta_predial && $request->filled('predio_id')) {
@@ -206,6 +298,22 @@ class TramitesController extends Controller
                     ) {
                         $documentoId = $idDoc;
                         $tipoDocumento = 'predio';
+                        break;
+                    }
+                }
+            }
+
+            // Si no se encontró en documentos, verificar si un trámite prerequisito completado lo cubre
+            if ($documentoId === null && $tramitesCompletadosNombres->isNotEmpty()) {
+                foreach ($tramitesCompletadosNombres as $nombreTramite) {
+                    $nombreTramiteLower = mb_strtolower(trim($nombreTramite));
+                    if (
+                        $nombreTramiteLower === $nombreRequisito ||
+                        str_contains($nombreRequisito, $nombreTramiteLower) ||
+                        str_contains($nombreTramiteLower, $nombreRequisito)
+                    ) {
+                        $documentoId = true;
+                        $tipoDocumento = 'tramite';
                         break;
                     }
                 }

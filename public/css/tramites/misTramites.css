@@ -229,14 +229,24 @@
     color: #92400e;
 }
 
-.estatus--aprobada {
-    background: #d1fae5;
-    color: #065f46;
+.estatus--turnado {
+    background: #dbeafe;
+    color: #1e40af;
 }
 
 .estatus--rechazada {
     background: #fee2e2;
     color: #991b1b;
+}
+
+.estatus--por-pagar {
+    background: #ccfbf1;
+    color: #0f766e;
+}
+
+.estatus--completado {
+    background: #dcfce7;
+    color: #166534;
 }
 
 .estatus--desconocido {

@@ -6,8 +6,8 @@
 
 @section('content')
     @php
-        $requisitos = $tramite->requisitos;
-        $totalRequisitos = $requisitos->count();
+        $requisitos = $todosRequisitos ?? $tramite->requisitos;
+        $totalRequisitos = $totalRequisitos ?? $requisitos->count();
     @endphp
 
     <div class="main-container">
@@ -74,87 +74,121 @@
         {{-- Card principal --}}
         <div class="card">
             <div class="card-body">
-                @if ($requisitos->isEmpty())
-                    <div class="empty-state">
-                        <i class="fa-solid fa-inbox"></i>
-                        <p>Este trámite no tiene requisitos registrados.</p>
+                {{-- Bloqueo por prerequisitos pendientes --}}
+                @if (($prerequisitosPendientes ?? collect())->isNotEmpty())
+                    <div class="prerequisitos-bloqueo">
+                        <div class="prerequisitos-bloqueo__icono">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        </div>
+                        <h3 class="prerequisitos-bloqueo__titulo">Trámites requeridos no completados</h3>
+                        <p class="prerequisitos-bloqueo__descripcion">
+                            Para solicitar <strong>{{ $tramite->nombre_tramite }}</strong>,
+                            primero debes completar el{{ $prerequisitosPendientes->count() > 1 ? ' los' : '' }}
+                            siguiente{{ $prerequisitosPendientes->count() > 1 ? 's' : '' }}
+                            trámite{{ $prerequisitosPendientes->count() > 1 ? 's' : '' }}:
+                        </p>
+                        <ul class="prerequisitos-bloqueo__lista">
+                            @foreach ($prerequisitosPendientes as $pendiente)
+                                <li class="prerequisitos-bloqueo__item">
+                                    <div class="prerequisitos-bloqueo__item-info">
+                                        <i class="fa-solid fa-circle-xmark"></i>
+                                        <span>{{ $pendiente->nombre_tramite }}</span>
+                                    </div>
+                                    <a href="{{ route('iniciarTramite', $pendiente->id_tramite) }}"
+                                        class="prerequisitos-bloqueo__btn-ir">
+                                        Ir a este trámite
+                                        <i class="fa-solid fa-arrow-right"></i>
+                                    </a>
+                                </li>
+                            @endforeach
+                        </ul>
                     </div>
                 @else
-                    {{-- Selector de predio para trámites con cuenta_predial activa --}}
-                    @if ($esTramitePredial ?? false)
-                        <div class="selector-predio">
-                            <div class="selector-predio__header">
-                                <i class="fa-solid fa-map-pin"></i>
-                                <span>Selecciona el predio para este trámite</span>
+                    @if ($requisitos->isEmpty())
+                        <div class="empty-state">
+                            <i class="fa-solid fa-inbox"></i>
+                            <p>Este trámite no tiene requisitos registrados.</p>
+                        </div>
+                    @else
+                        {{-- Selector de predio para trámites con cuenta_predial activa --}}
+                        @if ($esTramitePredial ?? false)
+                            <div class="selector-predio">
+                                <div class="selector-predio__header">
+                                    <i class="fa-solid fa-map-pin"></i>
+                                    <span>Selecciona el predio para este trámite</span>
+                                </div>
+
+                                @if (($prediosAprobados ?? collect())->isEmpty())
+                                    <div class="selector-predio__vacio">
+                                        <i class="fa-solid fa-triangle-exclamation"></i>
+                                        @if ($tienePrediosBloqueados ?? false)
+                                            <p>Algunos de tus predios ya están en proceso de este trámite. Para generar uno
+                                                nuevo, puedes registrar otro predio desde <a
+                                                    href="{{ route('indexPerfiles') }}" class="enlace-perfil">Mi Perfil</a>
+                                                o esperar a
+                                                que se resuelva la solicitud actual.</p>
+                                            <a href="{{ route('misTramites') }}" class="btn-predio-perfil">
+                                                <i class="fa-solid fa-list"></i> Ver mis trámites
+                                            </a>
+                                        @else
+                                            <p>No tienes predios aprobados.</p>
+                                            <a href="{{ route('indexPerfiles') }}" class="btn-predio-perfil">
+                                                <i class="fa-solid fa-building-circle-check"></i> Ir a Mi Perfil
+                                            </a>
+                                        @endif
+                                    </div>
+                                @else
+                                    <select id="selector-predio" class="selector-predio__select"
+                                        aria-label="Selecciona un predio aprobado">
+                                        <option value="" selected disabled>— Elige un predio —</option>
+                                        @foreach ($prediosAprobados as $predio)
+                                            <option value="{{ $predio->id_predio }}"
+                                                data-documentos='@json($predio->documentos->map(fn($doc) => mb_strtolower($doc->catalogoDocumento?->nombre_documento ?? ''))->filter()->values())'>
+                                                {{ $predio->clave_predio }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                @endif
                             </div>
 
-                            @if (($prediosAprobados ?? collect())->isEmpty())
-                                <div class="selector-predio__vacio">
-                                    <i class="fa-solid fa-triangle-exclamation"></i>
-                                    @if ($tienePrediosBloqueados ?? false)
-                                        <p>Algunos de tus predios ya están en proceso de este trámite. Para generar uno
-                                            nuevo, puedes registrar otro predio desde <a href="{{ route('indexPerfiles') }}"
-                                                class="enlace-perfil">Mi Perfil</a> o esperar a
-                                            que se resuelva la solicitud actual.</p>
-                                        <a href="{{ route('misTramites') }}" class="btn-predio-perfil">
-                                            <i class="fa-solid fa-list"></i> Ver mis trámites
-                                        </a>
-                                    @else
-                                        <p>No tienes predios aprobados.</p>
-                                        <a href="{{ route('indexPerfiles') }}" class="btn-predio-perfil">
-                                            <i class="fa-solid fa-building-circle-check"></i> Ir a Mi Perfil
-                                        </a>
-                                    @endif
-                                </div>
-                            @else
-                                <select id="selector-predio" class="selector-predio__select"
-                                    aria-label="Selecciona un predio aprobado">
-                                    <option value="" selected disabled>— Elige un predio —</option>
-                                    @foreach ($prediosAprobados as $predio)
-                                        <option value="{{ $predio->id_predio }}"
-                                            data-documentos='@json($predio->documentos->map(fn($doc) => mb_strtolower($doc->catalogoDocumento?->nombre_documento ?? ''))->filter()->values())'>
-                                            {{ $predio->clave_predio }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            @endif
-                        </div>
+                            {{-- Los requisitos se ocultan hasta seleccionar predio --}}
+                            <div id="seccion-requisitos" hidden>
+                        @endif
 
-                        {{-- Los requisitos se ocultan hasta seleccionar predio --}}
-                        <div id="seccion-requisitos" hidden>
-                    @endif
+                        <p class="instrucciones">
+                            <i class="fa-solid fa-circle-info me-1"></i>
+                            Los requisitos se cumplen automáticamente con los documentos que hayas cargado y aprobado
+                            en tu perfil. Si falta algún documento, dirígete a <strong>Mi Perfil</strong> para subirlo.
+                        </p>
 
-                    <p class="instrucciones">
-                        <i class="fa-solid fa-circle-info me-1"></i>
-                        Los requisitos se cumplen automáticamente con los documentos que hayas cargado y aprobado
-                        en tu perfil. Si falta algún documento, dirígete a <strong>Mi Perfil</strong> para subirlo.
-                    </p>
+                        <div class="requisitos-cumplimiento-lista" data-personal-documentos='@json($documentosPersonalesNombres ?? [])'
+                            data-personal-no-aprobados='@json($documentosNoAprobadosNombres ?? [])'
+                            data-tramites-completados='@json($tramitesCompletadosNombres ?? [])'>
+                            @foreach ($requisitos as $requisito)
+                                @php
+                                    $idRequisito = $requisito->id_requisito;
+                                @endphp
 
-                    <div class="requisitos-cumplimiento-lista" data-personal-documentos='@json($documentosPersonalesNombres ?? [])'
-                        data-personal-no-aprobados='@json($documentosNoAprobadosNombres ?? [])'>
-                        @foreach ($requisitos as $requisito)
-                            @php
-                                $idRequisito = $requisito->id_requisito;
-                            @endphp
+                                <div class="requisito-cumplimiento{{ $requisito->es_virtual ?? false ? ' requisito-cumplimiento--virtual' : '' }}"
+                                    data-requisito="{{ $idRequisito }}"
+                                    data-nombre-requisito="{{ mb_strtolower($requisito->nombre_requisito) }}">
+                                    <div class="requisito-cumplimiento__cabecera" data-toggle-acordeon>
+                                        <span
+                                            class="requisito-cumplimiento__nombre">{{ $requisito->nombre_requisito }}</span>
+                                        <span class="badge-estado badge-estado--pendiente">
+                                            <i class="fa-solid fa-circle-exclamation me-1"></i>Pendiente
+                                        </span>
+                                        <button type="button" class="requisito-cumplimiento__reabrir"
+                                            title="Editar requisito" hidden>
+                                            <i class="fa-solid fa-pen"></i>
+                                        </button>
+                                        <i class="fa-solid fa-chevron-down requisito-cumplimiento__chevron"></i>
+                                    </div>
 
-                            <div class="requisito-cumplimiento" data-requisito="{{ $idRequisito }}"
-                                data-nombre-requisito="{{ mb_strtolower($requisito->nombre_requisito) }}">
-                                <div class="requisito-cumplimiento__cabecera" data-toggle-acordeon>
-                                    <span class="requisito-cumplimiento__nombre">{{ $requisito->nombre_requisito }}</span>
-                                    <span class="badge-estado badge-estado--pendiente">
-                                        <i class="fa-solid fa-circle-exclamation me-1"></i>Pendiente
-                                    </span>
-                                    <button type="button" class="requisito-cumplimiento__reabrir" title="Editar requisito"
-                                        hidden>
-                                        <i class="fa-solid fa-pen"></i>
-                                    </button>
-                                    <i class="fa-solid fa-chevron-down requisito-cumplimiento__chevron"></i>
-                                </div>
-
-                                <div class="requisito-cumplimiento__cuerpo">
-                                    <div class="requisito-cumplimiento__cuerpo-inner">
-                                        {{-- Opciones de cumplimiento --}}
-                                        {{-- <div class="requisito-opciones" role="radiogroup"
+                                    <div class="requisito-cumplimiento__cuerpo">
+                                        <div class="requisito-cumplimiento__cuerpo-inner">
+                                            {{-- Opciones de cumplimiento --}}
+                                            {{-- <div class="requisito-opciones" role="radiogroup"
                                             aria-label="Forma de cumplir {{ $requisito->nombre_requisito }}">
                                             <label class="requisito-opcion" data-metodo="documento">
                                                 <input type="radio" name="{{ $nombreRadio }}" value="documento"
@@ -193,10 +227,10 @@
                                             </label>
                                         </div> --}}
 
-                                        {{-- Controles dinámicos --}}
-                                        {{-- <div class="requisito-controles"> --}}
-                                        {{-- Documento personal aprobado --}}
-                                        {{-- <div class="requisito-control" data-control="documento" hidden>
+                                            {{-- Controles dinámicos --}}
+                                            {{-- <div class="requisito-controles"> --}}
+                                            {{-- Documento personal aprobado --}}
+                                            {{-- <div class="requisito-control" data-control="documento" hidden>
                                                 <label class="requisito-control__label"
                                                     for="documento-{{ $idRequisito }}">
                                                     Selecciona un documento aprobado
@@ -227,8 +261,8 @@
                                                 @endif
                                             </div> --}}
 
-                                        {{-- Subir archivo --}}
-                                        {{-- <div class="requisito-control" data-control="subir" hidden>
+                                            {{-- Subir archivo --}}
+                                            {{-- <div class="requisito-control" data-control="subir" hidden>
                                                 <label class="requisito-control__label" for="archivo-{{ $idRequisito }}">
                                                     Selecciona el archivo a subir
                                                 </label>
@@ -248,8 +282,8 @@
                                                 </p>
                                             </div> --}}
 
-                                        {{-- Trámite previo finalizado --}}
-                                        {{-- <div class="requisito-control" data-control="tramite" hidden>
+                                            {{-- Trámite previo finalizado --}}
+                                            {{-- <div class="requisito-control" data-control="tramite" hidden>
                                                 <label class="requisito-control__label"
                                                     for="tramite-{{ $idRequisito }}">
                                                     Selecciona un trámite finalizado
@@ -268,24 +302,25 @@
                                                     Trámites finalizados que entregan un documento oficial.
                                                 </p>
                                             </div> --}}
-                                        {{-- </div> --}}
+                                            {{-- </div> --}}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        @endforeach
-                    </div>
+                            @endforeach
+                        </div>
 
-                    {{-- Acción final --}}
-                    <div class="acciones-finales">
-                        <button type="button" id="btn-enviar-solicitud" class="btn-enviar-solicitud" disabled>
-                            <i class="fa-solid fa-paper-plane"></i> Enviar solicitud
-                        </button>
-                    </div>
+                        {{-- Acción final --}}
+                        <div class="acciones-finales">
+                            <button type="button" id="btn-enviar-solicitud" class="btn-enviar-solicitud" disabled>
+                                <i class="fa-solid fa-paper-plane"></i> Enviar solicitud
+                            </button>
+                        </div>
 
-                    @if ($esTramitePredial ?? false)
+                        @if ($esTramitePredial ?? false)
             </div>{{-- Cierra #seccion-requisitos --}}
             @endif
-            @endif
+            @endif {{-- Cierra @if ($requisitos->isEmpty()) --}}
+            @endif {{-- Cierra @if (prerequisitosPendientes) --}}
         </div>
     </div>
     </div>

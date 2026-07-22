@@ -45,20 +45,26 @@
                     @php
                         $estatusTexto = match ($solicitud->estatus_solicitud) {
                             0 => 'Pendiente',
-                            1 => 'Aprobada',
-                            2 => 'Rechazada',
+                            1 => 'Turnado',
+                            2 => 'Rechazado',
+                            3 => 'Por pagar',
+                            4 => 'Completado',
                             default => 'Desconocido',
                         };
                         $estatusClase = match ($solicitud->estatus_solicitud) {
                             0 => 'estatus--pendiente',
-                            1 => 'estatus--aprobada',
+                            1 => 'estatus--turnado',
                             2 => 'estatus--rechazada',
+                            3 => 'estatus--por-pagar',
+                            4 => 'estatus--completado',
                             default => 'estatus--desconocido',
                         };
                         $estatusIcono = match ($solicitud->estatus_solicitud) {
                             0 => 'fa-solid fa-clock',
-                            1 => 'fa-solid fa-circle-check',
+                            1 => 'fa-solid fa-arrow-right',
                             2 => 'fa-solid fa-circle-xmark',
+                            3 => 'fa-solid fa-credit-card',
+                            4 => 'fa-solid fa-check-circle',
                             default => 'fa-solid fa-circle-question',
                         };
                     @endphp

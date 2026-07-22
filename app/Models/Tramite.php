@@ -30,4 +30,16 @@ class Tramite extends Model
     {
         return $this->belongsToMany(Requisito::class, 'tbl_requisitos_tramites', 'fk_tramite', 'fk_requisito', 'id_tramite', 'id_requisito');
     }
+
+    public function tramitesRequeridos(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            Tramite::class,
+            'tbl_tramites_prerequisitos',
+            'fk_tramite',
+            'fk_tramite_requerido',
+            'id_tramite',
+            'id_tramite',
+        );
+    }
 }

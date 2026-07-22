@@ -56,12 +56,16 @@ function initMatchingDocumentosPersonales() {
 
     let nombresPersonales = [];
     let nombresNoAprobados = [];
+    let tramitesCompletados = [];
     try {
         nombresPersonales = JSON.parse(
             lista.dataset.personalDocumentos || "[]",
         );
         nombresNoAprobados = JSON.parse(
             lista.dataset.personalNoAprobados || "[]",
+        );
+        tramitesCompletados = JSON.parse(
+            lista.dataset.tramitesCompletados || "[]",
         );
     } catch (e) {
         return;
@@ -89,9 +93,52 @@ function initMatchingDocumentosPersonales() {
         }
     });
 
+    // 1b) Marcar como cumplidos los que coinciden con trámites prerequisitos completados
+    if (tramitesCompletados.length > 0) {
+        requisitos.forEach(function (requisito) {
+            if (
+                requisito.classList.contains("requisito-cumplimiento--cumplido")
+            )
+                return;
+
+            const nombreRequisito = (requisito.dataset.nombreRequisito || "")
+                .trim()
+                .toLowerCase();
+            if (!nombreRequisito) return;
+
+            const tramiteMatch = tramitesCompletados.find(
+                function (nombreTramite) {
+                    const nombreTramiteLower = nombreTramite.toLowerCase();
+                    return (
+                        nombreTramiteLower === nombreRequisito ||
+                        nombreRequisito.includes(nombreTramiteLower) ||
+                        nombreTramiteLower.includes(nombreRequisito)
+                    );
+                },
+            );
+
+            if (tramiteMatch) {
+                // Mostrar el nombre completo del trámite (no el del requisito)
+                const nombreEl = requisito.querySelector(
+                    ".requisito-cumplimiento__nombre",
+                );
+                if (nombreEl) {
+                    nombreEl.textContent = tramiteMatch;
+                }
+                marcarPrecumplidoPersonal(requisito, "Trámite previo");
+            }
+        });
+    }
+
     // 2) Para requisitos NO cumplidos, mostrar aviso-perfil (dirige a Mi Perfil)
+    //    Se salta los requisitos virtuales (prerequisitos) para que no se confundan
+    //    con documentos del perfil que tengan nombres similares.
     requisitos.forEach(function (requisito) {
         if (requisito.classList.contains("requisito-cumplimiento--cumplido"))
+            return;
+
+        // Saltar requisitos virtuales (prerequisitos completados)
+        if (requisito.classList.contains("requisito-cumplimiento--virtual"))
             return;
 
         const nombreRequisito = (requisito.dataset.nombreRequisito || "")
@@ -278,6 +325,55 @@ function initSelectorPredio() {
                 marcarPrecumplidoPersonal(requisito, "Documento personal");
             }
         });
+
+        // 2b) Matching por trámites prerequisitos completados (para los que no cubrió predio ni docs)
+        let tramitesCompletados = [];
+        try {
+            tramitesCompletados = JSON.parse(
+                listaReqs?.dataset.tramitesCompletados || "[]",
+            );
+        } catch (e) {
+            tramitesCompletados = [];
+        }
+
+        if (tramitesCompletados.length > 0) {
+            requisitos.forEach(function (requisito) {
+                if (
+                    requisito.classList.contains(
+                        "requisito-cumplimiento--precumplido",
+                    )
+                )
+                    return;
+
+                const nombreRequisito = (
+                    requisito.dataset.nombreRequisito || ""
+                )
+                    .trim()
+                    .toLowerCase();
+                if (!nombreRequisito) return;
+
+                const tramiteMatch = tramitesCompletados.find(
+                    function (nombreTramite) {
+                        const nombreTramiteLower = nombreTramite.toLowerCase();
+                        return (
+                            nombreTramiteLower === nombreRequisito ||
+                            nombreRequisito.includes(nombreTramiteLower) ||
+                            nombreTramiteLower.includes(nombreRequisito)
+                        );
+                    },
+                );
+
+                if (tramiteMatch) {
+                    const nombreEl = requisito.querySelector(
+                        ".requisito-cumplimiento__nombre",
+                    );
+                    if (nombreEl) {
+                        nombreEl.textContent = tramiteMatch;
+                    }
+                    marcarPrecumplidoPersonal(requisito, "Trámite previo");
+                }
+            });
+        }
 
         // 3) Aviso-perfil para los que no cubrió ningún documento aprobado
         let nombresNoAprobados = [];
