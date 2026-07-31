@@ -319,6 +319,11 @@
 
 /* ── Footer ── */
 .solicitud-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
     padding: 0.75rem 1.25rem;
     border-top: 1px solid var(--border);
     background: var(--bg-subtle);
@@ -328,6 +333,44 @@
     font-size: 0.78rem;
     font-weight: 600;
     color: var(--text-secondary);
+}
+
+/* ── Botón generar orden de pago ── */
+.btn-orden-pago {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border: 1.5px solid var(--primary);
+    border-radius: var(--radius-md);
+    background: var(--bg-surface);
+    color: var(--primary);
+    font-family: inherit;
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.btn-orden-pago:hover {
+    background: var(--primary);
+    color: #fff;
+    box-shadow: var(--shadow-sm);
+}
+
+.btn-orden-pago:active {
+    background: var(--primary-dark);
+    border-color: var(--primary-dark);
+}
+
+.btn-orden-pago:focus-visible {
+    outline: 3px solid rgba(96, 16, 40, 0.25);
+    outline-offset: 2px;
+}
+
+.btn-orden-pago i {
+    font-size: 0.9rem;
 }
 
 /* ── Botón ir a trámites ── */

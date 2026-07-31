@@ -132,6 +132,14 @@
 
                         <div class="solicitud-card-footer">
                             <span class="solicitud-card-id">Solicitud #{{ $solicitud->id_solicitud }}</span>
+
+                            @if ($solicitud->estatus_solicitud === 4)
+                                <button type="button" class="btn-orden-pago"
+                                    title="Generar orden de pago para este trámite">
+                                    <i class="fa-solid fa-file-invoice-dollar"></i>
+                                    <span>Generar orden de pago</span>
+                                </button>
+                            @endif
                         </div>
                     </div>
                 @endforeach

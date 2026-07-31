@@ -1,6 +1,7 @@
 document.addEventListener("DOMContentLoaded", function () {
     initBusqueda();
     initAnimacionEntrada();
+    initBotonesOrdenPago();
 });
 
 /* ── Búsqueda en tiempo real ── */
@@ -40,6 +41,25 @@ function initBusqueda() {
         input.value = "";
         input.focus();
         filtrar();
+    });
+}
+
+/* ── Botón "Generar orden de pago" ── */
+function initBotonesOrdenPago() {
+    const botones = document.querySelectorAll(".btn-orden-pago");
+    if (!botones.length) return;
+
+    botones.forEach(function (boton) {
+        boton.addEventListener("click", function () {
+            if (typeof Swal === "undefined") return;
+            Swal.fire({
+                icon: "info",
+                title: "Generar orden de pago",
+                text: "Esta opción estará disponible próximamente. Podrás generar tu orden de pago para este trámite una vez esté habilitada.",
+                confirmButtonText: "Entendido",
+                confirmButtonColor: "#601028",
+            });
+        });
     });
 }
 
