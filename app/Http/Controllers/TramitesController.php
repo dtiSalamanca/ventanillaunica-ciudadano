@@ -19,10 +19,7 @@ class TramitesController extends Controller
     public function indexTramites(): View
     {
         $tramites = Tramite::where('estatus_tramite', 1)
-            ->with([
-                'dependencia',
-                'requisitos' => fn ($query) => $query->where('estatus_requisito', 1)->orderBy('nombre_requisito'),
-            ])
+            ->with('dependencia')
             ->orderBy('nombre_tramite')
             ->get();
 
@@ -33,9 +30,12 @@ class TramitesController extends Controller
             ->sortBy('nombre_dependencia')
             ->values();
 
+        $requisitosPorTramite = Tramite::mapaRequisitosVisibles($tramites);
+
         return view('tramites.indexTramites', [
             'tramites' => $tramites,
             'dependencias' => $dependencias,
+            'requisitosPorTramite' => $requisitosPorTramite,
         ]);
     }
 
@@ -43,7 +43,6 @@ class TramitesController extends Controller
     {
         $tramite->load([
             'dependencia',
-            'requisitos' => fn ($query) => $query->where('estatus_requisito', 1)->orderBy('nombre_requisito'),
             'tramitesRequeridos',
         ]);
 
@@ -116,7 +115,7 @@ class TramitesController extends Controller
             ]);
         }
 
-        $todosRequisitos = $requisitosVirtuales->merge($tramite->requisitos);
+        $todosRequisitos = $requisitosVirtuales->merge($tramite->requisitosVisibles());
         $totalRequisitos = $todosRequisitos->count();
 
         $data = [
@@ -173,10 +172,7 @@ class TramitesController extends Controller
             'predio_id' => ['nullable', 'integer', 'exists:tbl_predios,id_predio'],
         ]);
 
-        $tramite = Tramite::with([
-            'requisitos' => fn ($q) => $q->where('estatus_requisito', 1),
-            'tramitesRequeridos',
-        ])->findOrFail($request->integer('tramite_id'));
+        $tramite = Tramite::with(['tramitesRequeridos'])->findOrFail($request->integer('tramite_id'));
 
         // ── Validar prerequisitos del trámite ──
         $usuarioId = auth()->id();
@@ -270,7 +266,7 @@ class TramitesController extends Controller
         $requisitosCubiertos = [];
         $todosCubiertos = true;
 
-        foreach ($tramite->requisitos as $requisito) {
+        foreach ($tramite->requisitosVisibles() as $requisito) {
             $nombreRequisito = mb_strtolower(trim($requisito->nombre_requisito));
             $documentoId = null;
             $tipoDocumento = null;
@@ -352,7 +348,7 @@ class TramitesController extends Controller
                 // Registrar cada requisito cubierto en tbl_documentos_tramites
                 foreach ($requisitosCubiertos as $item) {
                     $data = [
-                        'fk_requisito' => $item['requisito']->id_requisito,
+                        'fk_requisito' => $this->idNumericoRequisito($item['requisito']),
                         'fk_solicitud' => $solicitud->id_solicitud,
                     ];
 
@@ -392,5 +388,21 @@ class TramitesController extends Controller
         return view('tramites.misTramites', [
             'solicitudes' => $solicitudes,
         ]);
+    }
+
+    /**
+     * Extrae el identificador numérico de un requisito visible para guardarlo en
+     * tbl_documentos_tramites. Los requisitos de documento usan ids compuestos
+     * ("personal_2", "predio_5"); los requisitos tradicionales usan entero directo.
+     */
+    private function idNumericoRequisito(object $requisito): int
+    {
+        if (is_int($requisito->id_requisito)) {
+            return $requisito->id_requisito;
+        }
+
+        $partes = explode('_', (string) $requisito->id_requisito);
+
+        return (int) end($partes);
     }
 }

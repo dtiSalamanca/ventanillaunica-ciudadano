@@ -6,7 +6,7 @@
 
 @section('content')
     @php
-        $requisitos = $todosRequisitos ?? $tramite->requisitos;
+        $requisitos = $todosRequisitos ?? $tramite->requisitosVisibles();
         $totalRequisitos = $totalRequisitos ?? $requisitos->count();
     @endphp
 
