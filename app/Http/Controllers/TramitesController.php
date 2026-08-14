@@ -11,8 +11,10 @@ use App\Models\Tramite;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class TramitesController extends Controller
 {
@@ -165,6 +167,25 @@ class TramitesController extends Controller
         return view('tramites.iniciarTramite', $data);
     }
 
+    /**
+     * Consulta los adeudos de la cuenta predial de un predio del ciudadano
+     * autenticado contra el sistema de recibo predial.
+     */
+    public function consultarAdeudoPredio(Predio $predio): JsonResponse
+    {
+        abort_unless($predio->fk_usuario === auth()->id(), 403);
+
+        $resultado = $predio->consultarAdeudo();
+
+        return response()->json([
+            'success' => true,
+            'clave_predio' => $predio->clave_predio,
+            'estado' => $resultado['estado'],
+            'mensaje' => $resultado['mensaje'],
+            'adeudos' => $resultado['adeudos'] ?? 0,
+        ]);
+    }
+
     public function enviarSolicitud(Request $request): JsonResponse
     {
         $request->validate([
@@ -226,6 +247,36 @@ class TramitesController extends Controller
                 return response()->json([
                     'success' => false,
                     'message' => 'Este predio ya tiene una solicitud pendiente para este trámite.',
+                ], 422);
+            }
+        }
+
+        // Validar adeudos de la cuenta predial contra el sistema de recibo predial
+        if ($tramite->cuenta_predial && $request->filled('predio_id')) {
+            $predio = Predio::where('id_predio', $request->integer('predio_id'))
+                ->where('fk_usuario', auth()->id())
+                ->first();
+
+            if (! $predio) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'El predio seleccionado no es válido.',
+                ], 422);
+            }
+
+            $resultadoAdeudo = $predio->consultarAdeudo();
+
+            if ($resultadoAdeudo['estado'] === 'adeudos') {
+                return response()->json([
+                    'success' => false,
+                    'message' => "No puedes realizar el trámite \"{$tramite->nombre_tramite}\" porque la cuenta predial {$predio->clave_predio} tiene adeudos pendientes.",
+                ], 422);
+            }
+
+            if ($resultadoAdeudo['estado'] === 'no_encontrado') {
+                return response()->json([
+                    'success' => false,
+                    'message' => "No se encontraron registros de la cuenta predial {$predio->clave_predio}. Verifica la clave de tu predio.",
                 ], 422);
             }
         }
@@ -379,7 +430,9 @@ class TramitesController extends Controller
     {
         $solicitudes = Solicitud::with([
             'tramite.dependencia',
+            'tramite.ordenesPago',
             'predio',
+            'resolucion',
         ])
             ->where('fk_usuario', auth()->id())
             ->orderByDesc('fecha_solicitud')
@@ -388,6 +441,37 @@ class TramitesController extends Controller
         return view('tramites.misTramites', [
             'solicitudes' => $solicitudes,
         ]);
+    }
+
+    /**
+     * Muestra o descarga el resolutivo asociado a una solicitud del ciudadano
+     * autenticado.
+     */
+    public function descargarResolutivo(Solicitud $solicitud): BinaryFileResponse
+    {
+        abort_if($solicitud->fk_usuario !== auth()->id(), 403);
+
+        $resolucion = $solicitud->resolucion;
+
+        abort_if($resolucion === null || blank($resolucion->documento_resolucion), 404, 'El resolutivo aún no está disponible.');
+
+        $disk = Storage::disk('local');
+        $ruta = $resolucion->documento_resolucion;
+        $nombreArchivo = basename($ruta);
+
+        if ($disk->exists($ruta)) {
+            return response()->file($disk->path($ruta))
+                ->setContentDisposition('inline', $nombreArchivo);
+        }
+
+        // En el entorno local ambos proyectos comparten la misma base de datos y
+        // los resolutivos se guardan en el storage del proyecto administrador.
+        $rutaAdmin = dirname(base_path()).'/ventanillaunica-administrador/storage/app/private/'.$ruta;
+
+        abort_if(! is_file($rutaAdmin), 404, 'El archivo del resolutivo no existe.');
+
+        return response()->file($rutaAdmin)
+            ->setContentDisposition('inline', $nombreArchivo);
     }
 
     /**

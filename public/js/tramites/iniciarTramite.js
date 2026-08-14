@@ -9,6 +9,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
 const baseUrlPerfil = "/perfiles/mi-perfil";
 
+// Estado de la verificación de adeudos de la cuenta predial:
+// null | "verificando" | "al_corriente" | "adeudos" | "no_encontrado"
+let estadoAdeudoPredio = null;
+
+// Contador para descartar respuestas obsoletas al cambiar de predio rápido
+let verificacionAdeudoRequestId = 0;
+
 /* ── Entrada escalonada de la vista (fade + slide) ── */
 function initAnimacionEntrada() {
     if (typeof anime === "undefined") return;
@@ -239,10 +246,18 @@ function initSelectorPredio() {
     selectPredio.addEventListener("change", function () {
         const opcionSeleccionada =
             selectPredio.options[selectPredio.selectedIndex];
-        if (!opcionSeleccionada || !opcionSeleccionada.value) return;
+        if (!opcionSeleccionada || !opcionSeleccionada.value) {
+            estadoAdeudoPredio = null;
+            ocultarAvisoAdeudo();
+            actualizarProgresoGlobal();
+            return;
+        }
 
         // Mostrar la sección de requisitos
         seccionRequisitos.hidden = false;
+
+        // Verificar adeudos de la cuenta predial contra el sistema de recibo predial
+        verificarAdeudoPredio(opcionSeleccionada.value);
 
         // Obtener los nombres de documentos aprobados del predio (normalizados)
         let documentosPredio = [];
@@ -528,7 +543,7 @@ function actualizarProgresoGlobal() {
     // Habilitar/deshabilitar botón de envío
     const boton = document.getElementById("btn-enviar-solicitud");
     if (boton) {
-        boton.disabled = cumplidos < total;
+        boton.disabled = !puedeEnviarSolicitud(cumplidos, total);
     }
 
     if (elFill) {
@@ -539,6 +554,141 @@ function actualizarProgresoGlobal() {
             elFill.style.width = `${porcentaje}%`;
         });
     }
+}
+
+/* ── Verificación de adeudos de la cuenta predial ── */
+
+/**
+ * Determina si el botón de envío puede habilitarse, considerando tanto los
+ * requisitos cumplidos como el estado de adeudos de la cuenta predial.
+ */
+function puedeEnviarSolicitud(cumplidos, total) {
+    if (cumplidos < total) return false;
+
+    // En trámites prediales el envío solo se habilita cuando el predio ya fue
+    // verificado y está al corriente (sin adeudos). Con adeudos, no encontrado
+    // o sin verificar, el botón permanece deshabilitado hasta que el predial
+    // quede al corriente.
+    const selectPredio = document.getElementById("selector-predio");
+    if (selectPredio) {
+        return estadoAdeudoPredio === "al_corriente";
+    }
+
+    return true;
+}
+
+/**
+ * Consulta los adeudos de la cuenta predial del predio seleccionado.
+ * @param {string} predioId - ID del predio seleccionado
+ */
+function verificarAdeudoPredio(predioId) {
+    const requestId = ++verificacionAdeudoRequestId;
+
+    estadoAdeudoPredio = "verificando";
+    mostrarAvisoAdeudo(
+        "verificando",
+        "Consultando adeudos de la cuenta predial...",
+    );
+    actualizarProgresoGlobal();
+
+    fetch("/tramites/predio/adeudo/" + encodeURIComponent(predioId), {
+        headers: { Accept: "application/json" },
+    })
+        .then(function (respuesta) {
+            return respuesta.json().then(function (data) {
+                return { ok: respuesta.ok, data: data };
+            });
+        })
+        .then(function ({ ok, data }) {
+            // Ignorar respuestas obsoletas (cambió la selección)
+            if (requestId !== verificacionAdeudoRequestId) return;
+
+            if (!ok || !data || !data.success) {
+                estadoAdeudoPredio = "no_encontrado";
+                mostrarAvisoAdeudo(
+                    "no_encontrado",
+                    "No se encontraron registros de esa cuenta predial.",
+                );
+                actualizarProgresoGlobal();
+                return;
+            }
+
+            if (data.estado === "al_corriente") {
+                estadoAdeudoPredio = "al_corriente";
+                mostrarAvisoAdeudo(
+                    "al_corriente",
+                    data.mensaje ||
+                        "La cuenta está al corriente, no tiene adeudos.",
+                );
+            } else if (data.estado === "adeudos") {
+                estadoAdeudoPredio = "adeudos";
+                mostrarAvisoAdeudo("adeudos", data.mensaje);
+            } else {
+                estadoAdeudoPredio = "no_encontrado";
+                mostrarAvisoAdeudo(
+                    "no_encontrado",
+                    "No se encontraron registros de esa cuenta predial.",
+                );
+            }
+
+            actualizarProgresoGlobal();
+        })
+        .catch(function () {
+            // Ignorar respuestas obsoletas (cambió la selección)
+            if (requestId !== verificacionAdeudoRequestId) return;
+
+            estadoAdeudoPredio = "no_encontrado";
+            mostrarAvisoAdeudo(
+                "no_encontrado",
+                "No se encontraron registros de esa cuenta predial.",
+            );
+            actualizarProgresoGlobal();
+        });
+}
+
+/**
+ * Muestra el aviso de adeudos de la cuenta predial.
+ * @param {string} estado - "verificando" | "al_corriente" | "adeudos" | "no_encontrado"
+ * @param {string} mensaje - Texto a mostrar
+ */
+function mostrarAvisoAdeudo(estado, mensaje) {
+    const aviso = document.getElementById("predio-adeudo-aviso");
+    if (!aviso) return;
+
+    aviso.hidden = false;
+
+    if (estado === "verificando") {
+        aviso.className =
+            "predio-adeudo-aviso predio-adeudo-aviso--verificando";
+        aviso.innerHTML =
+            '<i class="fa-solid fa-circle-notch fa-spin"></i> ' + mensaje;
+        return;
+    }
+
+    if (estado === "al_corriente") {
+        aviso.className = "predio-adeudo-aviso predio-adeudo-aviso--ok";
+        aviso.innerHTML = '<i class="fa-solid fa-circle-check"></i> ' + mensaje;
+        return;
+    }
+
+    if (estado === "adeudos") {
+        aviso.className = "predio-adeudo-aviso predio-adeudo-aviso--error";
+        aviso.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> ' + mensaje;
+        return;
+    }
+
+    aviso.className = "predio-adeudo-aviso predio-adeudo-aviso--error";
+    aviso.innerHTML =
+        '<i class="fa-solid fa-triangle-exclamation"></i> ' + mensaje;
+}
+
+/**
+ * Oculta el aviso de adeudos de la cuenta predial.
+ */
+function ocultarAvisoAdeudo() {
+    const aviso = document.getElementById("predio-adeudo-aviso");
+    if (!aviso) return;
+    aviso.hidden = true;
 }
 
 /* ── Envío de solicitud real ── */
@@ -625,15 +775,17 @@ function mostrarExito(mensaje, solicitudId) {
             title: "¡Solicitud enviada!",
             text: texto,
             confirmButtonColor: "#601028",
-            confirmButtonText: "Volver a trámites",
+            confirmButtonText: "Ir a mis trámites",
         }).then(function (resultado) {
             if (resultado.isConfirmed) {
-                window.location.href = "/tramites";
+                window.location.href =
+                    "/tramites/mis-tramites?nueva=" + (solicitudId || "");
             }
         });
     } else {
         alert(texto);
-        window.location.href = "/tramites";
+        window.location.href =
+            "/tramites/mis-tramites?nueva=" + (solicitudId || "");
     }
 }
 

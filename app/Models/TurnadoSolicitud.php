@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class TurnadoSolicitud extends Model
 {
@@ -21,5 +23,15 @@ class TurnadoSolicitud extends Model
         return [
             'estatus_turnado' => 'boolean',
         ];
+    }
+
+    public function solicitud(): BelongsTo
+    {
+        return $this->belongsTo(Solicitud::class, 'fk_solicitud', 'id_solicitud');
+    }
+
+    public function resolucion(): HasOne
+    {
+        return $this->hasOne(ResolucionSolicitud::class, 'fk_turnado', 'id_turnado');
     }
 }

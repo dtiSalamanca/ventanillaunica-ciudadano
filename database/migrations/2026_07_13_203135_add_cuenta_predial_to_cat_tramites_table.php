@@ -11,6 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // La tabla cat_tramites es gestionada por el proyecto administrador.
+        if (! Schema::hasTable('cat_tramites')) {
+            return;
+        }
+
         Schema::table('cat_tramites', function (Blueprint $table) {
             $table->integer('cuenta_predial', false, true, 11)->default(1)->after('precio_tramite');
         });
@@ -21,6 +26,10 @@ return new class extends Migration
      */
     public function down(): void
     {
+        if (! Schema::hasTable('cat_tramites')) {
+            return;
+        }
+
         Schema::table('cat_tramites', function (Blueprint $table) {
             $table->dropColumn('cuenta_predial');
         });

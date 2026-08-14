@@ -75,12 +75,20 @@ class LoginController extends Controller
     }
 
     /**
-     * Reject login for users who haven't verified their email yet.
+     * Reject login for blocked accounts or users who haven't verified their email yet.
      *
      * @param  User  $user
      */
     protected function authenticated(Request $request, $user): void
     {
+        if ($user->bloqueado) {
+            $this->guard()->logout();
+
+            throw ValidationException::withMessages([
+                $this->username() => ['Tu cuenta ha sido bloqueada. Ponte en contacto con la Ventanilla Única de Salamanca para más información.'],
+            ]);
+        }
+
         if (! $user->hasVerifiedEmail()) {
             $this->guard()->logout();
 

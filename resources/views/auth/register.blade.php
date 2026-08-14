@@ -88,16 +88,38 @@
                         <!-- Campo: Confirmar Contraseña -->
                         <div class="form-field form-field--float">
                             <input id="password-confirm" type="password" name="password_confirmation" required
-                                minlength="8" autocomplete="new-password"
-                                class="input-control input-control--float" placeholder=" "
-                                aria-describedby="passwordConfirmError" aria-invalid="false">
+                                minlength="8" autocomplete="new-password" class="input-control input-control--float"
+                                placeholder=" " aria-describedby="passwordConfirmError" aria-invalid="false">
                             <label for="password-confirm" class="float-label">Confirmar contraseña</label>
                             <small id="passwordConfirmError" class="error-text" role="alert"></small>
                         </div>
 
+                        <!-- Campo: Aceptación de términos y condiciones -->
+                        <div class="form-field form-field--terms">
+                            <label for="terminos" class="checkbox terms-checkbox">
+                                <input id="terminos" type="checkbox" name="terminos" value="1"
+                                    {{ old('terminos') ? 'checked' : '' }} aria-describedby="terminosError"
+                                    aria-invalid="false">
+                                <span class="terms-text">
+                                    He leído y acepto el
+                                    <a href="{{ asset('doc/' . rawurlencode('Aviso_Privacidad Simplificado_Plataforma_Tramites_Ventanilla Única.pdf')) }}"
+                                        target="_blank" rel="noopener" class="terms-link">
+                                        Aviso de Privacidad
+                                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                                    </a>
+                                    y los Términos y Condiciones de la Ventanilla Única de Salamanca, Guanajuato.
+                                </span>
+                            </label>
+                            <small id="terminosError" class="error-text" role="alert">
+                                @error('terminos')
+                                    {{ $message }}
+                                @enderror
+                            </small>
+                        </div>
+
                         <!-- Botón de envío -->
                         <div class="form-field form-field--submit">
-                            <button type="submit" class="btn-primary-login">Crear cuenta</button>
+                            <button type="submit" class="btn-primary-login" disabled>Crear cuenta</button>
                         </div>
 
                         <h5 style="text-align: center;">ó</h5>

@@ -148,6 +148,9 @@
                                             </option>
                                         @endforeach
                                     </select>
+
+                                    {{-- Estado de adeudos de la cuenta predial (se llena por JS) --}}
+                                    <div id="predio-adeudo-aviso" class="predio-adeudo-aviso" hidden></div>
                                 @endif
                             </div>
 

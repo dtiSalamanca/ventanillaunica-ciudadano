@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
 
 class Tramite extends Model
@@ -25,6 +26,17 @@ class Tramite extends Model
     public function dependencia(): BelongsTo
     {
         return $this->belongsTo(Dependencia::class, 'fk_dependencia', 'id_dependencia');
+    }
+
+    /**
+     * Órdenes de pago generadas para este trámite. Cuando el trámite se cobra por
+     * m², el monto total lo designa el enlace y se guarda en ordenes_pagos; el
+     * precio base de cat_tramites queda en 0.
+     */
+    public function ordenesPago(): HasMany
+    {
+        return $this->hasMany(OrdenPago::class, 'fk_tramite', 'id_tramite')
+            ->latest('id_orden_pago');
     }
 
     public function requisitos(): BelongsToMany

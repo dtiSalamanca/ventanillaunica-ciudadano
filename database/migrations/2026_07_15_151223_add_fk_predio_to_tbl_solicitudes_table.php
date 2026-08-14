@@ -11,6 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // La tabla tbl_solicitudes es gestionada por el proyecto administrador.
+        if (! Schema::hasTable('tbl_solicitudes')) {
+            return;
+        }
+
         Schema::table('tbl_solicitudes', function (Blueprint $table) {
             $table->unsignedBigInteger('fk_predio')->nullable()->after('fk_tramite');
         });
@@ -21,6 +26,10 @@ return new class extends Migration
      */
     public function down(): void
     {
+        if (! Schema::hasTable('tbl_solicitudes')) {
+            return;
+        }
+
         Schema::table('tbl_solicitudes', function (Blueprint $table) {
             $table->dropColumn('fk_predio');
         });

@@ -12,7 +12,11 @@ document.addEventListener("DOMContentLoaded", function () {
     const nameError = document.getElementById("nameError");
     const emailError = document.getElementById("emailError");
     const passwordError = document.getElementById("passwordError");
-    const passwordConfirmError = document.getElementById("passwordConfirmError");
+    const passwordConfirmError = document.getElementById(
+        "passwordConfirmError",
+    );
+    const terminosInput = document.getElementById("terminos");
+    const terminosError = document.getElementById("terminosError");
     const togglePassword = document.getElementById("togglePassword");
     const capsHint = document.getElementById("capsHint");
     const recaptchaTokenInput = document.getElementById("recaptcha_token");
@@ -128,6 +132,43 @@ document.addEventListener("DOMContentLoaded", function () {
         return true;
     }
 
+    function validateTerminos() {
+        if (!terminosInput || !terminosError) {
+            return true;
+        }
+
+        if (!terminosInput.checked) {
+            terminosError.textContent =
+                "Debes aceptar el Aviso de Privacidad para continuar.";
+            terminosInput.setAttribute("aria-invalid", "true");
+            return false;
+        }
+
+        terminosError.textContent = "";
+        terminosInput.setAttribute("aria-invalid", "false");
+        return true;
+    }
+
+    function isFormComplete() {
+        const fieldsComplete =
+            nameInput.value.trim() !== "" &&
+            emailInput.value.trim() !== "" &&
+            passwordInput.value.length >= 8 &&
+            passwordConfirmInput.value === passwordInput.value;
+
+        const termsAccepted = terminosInput ? terminosInput.checked : true;
+
+        return fieldsComplete && termsAccepted;
+    }
+
+    function updateSubmitState() {
+        if (!submitButton) {
+            return;
+        }
+
+        submitButton.disabled = !isFormComplete();
+    }
+
     function setSubmitting(isSubmitting, label) {
         if (!submitButton) {
             return;
@@ -157,15 +198,32 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    nameInput.addEventListener("input", validateName);
-    emailInput.addEventListener("input", validateEmail);
+    nameInput.addEventListener("input", function () {
+        validateName();
+        updateSubmitState();
+    });
+    emailInput.addEventListener("input", function () {
+        validateEmail();
+        updateSubmitState();
+    });
     passwordInput.addEventListener("input", function () {
         validatePassword();
         if (passwordConfirmInput.value) {
             validatePasswordConfirm();
         }
+        updateSubmitState();
     });
-    passwordConfirmInput.addEventListener("input", validatePasswordConfirm);
+    passwordConfirmInput.addEventListener("input", function () {
+        validatePasswordConfirm();
+        updateSubmitState();
+    });
+
+    terminosInput?.addEventListener("change", function () {
+        validateTerminos();
+        updateSubmitState();
+    });
+
+    updateSubmitState();
 
     togglePassword?.addEventListener("click", function () {
         const isPassword = passwordInput.getAttribute("type") === "password";
@@ -194,8 +252,15 @@ document.addEventListener("DOMContentLoaded", function () {
         const emailIsValid = validateEmail();
         const passwordIsValid = validatePassword();
         const passwordConfirmIsValid = validatePasswordConfirm();
+        const terminosIsValid = validateTerminos();
 
-        if (!nameIsValid || !emailIsValid || !passwordIsValid || !passwordConfirmIsValid) {
+        if (
+            !nameIsValid ||
+            !emailIsValid ||
+            !passwordIsValid ||
+            !passwordConfirmIsValid ||
+            !terminosIsValid
+        ) {
             event.preventDefault();
 
             if (!nameIsValid) {
@@ -204,8 +269,10 @@ document.addEventListener("DOMContentLoaded", function () {
                 emailInput.focus();
             } else if (!passwordIsValid) {
                 passwordInput.focus();
-            } else {
+            } else if (!passwordConfirmIsValid) {
                 passwordConfirmInput.focus();
+            } else {
+                terminosInput.focus();
             }
 
             return;
@@ -238,6 +305,7 @@ document.addEventListener("DOMContentLoaded", function () {
             );
 
             setSubmitting(false);
+            updateSubmitState();
         }
     });
 });

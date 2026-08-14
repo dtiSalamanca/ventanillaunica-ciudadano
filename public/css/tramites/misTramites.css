@@ -4,6 +4,8 @@
     --primary-light: #f5dde4;
     --accent: #a62346;
     --accent-dark: #8a1c36;
+    --success: #16a34a;
+    --success-dark: #15803d;
     --text-primary: #1a202c;
     --text-secondary: #64748b;
     --border: #e2e8f0;
@@ -90,10 +92,6 @@
 }
 
 /* ── Búsqueda ── */
-.mis-tramites-search {
-    margin-bottom: 1.25rem;
-}
-
 .search-bar {
     position: relative;
     max-width: 420px;
@@ -140,6 +138,130 @@
     color: var(--accent);
 }
 
+/* ── Toolbar: búsqueda + filtros ── */
+.mis-tramites-toolbar {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+    margin-bottom: 1.25rem;
+}
+
+.mis-tramites-toolbar-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.mis-tramites-hint {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 0;
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.mis-tramites-hint i {
+    color: var(--primary);
+}
+
+.mis-tramites-filtros {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.filtro-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.42rem 0.85rem;
+    border: 1.5px solid var(--border);
+    border-radius: 999px;
+    background: var(--bg-surface);
+    color: var(--text-secondary);
+    font: inherit;
+    font-size: 0.8rem;
+    font-weight: 600;
+    line-height: 1;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.filtro-chip:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: var(--bg-subtle);
+}
+
+.filtro-chip.is-active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+    box-shadow: var(--shadow-xs);
+}
+
+.filtro-chip:focus-visible {
+    outline: 3px solid rgba(96, 16, 40, 0.25);
+    outline-offset: 2px;
+}
+
+.filtro-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: var(--text-secondary);
+}
+
+.filtro-dot--todos {
+    background: var(--primary);
+}
+
+.filtro-dot--pendiente {
+    background: #f59e0b;
+}
+
+.filtro-dot--turnado {
+    background: #3b82f6;
+}
+
+.filtro-dot--rechazada {
+    background: #ef4444;
+}
+
+.filtro-dot--por-pagar {
+    background: #14b8a6;
+}
+
+.filtro-dot--completado {
+    background: #22c55e;
+}
+
+.filtro-chip.is-active .filtro-dot {
+    background: #fff;
+}
+
+.filtro-count {
+    min-width: 1.35rem;
+    padding: 0.08rem 0.4rem;
+    border-radius: 999px;
+    background: var(--bg-subtle);
+    color: var(--text-secondary);
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-align: center;
+}
+
+.filtro-chip.is-active .filtro-count {
+    background: rgba(255, 255, 255, 0.22);
+    color: #fff;
+}
+
 /* ── Grid de tarjetas ── */
 .mis-tramites-grid {
     display: flex;
@@ -162,11 +284,80 @@
     box-shadow: var(--shadow-sm);
 }
 
+/* Tarjeta recién creada (resaltado al llegar desde iniciar trámite) */
+.solicitud-card--nueva {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+@keyframes resaltar-solicitud-nueva {
+    0%,
+    100% {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px var(--primary-light);
+    }
+    50% {
+        box-shadow: 0 0 0 6px var(--primary-light);
+    }
+}
+
+.solicitud-card--nueva {
+    animation: resaltar-solicitud-nueva 1.2s ease-in-out 2;
+}
+
+/* El encabezado es un botón que expande/colapsa el detalle */
 .solicitud-card-header {
     display: flex;
     align-items: center;
     gap: 0.85rem;
+    width: 100%;
     padding: 1.1rem 1.25rem;
+    background: transparent;
+    border: none;
+    text-align: left;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+    transition: background var(--transition);
+}
+
+.solicitud-card-header:hover {
+    background: var(--bg-hover);
+}
+
+.solicitud-card-header:active {
+    background: var(--bg-subtle);
+}
+
+.solicitud-card-header:focus-visible {
+    outline: 3px solid rgba(96, 16, 40, 0.25);
+    outline-offset: -2px;
+}
+
+/* Tarjeta abierta (acordeón) */
+.solicitud-card.is-open {
+    border-color: rgba(96, 16, 40, 0.35);
+    box-shadow: var(--shadow-md);
+}
+
+.solicitud-card-chevron {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--bg-subtle);
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    transition: var(--transition);
+}
+
+.solicitud-card.is-open .solicitud-card-chevron {
+    transform: rotate(180deg);
+    background: var(--primary-light);
+    color: var(--primary);
 }
 
 .solicitud-card-icono {
@@ -317,6 +508,26 @@
     color: var(--text-secondary);
 }
 
+/* ── Detalle expandible (acordeón) ── */
+.solicitud-card-detalle-wrap {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.solicitud-card-detalle-wrap.is-open {
+    grid-template-rows: 1fr;
+}
+
+.solicitud-card-detalle-inner {
+    min-height: 0;
+    overflow: hidden;
+}
+
+.solicitud-card-detalle-inner .solicitud-card-body {
+    padding-top: 0.35rem;
+}
+
 /* ── Footer ── */
 .solicitud-card-footer {
     display: flex;
@@ -370,6 +581,43 @@
 }
 
 .btn-orden-pago i {
+    font-size: 0.9rem;
+}
+
+/* ── Botón ver/descargar resolutivo ── */
+.btn-ver-resolutivo {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border: 1.5px solid var(--success);
+    border-radius: var(--radius-md);
+    background: var(--bg-surface);
+    color: var(--success);
+    font-family: inherit;
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.btn-ver-resolutivo:hover {
+    background: var(--success);
+    color: #fff;
+    box-shadow: var(--shadow-sm);
+}
+
+.btn-ver-resolutivo:active {
+    filter: brightness(0.92);
+}
+
+.btn-ver-resolutivo:focus-visible {
+    outline: 3px solid rgba(40, 167, 69, 0.25);
+    outline-offset: 2px;
+}
+
+.btn-ver-resolutivo i {
     font-size: 0.9rem;
 }
 
@@ -505,6 +753,7 @@
 /* ── Preferencia de movimiento reducido ── */
 @media (prefers-reduced-motion: reduce) {
     .solicitud-card,
+    .solicitud-card-detalle-wrap,
     .search-bar input[type="text"] {
         transition: none;
     }

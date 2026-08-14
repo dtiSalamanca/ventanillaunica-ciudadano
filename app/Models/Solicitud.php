@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 
 class Solicitud extends Model
 {
@@ -48,5 +49,25 @@ class Solicitud extends Model
     public function documentosTramites(): HasMany
     {
         return $this->hasMany(DocumentoTramite::class, 'fk_solicitud', 'id_solicitud');
+    }
+
+    public function turnados(): HasMany
+    {
+        return $this->hasMany(TurnadoSolicitud::class, 'fk_solicitud', 'id_solicitud');
+    }
+
+    /**
+     * Resolución más reciente asociada a la solicitud a través de su turnado.
+     */
+    public function resolucion(): HasOneThrough
+    {
+        return $this->hasOneThrough(
+            ResolucionSolicitud::class,
+            TurnadoSolicitud::class,
+            'fk_solicitud',
+            'fk_turnado',
+            'id_solicitud',
+            'id_turnado',
+        );
     }
 }

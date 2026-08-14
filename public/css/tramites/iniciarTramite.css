@@ -920,6 +920,59 @@
     color: var(--primary-dark);
 }
 
+/* ── Aviso de adeudos de la cuenta predial ── */
+.predio-adeudo-aviso {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    margin-top: 0.9rem;
+    padding: 0.7rem 0.9rem;
+    border-radius: var(--radius-md);
+    font-size: 0.82rem;
+    font-weight: 600;
+    line-height: 1.45;
+}
+
+.predio-adeudo-aviso[hidden] {
+    display: none;
+}
+
+.predio-adeudo-aviso i {
+    margin-top: 0.12rem;
+    flex-shrink: 0;
+    font-size: 1rem;
+}
+
+.predio-adeudo-aviso--verificando {
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    color: #1d4ed8;
+}
+
+.predio-adeudo-aviso--verificando i {
+    color: #2563eb;
+}
+
+.predio-adeudo-aviso--ok {
+    background: #ecfdf5;
+    border: 1px solid #a7f3d0;
+    color: #047857;
+}
+
+.predio-adeudo-aviso--ok i {
+    color: #059669;
+}
+
+.predio-adeudo-aviso--error {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #b91c1c;
+}
+
+.predio-adeudo-aviso--error i {
+    color: #dc2626;
+}
+
 /* ── Requisito pre-cumplido por documento ── */
 .requisito-cumplimiento--precumplido {
     border-color: var(--primary);

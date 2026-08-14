@@ -343,8 +343,11 @@ body {
 
 .btn-primary-login:disabled,
 .btn-primary:disabled {
-    opacity: 0.75;
+    opacity: 0.55;
     cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+    filter: grayscale(0.2);
 }
 
 .is-hidden {

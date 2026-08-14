@@ -45,4 +45,9 @@ return [
         'score_threshold' => env('RECAPTCHA_V3_SCORE_THRESHOLD', 0.5),
     ],
 
+    'recibo_predial' => [
+        // URL base del sistema de recibo predial de Salamanca.
+        'url' => env('RECIBO_PREDIAL_URL', 'https://recibopredial.salamanca.gob.mx'),
+    ],
+
 ];

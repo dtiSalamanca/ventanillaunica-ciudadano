@@ -40,7 +40,9 @@ Route::middleware('auth')->controller(TramitesController::class)->group(function
     Route::get('/tramites', 'indexTramites')->name('indexTramites');
     Route::get('/tramites/mis-tramites', 'misTramites')->name('misTramites');
     Route::get('/tramites/iniciar/{tramite}', 'iniciarTramite')->name('iniciarTramite');
+    Route::get('/tramites/predio/adeudo/{predio}', 'consultarAdeudoPredio')->name('consultarAdeudoPredio');
     Route::post('/tramites/enviar-solicitud', 'enviarSolicitud')->name('enviarSolicitud');
+    Route::get('/tramites/resolutivo/{solicitud}/{nombre?}', 'descargarResolutivo')->name('descargarResolutivo');
 });
 
 Route::middleware('auth')->controller(UsuariosController::class)->group(function () {
