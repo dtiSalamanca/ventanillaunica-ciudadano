@@ -16,10 +16,11 @@ class PrediosController extends Controller
     public function agregarPredio(Request $request): RedirectResponse|JsonResponse
     {
         $request->validate([
-            'clave_predio' => ['required', 'string', 'max:255'],
+            'clave_predio' => ['required', 'string', 'max:255', 'unique:tbl_predios'],
         ], [
             'clave_predio.required' => 'Debes capturar la cuenta predial.',
             'clave_predio.max' => 'La cuenta predial no puede superar los 255 caracteres.',
+            'clave_predio.unique' => 'Este predio ya se encuentra registrado.',
         ]);
 
         $predio = Predio::create([

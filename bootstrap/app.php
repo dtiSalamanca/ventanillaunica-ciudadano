@@ -19,7 +19,10 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        // Se renderizan como JSON las excepciones de rutas de API y también
+        // cuando el cliente lo solicita (fetch con Accept: application/json),
+        // para que los errores de validación lleguen como 422 JSON.
         $exceptions->shouldRenderJsonWhen(
-            fn (Request $request) => $request->is('api/*'),
+            fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
     })->create();

@@ -396,6 +396,7 @@ function bindFormSubir(form) {
                 method: "POST",
                 headers: {
                     Accept: "application/json",
+                    "X-Requested-With": "XMLHttpRequest",
                     "X-CSRF-TOKEN": window.perfilConfig?.csrfToken ?? "",
                 },
                 body: formData,
@@ -641,6 +642,7 @@ function initFormAgregarPredio() {
                 method: "POST",
                 headers: {
                     Accept: "application/json",
+                    "X-Requested-With": "XMLHttpRequest",
                     "X-CSRF-TOKEN": window.perfilConfig?.csrfToken ?? "",
                 },
                 body: new FormData(form),
@@ -858,6 +860,7 @@ function bindFormCorregirPredio(form) {
                 method: "POST",
                 headers: {
                     Accept: "application/json",
+                    "X-Requested-With": "XMLHttpRequest",
                     "X-CSRF-TOKEN": window.perfilConfig?.csrfToken ?? "",
                 },
                 body: new FormData(form),
