@@ -18,8 +18,8 @@ class PrediosController extends Controller
         $request->validate([
             'clave_predio' => ['required', 'string', 'max:255'],
         ], [
-            'clave_predio.required' => 'Debes capturar la clave catastral del predio.',
-            'clave_predio.max' => 'La clave catastral no puede superar los 255 caracteres.',
+            'clave_predio.required' => 'Debes capturar la cuenta predial.',
+            'clave_predio.max' => 'La cuenta predial no puede superar los 255 caracteres.',
         ]);
 
         $predio = Predio::create([
@@ -60,13 +60,18 @@ class PrediosController extends Controller
         $validated = $request->validate([
             $campo => ['required', 'string', 'max:255'],
         ], [
-            $campo.'.required' => 'Debes capturar la clave catastral del predio.',
-            $campo.'.max' => 'La clave catastral no puede superar los 255 caracteres.',
+            $campo.'.required' => 'Debes capturar la cuenta predial.',
+            $campo.'.max' => 'La cuenta predial no puede superar los 255 caracteres.',
         ]);
 
         $predio->update([
             'clave_predio' => $validated[$campo],
             'estatus_predio' => Predio::ESTATUS_EN_REVISION,
+            // Al corregir la cuenta, el predio vuelve a estar pendiente de
+            // consulta contra el sistema de predial: se limpia el resultado
+            // anterior y el motivo de rechazo para que pueda consultarse de nuevo.
+            'consultado' => Predio::CONSULTADO_SIN_CONSULTAR,
+            'motivo_rechazo' => null,
         ]);
 
         if ($request->expectsJson()) {
@@ -121,6 +126,10 @@ class PrediosController extends Controller
 
         if ($registroExistente) {
             $registroExistente->update([
+                // Al re-subir, el documento vuelve a revisión: se limpia la
+                // fecha de aprobación anterior para que la vigencia se recalcule
+                // cuando el administrador lo apruebe de nuevo.
+                'fecha_aprobacion' => null,
                 'estatus_documento' => DocumentoPredio::ESTATUS_EN_REVISION,
                 'ruta_documento' => $rutaArchivo,
             ]);
@@ -165,6 +174,8 @@ class PrediosController extends Controller
     {
         $predios = Predio::where('fk_usuario', auth()->id())
             ->with('documentos')
+            // Se ocultan (sin borrar) los predios inexistentes en el sistema de predial.
+            ->where('consultado', '!=', Predio::CONSULTADO_NO_EXISTE)
             ->get()
             ->map(fn (Predio $predio) => [
                 'id_predio' => $predio->id_predio,

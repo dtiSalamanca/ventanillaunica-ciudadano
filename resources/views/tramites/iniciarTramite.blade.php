@@ -42,11 +42,6 @@
                         </span>
                     </div>
                 </div>
-
-                <div class="tramite-resumen__precio">
-                    <span class="precio-label">Precio del trámite</span>
-                    <span class="precio-monto">${{ number_format($tramite->precio_tramite, 2) }}</span>
-                </div>
             </div>
 
             @if ($tramite->descripcion_tramite)
@@ -74,8 +69,38 @@
         {{-- Card principal --}}
         <div class="card">
             <div class="card-body">
-                {{-- Bloqueo por prerequisitos pendientes --}}
-                @if (($prerequisitosPendientes ?? collect())->isNotEmpty())
+                {{-- Bloqueo por solicitud en proceso --}}
+                @if ($tieneSolicitudEnProceso ?? false)
+                    <div class="prerequisitos-bloqueo">
+                        <div class="prerequisitos-bloqueo__icono">
+                            <i class="fa-solid fa-hourglass-half"></i>
+                        </div>
+                        <h3 class="prerequisitos-bloqueo__titulo">Trámite en proceso</h3>
+                        <p class="prerequisitos-bloqueo__descripcion">
+                            Ya tienes una solicitud de
+                            <strong>{{ $tramite->nombre_tramite }}</strong> en proceso.
+                            Podrás iniciar este trámite nuevamente cuando la solicitud actual se resuelva.
+                        </p>
+                        <a href="{{ route('misTramites') }}" class="prerequisitos-bloqueo__btn-ir">
+                            <i class="fa-solid fa-list"></i> Ver mis trámites
+                        </a>
+                    </div>
+                @elseif ($tieneSolicitudCompletada ?? false)
+                    <div class="prerequisitos-bloqueo prerequisitos-bloqueo--completado">
+                        <div class="prerequisitos-bloqueo__icono">
+                            <i class="fa-solid fa-circle-check"></i>
+                        </div>
+                        <h3 class="prerequisitos-bloqueo__titulo">Trámite completado</h3>
+                        <p class="prerequisitos-bloqueo__descripcion">
+                            Ya completaste una solicitud de
+                            <strong>{{ $tramite->nombre_tramite }}</strong>.
+                            Este trámite ya fue atendido y no puede solicitarse de nuevo.
+                        </p>
+                        <a href="{{ route('misTramites') }}" class="prerequisitos-bloqueo__btn-ir">
+                            <i class="fa-solid fa-list"></i> Ver mis trámites
+                        </a>
+                    </div>
+                @elseif (($prerequisitosPendientes ?? collect())->isNotEmpty())
                     <div class="prerequisitos-bloqueo">
                         <div class="prerequisitos-bloqueo__icono">
                             <i class="fa-solid fa-triangle-exclamation"></i>

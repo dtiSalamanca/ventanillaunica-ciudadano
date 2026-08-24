@@ -242,6 +242,10 @@
     background: #22c55e;
 }
 
+.filtro-dot--expirado {
+    background: #6b7280;
+}
+
 .filtro-chip.is-active .filtro-dot {
     background: #fff;
 }
@@ -438,6 +442,11 @@
 .estatus--completado {
     background: #dcfce7;
     color: #166534;
+}
+
+.estatus--expirado {
+    background: #f3f4f6;
+    color: #4b5563;
 }
 
 .estatus--desconocido {

@@ -1145,6 +1145,31 @@
     transform: translateX(3px);
 }
 
+/* ── Bloqueo por trámite ya completado ── */
+.prerequisitos-bloqueo--completado {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+}
+
+.prerequisitos-bloqueo--completado .prerequisitos-bloqueo__icono {
+    background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+    color: #16a34a;
+    box-shadow: 0 4px 12px rgba(22, 163, 74, 0.15);
+}
+
+.prerequisitos-bloqueo--completado .prerequisitos-bloqueo__titulo {
+    color: #166534;
+}
+
+.prerequisitos-bloqueo--completado .prerequisitos-bloqueo__btn-ir {
+    background: #16a34a;
+    box-shadow: 0 2px 6px rgba(22, 163, 74, 0.25);
+}
+
+.prerequisitos-bloqueo--completado .prerequisitos-bloqueo__btn-ir:hover {
+    background: #15803d;
+}
+
 .btn-volver-tramites {
     display: inline-flex;
     align-items: center;

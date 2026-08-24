@@ -156,10 +156,14 @@
                                 </div>
 
                                 <div class="tramite-card-footer">
+                                    {{-- Precio oculto: el monto final lo asigna el enlace al aprobar la
+                                         solicitud, subir el resolutivo y designar el precio. --}}
+                                    {{--
                                     <div class="tramite-card-precio">
                                         <span class="precio-label">Precio del trámite</span>
                                         <span class="precio-monto">${{ number_format($tramite->precio_tramite, 2) }}</span>
                                     </div>
+                                    --}}
 
                                     <a href="{{ route('iniciarTramite', $tramite) }}" class="btn-iniciar-tramite"
                                         data-nombre="{{ $tramite->nombre_tramite }}">

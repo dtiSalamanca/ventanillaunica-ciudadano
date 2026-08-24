@@ -12,7 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         // La tabla tbl_solicitudes es gestionada por el proyecto administrador.
-        if (! Schema::hasTable('tbl_solicitudes')) {
+        // Se protege con hasColumn: la columna puede existir ya y no debe
+        // fallar con columna duplicada.
+        if (! Schema::hasTable('tbl_solicitudes') || Schema::hasColumn('tbl_solicitudes', 'fk_predio')) {
             return;
         }
 

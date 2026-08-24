@@ -173,15 +173,22 @@
                                         @php
                                             $cargado = $documentosCargados->get($documento->id_documento);
                                             $estatusDoc = $cargado ? 'cargado' : 'pendiente';
-                                            $fechaVencimiento = $cargado
-                                                ? $cargado->fecha_registro
-                                                    ->copy()
-                                                    ->addMonths($documento->vigencia_meses)
-                                                : null;
+                                            // La vigencia corre desde la aprobación (respaldo: fecha de registro).
+                                            // Con vigencia 0 el documento no expira.
+                                            $fechaVencimiento =
+                                                $cargado && $documento->vigencia_meses > 0
+                                                    ? ($cargado->fecha_aprobacion ?? $cargado->fecha_registro)
+                                                        ->copy()
+                                                        ->addMonths($documento->vigencia_meses)
+                                                    : null;
                                             $diasRestantes = $fechaVencimiento
-                                                ? now()->diffInDays($fechaVencimiento, false)
+                                                ? now()
+                                                    ->startOfDay()
+                                                    ->diffInDays($fechaVencimiento->copy()->startOfDay(), false)
                                                 : null;
                                             $estatus = $cargado ? (int) $cargado->estatus_documento : null;
+                                            // Vencido = el día del vencimiento aún es válido; expira al día siguiente.
+                                            $documentoVencido = $diasRestantes !== null && $diasRestantes < 0;
                                         @endphp
                                         <div class="documento-card {{ $cargado ? 'documento-card--cargado' : '' }}"
                                             data-estatus="{{ $estatusDoc }}"
@@ -203,19 +210,35 @@
                                                         <span class="documento-card__fecha"><i
                                                                 class="fas fa-calendar-check me-1"></i>Cargado el
                                                             {{ $cargado->fecha_registro->format('d/m/Y') }}</span>
-                                                        @if ($diasRestantes !== null && $diasRestantes <= 0)
-                                                            <span class="badge-vigencia badge-vigencia--vencido"><i
-                                                                    class="fas fa-triangle-exclamation me-1"></i>Vencido</span>
-                                                        @elseif ($diasRestantes !== null && $diasRestantes <= 60)
-                                                            <span class="badge-vigencia badge-vigencia--por-vencer"><i
-                                                                    class="fas fa-clock me-1"></i>Por vencer</span>
+                                                        @if ($estatus === 2)
+                                                            {{-- La vigencia corre desde la aprobación: solo aplica a documentos aprobados.
+                                                                "Por vencer" aparece únicamente en los últimos 3 días. El estado "Vencido"
+                                                                se muestra como badge de estatus. --}}
+                                                            @if (!$documentoVencido && $diasRestantes !== null && $diasRestantes <= 3)
+                                                                <span class="badge-vigencia badge-vigencia--por-vencer"><i
+                                                                        class="fas fa-clock me-1"></i>Por vencer</span>
+                                                            @endif
+                                                            @if ($fechaVencimiento)
+                                                                <span class="documento-card__fecha"><i
+                                                                        class="fas fa-calendar-day me-1"></i>Vence:
+                                                                    {{ $fechaVencimiento->format('d/m/Y') }}</span>
+                                                            @endif
                                                         @endif
                                                     @endif
                                                 </div>
+                                                @if ($estatus === 0 && $cargado->motivo_rechazo)
+                                                    <p class="documento-card__motivo">
+                                                        <i class="fas fa-circle-xmark me-1"></i>
+                                                        Motivo del rechazo: {{ $cargado->motivo_rechazo }}
+                                                    </p>
+                                                @endif
                                             </div>
                                             <div class="documento-card__acciones">
                                                 @if ($cargado)
-                                                    @if ($estatus === 2)
+                                                    @if ($estatus === 2 && $documentoVencido)
+                                                        <span class="badge-estatus badge-estatus--vencido"><i
+                                                                class="fas fa-triangle-exclamation me-1"></i>Vencido</span>
+                                                    @elseif ($estatus === 2)
                                                         <span class="badge-estatus badge-estatus--aprobado"><i
                                                                 class="fas fa-circle-check me-1"></i>Aprobado</span>
                                                     @elseif ($estatus === 1)
@@ -230,7 +253,7 @@
                                                         title="Ver documento">
                                                         <i class="fas fa-eye"></i>
                                                     </a>
-                                                    @if ($estatus === 0)
+                                                    @if ($estatus === 0 || $documentoVencido)
                                                         <form
                                                             action="{{ route('subirDocumento', $documento->id_documento) }}"
                                                             method="POST" enctype="multipart/form-data"
@@ -288,7 +311,7 @@
 
                             <div class="aviso-predios" role="note">
                                 <i class="fas fa-circle-info"></i>
-                                <span>Para cargar los documentos de un predio, es necesario que su clave catastral haya sido
+                                <span>Para cargar los documentos de un predio, es necesario que su cuenta predial haya sido
                                     <strong>validada previamente</strong>.</span>
                             </div>
 
@@ -314,7 +337,7 @@
                                 </div>
                                 <div class="form-agregar-predio__contenido">
                                     <div class="form-agregar-predio__campo">
-                                        <label for="clave_predio">Clave catastral del predio</label>
+                                        <label for="clave_predio">Cuenta predial</label>
                                         <div class="form-agregar-predio__input-wrap">
                                             <i class="fas fa-location-dot form-agregar-predio__input-icono"></i>
                                             <input type="text" name="clave_predio" id="clave_predio"

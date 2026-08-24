@@ -25,6 +25,29 @@ class TramitesController extends Controller
             ->orderBy('nombre_tramite')
             ->get();
 
+        // Ocultar del catálogo los trámites NO prediales que el ciudadano ya tiene
+        // completados y vigentes (estadoMostrado = 5), porque no podrá volver a
+        // solicitarlos. Los trámites prediales (cuenta_predial) SIEMPRE se muestran,
+        // ya que pueden volver a solicitarse por cada predio. Los mensajes de bloqueo
+        // de la vista "iniciar trámite" se conservan por si este flujo cambia.
+        if (auth()->check()) {
+            // Solo se ocultan los trámites con una solicitud completada cuya
+            // vigencia NO ha vencido (estadoMostrado = 5). Si la solicitud está
+            // expirada (6), el trámite vuelve a aparecer y puede solicitarse de nuevo.
+            $tramitesCompletados = Solicitud::where('fk_usuario', auth()->id())
+                ->whereIn('fk_tramite', $tramites->pluck('id_tramite'))
+                ->with(['ordenPago', 'tramite'])
+                ->get()
+                ->filter(fn ($solicitud) => $solicitud->estadoMostrado() === 5)
+                ->pluck('fk_tramite')
+                ->unique()
+                ->values();
+
+            $tramites = $tramites
+                ->reject(fn ($tramite) => ! $tramite->cuenta_predial && $tramitesCompletados->contains($tramite->id_tramite))
+                ->values();
+        }
+
         $dependencias = $tramites
             ->pluck('dependencia')
             ->filter()
@@ -53,28 +76,61 @@ class TramitesController extends Controller
         $prerequisitosPendientes = collect();
         $usuarioId = auth()->id();
 
+        // ── Bloqueo por solicitud en proceso o completada ──
+        // El estado efectivo replica la lógica visual de "Mis trámites": una
+        // orden de pago con folio (ya pagada) se muestra como Completado (4) y
+        // sin folio como Por pagar (3).
+        // Regla de negocio: solo se puede volver a iniciar un trámite cuando la
+        // solicitud anterior fue rechazada (2). En los prediales el bloqueo se
+        // resuelve por predio en el selector.
+        $solicitudesDelTramite = Solicitud::where('fk_usuario', $usuarioId)
+            ->where('fk_tramite', $tramite->id_tramite)
+            ->with(['ordenPago', 'tramite'])
+            ->get();
+
+        $tieneSolicitudEnProceso = false;
+        $tieneSolicitudCompletada = false;
+
+        if (! $tramite->cuenta_predial) {
+            foreach ($solicitudesDelTramite as $solicitud) {
+                // El estado efectivo (0-6) considera el folio y la vigencia: si la
+                // solicitud completada ya venció (6), no bloquea ni cuenta como completada.
+                $estadoMostrado = $solicitud->estadoMostrado();
+
+                if (in_array($estadoMostrado, [0, 1, 3], true)) {
+                    $tieneSolicitudEnProceso = true;
+                } elseif ($estadoMostrado === 5) {
+                    $tieneSolicitudCompletada = true;
+                }
+            }
+        }
+
         $idsTramitesRequeridos = $prerequisitos->pluck('id_tramite');
 
         foreach ($prerequisitos as $prerequisito) {
+            // El prerequisito se considera cumplido solo si hay una solicitud
+            // completada y vigente (estadoMostrado = 5). Si está expirada (6),
+            // ya no es válida y debe volver a tramitarse.
             $completado = Solicitud::where('fk_usuario', $usuarioId)
                 ->where('fk_tramite', $prerequisito->id_tramite)
-                ->where('estatus_solicitud', 4) // 4 = Completado
-                ->exists();
+                ->with(['ordenPago', 'tramite'])
+                ->get()
+                ->contains(fn ($solicitud) => $solicitud->estadoMostrado() === 5);
 
             if (! $completado) {
                 $prerequisitosPendientes->push($prerequisito);
             }
         }
 
-        // Nombres de tramites prerequisitos que el usuario ya completó
+        // Nombres de tramites prerequisitos que el usuario ya completó y están vigentes
         $tramitesCompletadosNombres = collect();
         if ($idsTramitesRequeridos->isNotEmpty()) {
             $tramitesCompletadosNombres = Solicitud::where('fk_usuario', $usuarioId)
                 ->whereIn('fk_tramite', $idsTramitesRequeridos)
-                ->where('estatus_solicitud', 4)
-                ->with('tramite')
+                ->with(['ordenPago', 'tramite'])
                 ->get()
-                ->map(fn ($s) => trim($s->tramite?->nombre_tramite ?? ''))
+                ->filter(fn ($solicitud) => $solicitud->estadoMostrado() === 5)
+                ->map(fn ($solicitud) => trim($solicitud->tramite?->nombre_tramite ?? ''))
                 ->filter()
                 ->values();
         }
@@ -84,6 +140,13 @@ class TramitesController extends Controller
             ->with('catalogoDocumento')
             ->orderByDesc('fecha_registro')
             ->get();
+
+        // Un documento aprobado que está por vencer (a 3 días o menos) o ya
+        // vencido deja de ser válido para iniciar un trámite: exige recargarlo
+        // desde el perfil. Se excluye de los documentos "aprobados" vigentes.
+        $documentosAprobados = $documentosAprobados->reject(
+            fn ($doc) => $doc->estaPorVencer(3)
+        );
 
         // Todos los documentos del usuario (sin importar estatus), para saber
         // cuáles existen pero no están aprobados y sugerir ir al perfil.
@@ -129,17 +192,25 @@ class TramitesController extends Controller
             'documentosNoAprobadosNombres' => $documentosNoAprobadosNombres,
             'prerequisitosPendientes' => $prerequisitosPendientes,
             'tramitesCompletadosNombres' => $tramitesCompletadosNombres,
+            'tieneSolicitudEnProceso' => $tieneSolicitudEnProceso,
+            'tieneSolicitudCompletada' => $tieneSolicitudCompletada,
         ];
 
         // Si el trámite tiene cuenta_predial activa (1), cargar predios aprobados
         // para que el ciudadano seleccione el predio y se pre-llenen requisitos.
         if ($tramite->cuenta_predial) {
-            // IDs de predios que ya tienen una solicitud pendiente para este trámite
+            // Predios que NO deben aparecer en el selector: los que ya tienen una
+            // solicitud de ESTE trámite en proceso (0,1,3) o completada y vigente (5).
+            // Los predios con solicitud rechazada (2) o expirada (6) sí pueden usarse.
             $prediosConSolicitudPendiente = Solicitud::where('fk_tramite', $tramite->id_tramite)
                 ->where('fk_usuario', auth()->id())
-                ->where('estatus_solicitud', 0) // 0 = Pendiente
                 ->whereNotNull('fk_predio')
+                ->with(['ordenPago', 'tramite'])
+                ->get()
+                ->filter(fn ($solicitud) => in_array($solicitud->estadoMostrado(), [0, 1, 3, 5], true))
                 ->pluck('fk_predio')
+                ->unique()
+                ->values()
                 ->toArray();
 
             $prediosAprobados = Predio::where('fk_usuario', auth()->id())
@@ -151,7 +222,15 @@ class TramitesController extends Controller
                         ->with('catalogoDocumento'),
                 ])
                 ->orderByDesc('id_predio')
-                ->get();
+                ->get()
+                ->each(function (Predio $predio) {
+                    // Los documentos del predio por vencer o vencidos tampoco
+                    // cuentan como válidos para iniciar el trámite.
+                    $predio->setRelation(
+                        'documentos',
+                        $predio->documentos->reject(fn ($doc) => $doc->estaPorVencer(3))
+                    );
+                });
 
             $data['prediosAprobados'] = $prediosAprobados;
             $data['esTramitePredial'] = true;
@@ -203,10 +282,14 @@ class TramitesController extends Controller
         $idsTramitesRequeridos = $prerequisitos->pluck('id_tramite');
 
         foreach ($prerequisitos as $prerequisito) {
+            // El prerequisito se considera cumplido solo si hay una solicitud
+            // completada y vigente (estadoMostrado = 5). Si está expirada (6),
+            // ya no es válida y debe volver a tramitarse.
             $completado = Solicitud::where('fk_usuario', $usuarioId)
                 ->where('fk_tramite', $prerequisito->id_tramite)
-                ->where('estatus_solicitud', 4) // 4 = Completado
-                ->exists();
+                ->with(['ordenPago', 'tramite'])
+                ->get()
+                ->contains(fn ($solicitud) => $solicitud->estadoMostrado() === 5);
 
             if (! $completado) {
                 $prerequisitosPendientes->push($prerequisito);
@@ -222,33 +305,72 @@ class TramitesController extends Controller
             ], 422);
         }
 
-        // Nombres de tramites prerequisitos completados por el usuario
+        // Nombres de tramites prerequisitos completados por el usuario y vigentes
         $tramitesCompletadosNombres = collect();
         if ($idsTramitesRequeridos->isNotEmpty()) {
             $tramitesCompletadosNombres = Solicitud::where('fk_usuario', $usuarioId)
                 ->whereIn('fk_tramite', $idsTramitesRequeridos)
-                ->where('estatus_solicitud', 4)
-                ->with('tramite')
+                ->with(['ordenPago', 'tramite'])
                 ->get()
-                ->map(fn ($s) => trim($s->tramite?->nombre_tramite ?? ''))
+                ->filter(fn ($solicitud) => $solicitud->estadoMostrado() === 5)
+                ->map(fn ($solicitud) => trim($solicitud->tramite?->nombre_tramite ?? ''))
                 ->filter()
                 ->values();
         }
 
-        // Validar que el predio no tenga ya una solicitud pendiente para este trámite
-        if ($tramite->cuenta_predial && $request->filled('predio_id')) {
-            $yaTieneSolicitud = Solicitud::where('fk_tramite', $tramite->id_tramite)
-                ->where('fk_usuario', auth()->id())
-                ->where('fk_predio', $request->integer('predio_id'))
-                ->where('estatus_solicitud', 0)
-                ->exists();
+        // Validar que el ciudadano no tenga ya una solicitud en proceso de este trámite
+        // (Pendiente=0, Turnado=1, Por pagar=3 sin folio). Una solicitud completada (4)
+        // o expirada (6) NO cuenta como "en proceso". En trámites prediales la validación
+        // es por predio; en los demás, cualquier solicitud activa del trámite lo bloquea.
+        $yaTieneSolicitudEnProceso = Solicitud::where('fk_tramite', $tramite->id_tramite)
+            ->where('fk_usuario', auth()->id())
+            ->with(['ordenPago', 'tramite'])
+            ->get()
+            ->contains(function ($solicitud) use ($request) {
+                if (! in_array($solicitud->estadoMostrado(), [0, 1, 3], true)) {
+                    return false;
+                }
 
-            if ($yaTieneSolicitud) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Este predio ya tiene una solicitud pendiente para este trámite.',
-                ], 422);
-            }
+                return $request->filled('predio_id')
+                    ? $solicitud->fk_predio === $request->integer('predio_id')
+                    : $solicitud->fk_predio === null;
+            });
+
+        if ($yaTieneSolicitudEnProceso) {
+            $mensaje = $request->filled('predio_id')
+                ? 'Este predio ya tiene una solicitud en proceso para este trámite.'
+                : 'Ya tienes una solicitud de este trámite en proceso. Revisa tus trámites.';
+
+            return response()->json([
+                'success' => false,
+                'message' => $mensaje,
+            ], 422);
+        }
+
+        // Validar que el ciudadano no tenga ya un trámite completado de este tipo
+        // (estatus 4 o por pagar ya pagado con folio). Un trámite solo puede
+        // solicitarse de nuevo si la solicitud anterior fue rechazada o su vigencia
+        // venció (expirada). En trámites prediales el bloqueo es por predio.
+        $yaTieneSolicitudCompletada = Solicitud::where('fk_tramite', $tramite->id_tramite)
+            ->where('fk_usuario', auth()->id())
+            ->with(['ordenPago', 'tramite'])
+            ->get()
+            ->contains(function ($solicitud) use ($request) {
+                // Una solicitud expirada (estadoMostrado = 6) ya no se considera completada.
+                if ($solicitud->estadoMostrado() !== 5) {
+                    return false;
+                }
+
+                return $request->filled('predio_id')
+                    ? $solicitud->fk_predio === $request->integer('predio_id')
+                    : true;
+            });
+
+        if ($yaTieneSolicitudCompletada) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Ya tienes un trámite completado de este tipo y no puede solicitarse de nuevo.',
+            ], 422);
         }
 
         // Validar adeudos de la cuenta predial contra el sistema de recibo predial
@@ -289,8 +411,23 @@ class TramitesController extends Controller
             ->with('catalogoDocumento')
             ->get();
 
+        // Un documento vencido o por vencer (a 3 días o menos) deja de ser
+        // válido para iniciar un trámite: exige recargarlo en el perfil.
+        $documentosValidos = $documentosAprobados->reject(
+            fn ($doc) => $doc->estaPorVencer(3)
+        );
+
+        // Nombres normalizados de documentos vencidos o por vencer (para dar
+        // un aviso específico al ciudadano).
+        $documentosInvalidadosNombres = $documentosAprobados
+            ->filter(fn ($doc) => $doc->estaPorVencer(3))
+            ->map(fn ($doc) => mb_strtolower(trim($doc->catalogoDocumento?->nombre_documento ?? '')))
+            ->filter()
+            ->values()
+            ->toArray();
+
         // Mapa: nombre_documento (normalizado) => id del documento personal
-        $documentosMap = $documentosAprobados
+        $documentosMap = $documentosValidos
             ->mapWithKeys(fn ($doc) => [
                 mb_strtolower(trim($doc->catalogoDocumento?->nombre_documento ?? '')) => $doc->id_documento,
             ])
@@ -305,7 +442,18 @@ class TramitesController extends Controller
                 ->with('catalogoDocumento')
                 ->get();
 
+            $documentosInvalidadosNombres = array_merge(
+                $documentosInvalidadosNombres,
+                $documentosPredio
+                    ->filter(fn ($doc) => $doc->estaPorVencer(3))
+                    ->map(fn ($doc) => mb_strtolower(trim($doc->catalogoDocumento?->nombre_documento ?? '')))
+                    ->filter()
+                    ->values()
+                    ->toArray()
+            );
+
             $documentosPredioMap = $documentosPredio
+                ->reject(fn ($doc) => $doc->estaPorVencer(3))
                 ->mapWithKeys(fn ($doc) => [
                     mb_strtolower(trim($doc->catalogoDocumento?->nombre_documento ?? '')) => $doc->id_documento_predio,
                 ])
@@ -316,6 +464,7 @@ class TramitesController extends Controller
         // Hacer matching requisito vs documento personal/predio
         $requisitosCubiertos = [];
         $todosCubiertos = true;
+        $documentoBloqueado = null;
 
         foreach ($tramite->requisitosVisibles() as $requisito) {
             $nombreRequisito = mb_strtolower(trim($requisito->nombre_requisito));
@@ -368,6 +517,20 @@ class TramitesController extends Controller
 
             if ($documentoId === null) {
                 $todosCubiertos = false;
+
+                // Si el requisito lo cubre un documento vencido o por vencer,
+                // avisar al ciudadano para que lo recargue desde su perfil.
+                foreach ($documentosInvalidadosNombres as $nombreDoc) {
+                    if (
+                        $nombreDoc === $nombreRequisito ||
+                        str_contains($nombreRequisito, $nombreDoc) ||
+                        str_contains($nombreDoc, $nombreRequisito)
+                    ) {
+                        $documentoBloqueado = $requisito->nombre_requisito;
+                        break;
+                    }
+                }
+
                 break;
             }
 
@@ -379,9 +542,13 @@ class TramitesController extends Controller
         }
 
         if (! $todosCubiertos) {
+            $message = $documentoBloqueado
+                ? "El documento \"{$documentoBloqueado}\" está vencido o por vencer. Recárgalo desde tu perfil para poder continuar."
+                : 'No todos los requisitos están cumplidos. Revisa los documentos en tu perfil.';
+
             return response()->json([
                 'success' => false,
-                'message' => 'No todos los requisitos están cumplidos. Revisa los documentos en tu perfil.',
+                'message' => $message,
             ], 422);
         }
 
@@ -430,7 +597,7 @@ class TramitesController extends Controller
     {
         $solicitudes = Solicitud::with([
             'tramite.dependencia',
-            'tramite.ordenesPago',
+            'ordenPago',
             'predio',
             'resolucion',
         ])

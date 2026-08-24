@@ -12,7 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         // La tabla cat_tramites es gestionada por el proyecto administrador.
-        if (! Schema::hasTable('cat_tramites')) {
+        // Se protege con hasColumn: la columna puede existir ya (la agrega el
+        // proyecto administrador) y no debe fallar con columna duplicada.
+        if (! Schema::hasTable('cat_tramites') || Schema::hasColumn('cat_tramites', 'cuenta_predial')) {
             return;
         }
 

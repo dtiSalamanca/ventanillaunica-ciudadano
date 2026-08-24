@@ -484,7 +484,7 @@ function initFormAgregarPredio() {
         if (!clave) {
             mostrarErrorAgregarPredio(
                 form,
-                "Debes capturar la clave catastral del predio.",
+                "Debes capturar la cuenta predial.",
             );
             return;
         }
@@ -592,7 +592,7 @@ function actualizarConteoPredios() {
 function confirmarAgregarPredio(clave) {
     if (!window.Swal) {
         return Promise.resolve(
-            confirm(`¿Agregar el predio con clave catastral "${clave}"?`),
+            confirm(`¿Agregar el predio con cuenta predial "${clave}"?`),
         );
     }
 

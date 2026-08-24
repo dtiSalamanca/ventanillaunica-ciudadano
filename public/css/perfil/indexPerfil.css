@@ -10,14 +10,11 @@
     --bg-surface: #ffffff;
     --bg-subtle: #f8fafc;
     --shadow-sm:
-        0 1px 3px 0 rgba(0, 0, 0, 0.1),
-        0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
     --shadow-md:
-        0 4px 6px -1px rgba(0, 0, 0, 0.1),
-        0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     --shadow-lg:
-        0 10px 15px -3px rgba(0, 0, 0, 0.1),
-        0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
     --radius-sm: 8px;
     --radius-md: 10px;
     --radius-lg: 16px;
@@ -589,6 +586,19 @@
     font-weight: 600;
 }
 
+.documento-card__motivo {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.4rem;
+    margin: 0.5rem 0 0;
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    background: var(--danger-bg);
+    color: var(--danger);
+    font-size: 0.78rem;
+    line-height: 1.4;
+}
+
 .documento-card__estatus {
     flex-shrink: 0;
 }
@@ -625,6 +635,11 @@
 .badge-estatus--rechazado {
     background: var(--danger-bg);
     color: var(--danger);
+}
+
+.badge-estatus--vencido {
+    background: #fee2e2;
+    color: #b91c1c;
 }
 
 .badge-estatus--pendiente {
@@ -690,7 +705,6 @@
     color: var(--danger);
     border-color: #fecaca;
 }
-
 
 /* ── Input de archivo oculto ── */
 .input-archivo-oculto {
@@ -852,7 +866,8 @@
 }
 
 .form-agregar-predio__campo input:focus ~ .form-agregar-predio__input-icono,
-.form-agregar-predio__input-wrap:focus-within .form-agregar-predio__input-icono {
+.form-agregar-predio__input-wrap:focus-within
+    .form-agregar-predio__input-icono {
     color: var(--primary);
 }
 

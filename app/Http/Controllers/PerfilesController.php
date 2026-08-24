@@ -36,6 +36,9 @@ class PerfilesController extends Controller
 
         $predios = Predio::where('fk_usuario', auth()->id())
             ->with('documentos')
+            // Se ocultan (sin borrar) los predios que al ser consultados resultaron
+            // inexistentes en el sistema de predial.
+            ->where('consultado', '!=', Predio::CONSULTADO_NO_EXISTE)
             ->orderByDesc('id_predio')
             ->get();
 
@@ -91,6 +94,10 @@ class PerfilesController extends Controller
         if ($registroExistente) {
             $registroExistente->update([
                 'fecha_registro' => now(),
+                // Al re-subir, el documento vuelve a revisión: se limpia la
+                // fecha de aprobación anterior para que la vigencia se recalcule
+                // cuando el administrador lo apruebe de nuevo.
+                'fecha_aprobacion' => null,
                 'estatus_documento' => tblDocumentoPersonal::ESTATUS_EN_REVISION,
                 'ruta_archivo' => $rutaArchivo,
             ]);

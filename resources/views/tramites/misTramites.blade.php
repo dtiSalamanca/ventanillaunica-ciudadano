@@ -63,10 +63,15 @@
                     Por pagar
                     <span class="filtro-count" data-conteo="3">0</span>
                 </button>
-                <button type="button" class="filtro-chip" data-estatus-filtro="4">
+                <button type="button" class="filtro-chip" data-estatus-filtro="5">
                     <span class="filtro-dot filtro-dot--completado"></span>
                     Completados
-                    <span class="filtro-count" data-conteo="4">0</span>
+                    <span class="filtro-count" data-conteo="5">0</span>
+                </button>
+                <button type="button" class="filtro-chip" data-estatus-filtro="6">
+                    <span class="filtro-dot filtro-dot--expirado"></span>
+                    Expirados
+                    <span class="filtro-count" data-conteo="6">0</span>
                 </button>
             </div>
         </div>
@@ -83,19 +88,20 @@
             <div class="mis-tramites-grid">
                 @foreach ($solicitudes as $solicitud)
                     @php
-                        $ordenPago = $solicitud->tramite->ordenesPago->first();
+                        $ordenPago = $solicitud->ordenPago;
                         $tieneFolio = filled($ordenPago?->folio_pago);
 
-                        // Si hay orden de pago, el estado visual se define por el folio:
-                        // sin folio → "Por pagar"; con folio → "Completado" (ya se pagó).
-                        $estadoMostrado = $tieneFolio ? 4 : ($ordenPago !== null ? 3 : $solicitud->estatus_solicitud);
+                        // Estado efectivo considerando la vigencia: una solicitud
+                        // completada cuya vigencia ya venció se muestra como 6 (Expirado).
+                        $estadoMostrado = $solicitud->estadoMostrado();
 
                         $estatusTexto = match ($estadoMostrado) {
                             0 => 'Pendiente',
                             1 => 'Turnado',
                             2 => 'Rechazado',
                             3 => 'Por pagar',
-                            4 => 'Completado',
+                            5 => 'Completado',
+                            6 => 'Expirado',
                             default => 'Desconocido',
                         };
                         $estatusClase = match ($estadoMostrado) {
@@ -103,7 +109,8 @@
                             1 => 'estatus--turnado',
                             2 => 'estatus--rechazada',
                             3 => 'estatus--por-pagar',
-                            4 => 'estatus--completado',
+                            5 => 'estatus--completado',
+                            6 => 'estatus--expirado',
                             default => 'estatus--desconocido',
                         };
                         $estatusIcono = match ($estadoMostrado) {
@@ -111,14 +118,16 @@
                             1 => 'fa-solid fa-arrow-right',
                             2 => 'fa-solid fa-circle-xmark',
                             3 => 'fa-solid fa-credit-card',
-                            4 => 'fa-solid fa-check-circle',
+                            5 => 'fa-solid fa-check-circle',
+                            6 => 'fa-solid fa-hourglass-end',
                             default => 'fa-solid fa-circle-question',
                         };
 
-                        // Monto a mostrar: si existe una orden de pago para el trámite
-                        // (monto designado por el enlace, p. ej. trámites por m²), se usa ese;
-                        // en caso contrario se muestra el precio base del trámite.
-                        $precioMostrar = $ordenPago?->precio_tramite ?? $solicitud->tramite->precio_tramite;
+                        // Monto asignado por el enlace al aprobar la solicitud, subir el
+                        // resolutivo y designar el precio. Solo se muestra cuando el trámite
+                        // está completado y existe un precio asignado (el precio base del
+                        // catálogo puede variar, por eso no se usa como respaldo).
+                        $precioMostrar = $ordenPago?->precio_tramite;
 
                         // Nombre del archivo del resolutivo para mostrarlo en la URL.
                         $nombreResolutivo = $solicitud->resolucion?->documento_resolucion
@@ -173,11 +182,15 @@
                                             </div>
                                         @endif
 
-                                        <div class="solicitud-card-detalle-item">
-                                            <span class="detalle-label">Precio del trámite</span>
-                                            <span
-                                                class="detalle-valor detalle-valor--precio">${{ number_format($precioMostrar, 2) }}</span>
-                                        </div>
+                                        {{-- El precio se muestra cuando hay una orden de pago con monto asignado,
+                                             tanto en "Por pagar" (sin folio) como en "Completado" (con folio). --}}
+                                        @if ($ordenPago !== null && filled($precioMostrar))
+                                            <div class="solicitud-card-detalle-item">
+                                                <span class="detalle-label">Precio del trámite</span>
+                                                <span
+                                                    class="detalle-valor detalle-valor--precio">${{ number_format($precioMostrar, 2) }}</span>
+                                            </div>
+                                        @endif
 
                                         @if ($solicitud->fecha_resolucion)
                                             <div class="solicitud-card-detalle-item">
@@ -206,13 +219,16 @@
                                             <i class="fa-solid fa-file-pdf"></i>
                                             <span>Ver/Descargar resolutivo</span>
                                         </a>
+                                    @endif
+
+                                    {{-- Botón "Generar orden de pago" comentado (en desuso):
                                     @elseif ($ordenPago !== null)
                                         <button type="button" class="btn-orden-pago"
                                             title="Generar orden de pago para este trámite">
                                             <i class="fa-solid fa-file-invoice-dollar"></i>
                                             <span>Generar orden de pago</span>
                                         </button>
-                                    @endif
+                                    --}}
                                 </div>
                             </div>
                         </div>
