@@ -141,12 +141,24 @@
                                 <h2 class="documents-card__title">Documentos requeridos</h2>
 
                                 @if ($totalDocumentos > 0)
-                                    <div class="documentos-filtro" role="group" aria-label="Filtrar documentos">
-                                        <button class="filtro-btn filtro-btn--active" data-filtro="todos"
-                                            type="button">Todos</button>
-                                        <button class="filtro-btn" data-filtro="cargado" type="button">Cargados</button>
-                                        <button class="filtro-btn" data-filtro="pendiente"
-                                            type="button">Pendientes</button>
+                                    <div class="documents-card__header-acciones">
+                                        <div class="perfil-buscador" role="search">
+                                            <i class="fas fa-magnifying-glass"></i>
+                                            <input type="text" placeholder="Buscar documento..." autocomplete="off"
+                                                aria-label="Buscar documento por nombre">
+                                            <button type="button" class="perfil-buscador__limpiar" title="Limpiar búsqueda"
+                                                hidden>
+                                                <i class="fas fa-xmark"></i>
+                                            </button>
+                                        </div>
+                                        <div class="documentos-filtro" role="group" aria-label="Filtrar documentos">
+                                            <button class="filtro-btn filtro-btn--active" data-filtro="todos"
+                                                type="button">Todos</button>
+                                            <button class="filtro-btn" data-filtro="cargado"
+                                                type="button">Cargados</button>
+                                            <button class="filtro-btn" data-filtro="pendiente"
+                                                type="button">Pendientes</button>
+                                        </div>
                                     </div>
                                 @endif
                             </div>
@@ -290,8 +302,8 @@
                                     @endforeach
                                 </div>
 
-                                <p class="mensaje-filtro-vacio" hidden><i class="fas fa-circle-info me-1"></i>No hay
-                                    documentos con este estatus.</p>
+                                <p class="mensaje-filtro-vacio" hidden><i class="fas fa-circle-info me-1"></i>No se
+                                    encontraron documentos con los filtros aplicados.</p>
                             @endif
                         </div>
                     </div>
@@ -303,11 +315,43 @@
                         <div class="documents-card documents-card--full">
                             <div class="documents-card__header">
                                 <h2 class="documents-card__title">Mis predios</h2>
-                                <button class="btn-accion btn-accion--cargar" id="btn-mostrar-form-predio"
-                                    type="button">
-                                    <i class="fas fa-plus me-1"></i>Agregar predio
-                                </button>
+                                <div class="documents-card__header-acciones">
+                                    @if ($predios->isNotEmpty() && $catalogoPredios->isNotEmpty())
+                                        <div class="perfil-buscador" role="search">
+                                            <i class="fas fa-magnifying-glass"></i>
+                                            <input type="text" placeholder="Buscar predio..." autocomplete="off"
+                                                aria-label="Buscar predio por cuenta predial">
+                                            <button type="button" class="perfil-buscador__limpiar"
+                                                title="Limpiar búsqueda" hidden>
+                                                <i class="fas fa-xmark"></i>
+                                            </button>
+                                        </div>
+                                        <div class="documentos-filtro" role="group" aria-label="Filtrar predios">
+                                            <button class="filtro-btn filtro-btn--active" data-filtro="todos"
+                                                data-ayuda="Mostrando todos tus predios." type="button">Todos</button>
+                                            <button class="filtro-btn" data-filtro="completado"
+                                                data-ayuda="Completos: predios aprobados y con todos sus documentos cargados."
+                                                title="Predios aprobados y con todos sus documentos cargados"
+                                                type="button">Completos</button>
+                                            <button class="filtro-btn" data-filtro="pendiente"
+                                                data-ayuda="Pendientes: predios en revisión, rechazados o con documentos por cargar."
+                                                title="Predios en revisión, rechazados o con documentos por cargar"
+                                                type="button">Pendientes</button>
+                                        </div>
+                                    @endif
+                                    <button class="btn-accion btn-accion--cargar" id="btn-mostrar-form-predio"
+                                        type="button">
+                                        <i class="fas fa-plus me-1"></i>Agregar predio
+                                    </button>
+                                </div>
                             </div>
+
+                            @if ($predios->isNotEmpty() && $catalogoPredios->isNotEmpty())
+                                <p class="predios-filtro-ayuda" role="note" id="predios-filtro-ayuda">
+                                    <i class="fas fa-circle-info me-1"></i>
+                                    <span id="predios-filtro-ayuda-texto">Mostrando todos tus predios.</span>
+                                </p>
+                            @endif
 
                             <div class="aviso-predios" role="note">
                                 <i class="fas fa-circle-info"></i>
@@ -371,6 +415,8 @@
                                         @include('perfil.predio-card', ['predio' => $predio])
                                     @endforeach
                                 </div>
+                                <p class="mensaje-filtro-vacio" hidden><i class="fas fa-circle-info me-1"></i>No se
+                                    encontraron predios con los filtros aplicados.</p>
                             @endif
                         </div>
                     </div>

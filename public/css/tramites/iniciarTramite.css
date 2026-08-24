@@ -973,6 +973,17 @@
     color: #dc2626;
 }
 
+.predio-adeudo-aviso a {
+    color: var(--primary);
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.predio-adeudo-aviso a:hover {
+    color: var(--primary-dark);
+}
+
 /* ── Requisito pre-cumplido por documento ── */
 .requisito-cumplimiento--precumplido {
     border-color: var(--primary);

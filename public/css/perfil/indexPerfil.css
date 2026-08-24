@@ -464,6 +464,13 @@
     margin-bottom: 1.25rem;
 }
 
+.documents-card__header-acciones {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
 .documents-card__title {
     margin: 0;
     font-size: 1.05rem;
@@ -511,6 +518,60 @@
 .filtro-btn--active:hover {
     background: var(--primary-dark);
     color: #fff;
+}
+
+/* ── Buscador ── */
+.perfil-buscador {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg-surface);
+    padding: 0.4rem 0.7rem;
+    color: var(--text-secondary);
+    min-width: 190px;
+    transition: var(--transition);
+}
+
+.perfil-buscador:focus-within {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.perfil-buscador > i {
+    font-size: 0.78rem;
+}
+
+.perfil-buscador input {
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 0.8rem;
+    color: var(--text-primary);
+    width: 100%;
+    min-width: 0;
+}
+
+.perfil-buscador input::placeholder {
+    color: var(--text-secondary);
+}
+
+.perfil-buscador__limpiar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 0.1rem;
+    font-size: 0.75rem;
+}
+
+.perfil-buscador__limpiar:hover {
+    color: var(--text-primary);
 }
 
 /* ── Lista de documentos ── */
@@ -919,6 +980,29 @@
 .aviso-predios strong {
     font-weight: 700;
     color: #78350f;
+}
+
+/* ── Ayuda del filtro de predios ── */
+.predios-filtro-ayuda {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.45rem;
+    margin: -0.25rem 0 1.1rem;
+    font-size: 0.78rem;
+    line-height: 1.45;
+    color: var(--text-secondary);
+}
+
+.predios-filtro-ayuda i {
+    flex-shrink: 0;
+    margin-top: 0.15rem;
+    color: var(--primary);
+    opacity: 0.7;
+}
+
+.predios-filtro-ayuda strong {
+    font-weight: 700;
+    color: var(--text-primary);
 }
 
 /* ── Lista de predios (acordeón) ── */

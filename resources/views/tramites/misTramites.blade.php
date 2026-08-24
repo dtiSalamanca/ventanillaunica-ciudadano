@@ -91,6 +91,14 @@
                         $ordenPago = $solicitud->ordenPago;
                         $tieneFolio = filled($ordenPago?->folio_pago);
 
+                        // Trámite sin costo: el administrador no genera orden de
+                        // pago ni asigna precio.
+                        $esSinCosto = (bool) ($solicitud->tramite?->sin_costo ?? false);
+
+                        // El resolutivo se muestra cuando ya se pagó (hay folio) o
+                        // cuando el trámite es sin costo y el administrador lo subió.
+                        $puedeVerResolutivo = $tieneFolio || ($esSinCosto && $solicitud->resolucion !== null);
+
                         // Estado efectivo considerando la vigencia: una solicitud
                         // completada cuya vigencia ya venció se muestra como 6 (Expirado).
                         $estadoMostrado = $solicitud->estadoMostrado();
@@ -192,6 +200,16 @@
                                             </div>
                                         @endif
 
+                                        {{-- Trámite sin costo: se indica que no genera pago. --}}
+                                        @if ($esSinCosto)
+                                            <div class="solicitud-card-detalle-item">
+                                                <span class="detalle-label">Costo</span>
+                                                <span class="detalle-valor detalle-valor--sin-costo">
+                                                    <i class="fa-solid fa-circle-check me-1"></i> Sin costo
+                                                </span>
+                                            </div>
+                                        @endif
+
                                         @if ($solicitud->fecha_resolucion)
                                             <div class="solicitud-card-detalle-item">
                                                 <span class="detalle-label">Fecha de resolución</span>
@@ -212,7 +230,7 @@
                                 <div class="solicitud-card-footer">
                                     <span class="solicitud-card-id">Solicitud #{{ $solicitud->id_solicitud }}</span>
 
-                                    @if ($tieneFolio)
+                                    @if ($puedeVerResolutivo)
                                         <a href="{{ route('descargarResolutivo', $nombreResolutivo ? [$solicitud, $nombreResolutivo] : [$solicitud]) }}"
                                             class="btn-ver-resolutivo" target="_blank" rel="noopener noreferrer"
                                             title="Ver o descargar el resolutivo de este trámite">

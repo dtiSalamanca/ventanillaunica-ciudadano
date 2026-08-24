@@ -36,7 +36,7 @@ class TramitesController extends Controller
             // expirada (6), el trámite vuelve a aparecer y puede solicitarse de nuevo.
             $tramitesCompletados = Solicitud::where('fk_usuario', auth()->id())
                 ->whereIn('fk_tramite', $tramites->pluck('id_tramite'))
-                ->with(['ordenPago', 'tramite'])
+                ->with(['ordenPago', 'tramite', 'resolucion'])
                 ->get()
                 ->filter(fn ($solicitud) => $solicitud->estadoMostrado() === 5)
                 ->pluck('fk_tramite')
@@ -85,7 +85,7 @@ class TramitesController extends Controller
         // resuelve por predio en el selector.
         $solicitudesDelTramite = Solicitud::where('fk_usuario', $usuarioId)
             ->where('fk_tramite', $tramite->id_tramite)
-            ->with(['ordenPago', 'tramite'])
+            ->with(['ordenPago', 'tramite', 'resolucion'])
             ->get();
 
         $tieneSolicitudEnProceso = false;
@@ -113,7 +113,7 @@ class TramitesController extends Controller
             // ya no es válida y debe volver a tramitarse.
             $completado = Solicitud::where('fk_usuario', $usuarioId)
                 ->where('fk_tramite', $prerequisito->id_tramite)
-                ->with(['ordenPago', 'tramite'])
+                ->with(['ordenPago', 'tramite', 'resolucion'])
                 ->get()
                 ->contains(fn ($solicitud) => $solicitud->estadoMostrado() === 5);
 
@@ -127,7 +127,7 @@ class TramitesController extends Controller
         if ($idsTramitesRequeridos->isNotEmpty()) {
             $tramitesCompletadosNombres = Solicitud::where('fk_usuario', $usuarioId)
                 ->whereIn('fk_tramite', $idsTramitesRequeridos)
-                ->with(['ordenPago', 'tramite'])
+                ->with(['ordenPago', 'tramite', 'resolucion'])
                 ->get()
                 ->filter(fn ($solicitud) => $solicitud->estadoMostrado() === 5)
                 ->map(fn ($solicitud) => trim($solicitud->tramite?->nombre_tramite ?? ''))
@@ -205,7 +205,7 @@ class TramitesController extends Controller
             $prediosConSolicitudPendiente = Solicitud::where('fk_tramite', $tramite->id_tramite)
                 ->where('fk_usuario', auth()->id())
                 ->whereNotNull('fk_predio')
-                ->with(['ordenPago', 'tramite'])
+                ->with(['ordenPago', 'tramite', 'resolucion'])
                 ->get()
                 ->filter(fn ($solicitud) => in_array($solicitud->estadoMostrado(), [0, 1, 3, 5], true))
                 ->pluck('fk_predio')
@@ -287,7 +287,7 @@ class TramitesController extends Controller
             // ya no es válida y debe volver a tramitarse.
             $completado = Solicitud::where('fk_usuario', $usuarioId)
                 ->where('fk_tramite', $prerequisito->id_tramite)
-                ->with(['ordenPago', 'tramite'])
+                ->with(['ordenPago', 'tramite', 'resolucion'])
                 ->get()
                 ->contains(fn ($solicitud) => $solicitud->estadoMostrado() === 5);
 
@@ -310,7 +310,7 @@ class TramitesController extends Controller
         if ($idsTramitesRequeridos->isNotEmpty()) {
             $tramitesCompletadosNombres = Solicitud::where('fk_usuario', $usuarioId)
                 ->whereIn('fk_tramite', $idsTramitesRequeridos)
-                ->with(['ordenPago', 'tramite'])
+                ->with(['ordenPago', 'tramite', 'resolucion'])
                 ->get()
                 ->filter(fn ($solicitud) => $solicitud->estadoMostrado() === 5)
                 ->map(fn ($solicitud) => trim($solicitud->tramite?->nombre_tramite ?? ''))
@@ -324,7 +324,7 @@ class TramitesController extends Controller
         // es por predio; en los demás, cualquier solicitud activa del trámite lo bloquea.
         $yaTieneSolicitudEnProceso = Solicitud::where('fk_tramite', $tramite->id_tramite)
             ->where('fk_usuario', auth()->id())
-            ->with(['ordenPago', 'tramite'])
+            ->with(['ordenPago', 'tramite', 'resolucion'])
             ->get()
             ->contains(function ($solicitud) use ($request) {
                 if (! in_array($solicitud->estadoMostrado(), [0, 1, 3], true)) {
@@ -353,7 +353,7 @@ class TramitesController extends Controller
         // venció (expirada). En trámites prediales el bloqueo es por predio.
         $yaTieneSolicitudCompletada = Solicitud::where('fk_tramite', $tramite->id_tramite)
             ->where('fk_usuario', auth()->id())
-            ->with(['ordenPago', 'tramite'])
+            ->with(['ordenPago', 'tramite', 'resolucion'])
             ->get()
             ->contains(function ($solicitud) use ($request) {
                 // Una solicitud expirada (estadoMostrado = 6) ya no se considera completada.

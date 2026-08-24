@@ -1,6 +1,9 @@
 document.addEventListener("DOMContentLoaded", function () {
     initBarraProgreso();
     initFiltroDocumentos();
+    initBusquedaDocumentos();
+    initFiltroPredios();
+    initBusquedaPredios();
     initTabs();
     initSubirDocumento();
     initPollingEstatus();
@@ -135,32 +138,156 @@ function initBarraProgreso() {
     });
 }
 
+let filtroDocumentosActivo = "todos";
+let terminoBusquedaDocumentos = "";
+
 function initFiltroDocumentos() {
-    const botones = document.querySelectorAll(".filtro-btn");
-    const cards = document.querySelectorAll(".documento-card");
-    const mensajeVacio = document.querySelector(".mensaje-filtro-vacio");
+    const panel = document.getElementById("panel-documentos");
+    if (!panel) return;
+    const botones = panel.querySelectorAll(".filtro-btn");
+    const cards = panel.querySelectorAll(".documento-card");
     if (!botones.length || !cards.length) return;
 
     botones.forEach((btn) => {
         btn.addEventListener("click", () => {
             botones.forEach((b) => b.classList.remove("filtro-btn--active"));
             btn.classList.add("filtro-btn--active");
-
-            const filtro = btn.dataset.filtro;
-            let visibles = 0;
-
-            cards.forEach((card) => {
-                const mostrar =
-                    filtro === "todos" || card.dataset.estatus === filtro;
-                card.style.display = mostrar ? "" : "none";
-                if (mostrar) visibles++;
-            });
-
-            if (mensajeVacio) {
-                mensajeVacio.hidden = visibles > 0;
-            }
+            filtroDocumentosActivo = btn.dataset.filtro;
+            aplicarFiltrosDocumentos();
         });
     });
+}
+
+function initBusquedaDocumentos() {
+    const panel = document.getElementById("panel-documentos");
+    if (!panel) return;
+    const input = panel.querySelector(".perfil-buscador input");
+    const btnLimpiar = panel.querySelector(".perfil-buscador__limpiar");
+    if (!input) return;
+
+    input.addEventListener("input", () => {
+        terminoBusquedaDocumentos = input.value.trim().toLowerCase();
+        if (btnLimpiar) btnLimpiar.hidden = !input.value;
+        aplicarFiltrosDocumentos();
+    });
+
+    if (btnLimpiar) {
+        btnLimpiar.addEventListener("click", () => {
+            input.value = "";
+            terminoBusquedaDocumentos = "";
+            btnLimpiar.hidden = true;
+            input.focus();
+            aplicarFiltrosDocumentos();
+        });
+    }
+}
+
+function aplicarFiltrosDocumentos() {
+    const panel = document.getElementById("panel-documentos");
+    if (!panel) return;
+    const cards = panel.querySelectorAll(".documento-card");
+    const mensajeVacio = panel.querySelector(".mensaje-filtro-vacio");
+    let visibles = 0;
+
+    cards.forEach((card) => {
+        const nombre = (
+            card.querySelector(".documento-card__nombre")?.textContent ?? ""
+        ).toLowerCase();
+        const coincideBusqueda =
+            !terminoBusquedaDocumentos ||
+            nombre.includes(terminoBusquedaDocumentos);
+        const coincideFiltro =
+            filtroDocumentosActivo === "todos" ||
+            card.dataset.estatus === filtroDocumentosActivo;
+        const mostrar = coincideBusqueda && coincideFiltro;
+
+        card.style.display = mostrar ? "" : "none";
+        if (mostrar) visibles++;
+    });
+
+    if (mensajeVacio) {
+        mensajeVacio.hidden = visibles > 0;
+    }
+}
+
+let filtroPrediosActivo = "todos";
+
+function initFiltroPredios() {
+    const panel = document.getElementById("panel-predios");
+    if (!panel) return;
+    const botones = panel.querySelectorAll(".filtro-btn");
+    const cards = panel.querySelectorAll(".predio-card");
+    const mensajeVacio = panel.querySelector(".mensaje-filtro-vacio");
+    const ayudaTexto = document.getElementById("predios-filtro-ayuda-texto");
+    if (!botones.length || !cards.length) return;
+
+    botones.forEach((btn) => {
+        btn.addEventListener("click", () => {
+            botones.forEach((b) => b.classList.remove("filtro-btn--active"));
+            btn.classList.add("filtro-btn--active");
+            filtroPrediosActivo = btn.dataset.filtro;
+
+            // El texto de ayuda cambia según el filtro seleccionado.
+            if (ayudaTexto && btn.dataset.ayuda) {
+                ayudaTexto.textContent = btn.dataset.ayuda;
+            }
+
+            aplicarFiltroPredios();
+        });
+    });
+}
+
+let terminoBusquedaPredios = "";
+
+function initBusquedaPredios() {
+    const panel = document.getElementById("panel-predios");
+    if (!panel) return;
+    const input = panel.querySelector(".perfil-buscador input");
+    const btnLimpiar = panel.querySelector(".perfil-buscador__limpiar");
+    if (!input) return;
+
+    input.addEventListener("input", () => {
+        terminoBusquedaPredios = input.value.trim().toLowerCase();
+        if (btnLimpiar) btnLimpiar.hidden = !input.value;
+        aplicarFiltroPredios();
+    });
+
+    if (btnLimpiar) {
+        btnLimpiar.addEventListener("click", () => {
+            input.value = "";
+            terminoBusquedaPredios = "";
+            btnLimpiar.hidden = true;
+            input.focus();
+            aplicarFiltroPredios();
+        });
+    }
+}
+
+function aplicarFiltroPredios() {
+    const panel = document.getElementById("panel-predios");
+    if (!panel) return;
+    const cards = panel.querySelectorAll(".predio-card");
+    const mensajeVacio = panel.querySelector(".mensaje-filtro-vacio");
+    let visibles = 0;
+
+    cards.forEach((card) => {
+        const clave = (
+            card.querySelector(".predio-card__clave")?.textContent ?? ""
+        ).toLowerCase();
+        const coincideBusqueda =
+            !terminoBusquedaPredios || clave.includes(terminoBusquedaPredios);
+        const coincideFiltro =
+            filtroPrediosActivo === "todos" ||
+            card.dataset.estatus === filtroPrediosActivo;
+        const mostrar = coincideBusqueda && coincideFiltro;
+
+        card.style.display = mostrar ? "" : "none";
+        if (mostrar) visibles++;
+    });
+
+    if (mensajeVacio) {
+        mensajeVacio.hidden = visibles > 0;
+    }
 }
 
 function initTabs() {
@@ -433,6 +560,15 @@ function actualizarResumenPredio(predioCard) {
     ).length;
 
     resumen.textContent = `${cargados} de ${total} documentos cargados`;
+
+    // Mantener actualizado el estado del filtro de predios: "completado" solo
+    // cuando el predio está aprobado y con todos sus documentos cargados.
+    const predioAprobado = Number(predioCard.dataset.estatusPredio) === 2;
+    predioCard.dataset.estatus =
+        predioAprobado && total > 0 && cargados >= total
+            ? "completado"
+            : "pendiente";
+    aplicarFiltroPredios();
 
     actualizarBarraPredios();
 }

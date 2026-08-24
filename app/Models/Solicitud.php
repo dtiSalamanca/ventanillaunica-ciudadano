@@ -98,6 +98,13 @@ class Solicitud extends Model
             $estado = $this->estatus_solicitud;
         }
 
+        // Trámite sin costo: el administrador no genera orden de pago ni folio,
+        // por lo que el estatus guardado puede quedar en 3 (Por pagar). Si ya se
+        // subió el resolutivo, la solicitud se considera Completado (5).
+        if (($this->tramite?->sin_costo ?? false) && $this->resolucion !== null) {
+            $estado = 5;
+        }
+
         // El administrador puede marcar Completado como 4 (legado) o 5 (nuevo);
         // ambos equivalen a Completado (5).
         if (in_array($estado, [4, 5], true)) {

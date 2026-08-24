@@ -673,7 +673,10 @@ function mostrarAvisoAdeudo(estado, mensaje) {
 
     if (estado === "adeudos") {
         aviso.className = "predio-adeudo-aviso predio-adeudo-aviso--error";
-        aviso.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> ' + mensaje;
+        aviso.innerHTML =
+            '<i class="fa-solid fa-circle-xmark"></i> Esta cuenta presenta adeudos pendientes. ' +
+            "Para consultar el detalle y obtener más información, puede ingresar " +
+            '<a href="https://predial.salamanca.gob.mx/" target="_blank" rel="noopener noreferrer">aquí</a>.';
         return;
     }
 

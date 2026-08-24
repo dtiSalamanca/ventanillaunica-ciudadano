@@ -5,9 +5,17 @@
     $completadosPredio = $catalogoPredios
         ->filter(fn($doc) => $documentosPredioCargados->has($doc->id_documento_predio))
         ->count();
+    // Para el filtro de la sección Predios:
+    //  - "completado": predio aprobado (2) y con todos sus documentos cargados.
+    //  - "pendiente": en revisión, rechazado o aprobado con documentos por cargar.
+    $docsEstatusPredio =
+        $estatusPredio === 2 && $totalDocumentosPredio > 0 && $completadosPredio >= $totalDocumentosPredio
+            ? 'completado'
+            : 'pendiente';
     $tieneErrorCorreccion = $errors->has('clave_predio_' . $predio->id_predio);
 @endphp
-<div class="predio-card" data-predio-id="{{ $predio->id_predio }}" data-estatus-predio="{{ $estatusPredio }}">
+<div class="predio-card" data-predio-id="{{ $predio->id_predio }}" data-estatus="{{ $docsEstatusPredio }}"
+    data-estatus-predio="{{ $estatusPredio }}">
     <button class="predio-card__header" type="button" aria-expanded="{{ $tieneErrorCorreccion ? 'true' : 'false' }}">
         <div class="predio-card__info">
             <span class="predio-card__icono"><i class="fas fa-house"></i></span>
